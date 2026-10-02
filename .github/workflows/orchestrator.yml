@@ -1,0 +1,35 @@
+name: Agent Orchestrator
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [portfolio-refresh, orchestrator-tick]
+  schedule:
+    - cron: "7 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-orchestrator
+  cancel-in-progress: true
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Refresh project state
+        env:
+          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/generate_dashboard.py
+
+      - name: Decide next orchestration action
+        run: python3 scripts/orchestrate.py
+
+      - name: Phase 1 guardrail
+        run: |
+          echo "Phase 1 is decision-only. Builder dispatch and autonomous PR creation are intentionally disabled until Phase 2."
