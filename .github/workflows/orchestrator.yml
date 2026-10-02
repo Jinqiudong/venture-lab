@@ -47,7 +47,7 @@ jobs:
 
   wake-review:
     needs: decide
-    if: needs.decide.outputs.should_review == 'true'
+    if: needs.decide.outputs.should_review == 'true' && !(github.event_name == 'repository_dispatch' && (github.event.client_payload.source == 'agent-orchestrator' || github.event.client_payload.source == 'builder-pr-created'))
     runs-on: ubuntu-latest
     steps:
       - name: Wake independent review cycle
