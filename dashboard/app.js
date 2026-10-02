@@ -175,6 +175,14 @@ async function loadDashboard() {
     aiTeamNode.innerHTML = aiTeam.length ? workflowGroups(aiTeam) : `<div class="empty-state">No AI work is active or ready.</div>`;
     queueNode.innerHTML = queue.length ? workflowGroups(queue) : `<div class="empty-state">Queue is clear.</div>`;
     projectsNode.innerHTML = (dashboardData.projects || []).map(projectCard).join("");
+
+    const attentionCount = document.querySelector('#attention-count');
+    const aiCount = document.querySelector('#ai-team-count');
+    const queueCount = document.querySelector('#queue-count');
+    if (attentionCount) attentionCount.textContent = needsYou.length;
+    if (aiCount) aiCount.textContent = aiTeam.length;
+    if (queueCount) queueCount.textContent = queue.length;
+
     updatedNode.textContent = `Synced ${formatDate(dashboardData.generated_at)}`;
     wireSearch();
   } catch (error) {
