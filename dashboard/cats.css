@@ -1,0 +1,55 @@
+.cat-stage { position: relative; isolation: isolate; }
+.mascot { --cat-x: 0px; --cat-y: 0px; --cat-tilt: 0deg; position: absolute; z-index: 5; border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 18px 28px rgba(0,0,0,.55)); transition: transform .28s cubic-bezier(.2,.9,.25,1), filter .28s ease, opacity .2s ease; }
+.mascot img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; transform: translate(var(--cat-x), var(--cat-y)) rotate(var(--cat-tilt)); transition: transform .12s ease-out; }
+.mascot:hover { transform: translateY(-5px) scale(1.07); filter: drop-shadow(0 24px 36px rgba(0,0,0,.7)) drop-shadow(0 0 18px rgba(255,255,255,.08)); }
+.mascot:focus-visible { outline: 1px solid #666; outline-offset: 8px; border-radius: 16px; }
+.cat-whisper { position: absolute; z-index: 8; max-width: 190px; padding: 8px 10px; border: 1px solid #333; border-radius: 10px; color: #ddd; background: rgba(9,9,9,.88); backdrop-filter: blur(12px); font: 700 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .02em; opacity: 0; transform: translateY(6px) scale(.96); pointer-events: none; transition: opacity .18s ease, transform .18s ease; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.mascot:hover .cat-whisper, .mascot:focus-visible .cat-whisper, .mascot.is-booped .cat-whisper { opacity: 1; transform: translateY(0) scale(1); }
+.mascot.is-booped img { animation: catBoop .52s cubic-bezier(.2,.8,.2,1); }
+@keyframes catBoop { 0% { transform: scale(1) rotate(0); } 35% { transform: scale(1.12) rotate(-2deg); } 65% { transform: scale(.98) rotate(1deg); } 100% { transform: scale(1) rotate(0); } }
+
+.hero-cat-stage { overflow: visible; }
+.hero-copy { position: relative; z-index: 3; }
+.mascot-hero { right: -24px; bottom: -18px; width: clamp(190px, 25vw, 300px); transform-origin: 68% 78%; }
+.mascot-hero img { transform-origin: 70% 80%; }
+.mascot-hero .cat-whisper { left: -54px; top: 24%; }
+.mascot-hero:hover { transform: translate(-8px,-8px) scale(1.11) rotate(-1deg); }
+.hero h1 { position: relative; z-index: 2; }
+.hero h1::after { content: ""; position: absolute; right: -8%; bottom: 4%; width: 32%; height: 1px; background: linear-gradient(90deg, transparent, #555, transparent); opacity: .65; }
+
+.human-cat-stage { padding-top: 46px; }
+.mascot-boss { right: 8px; top: 4px; width: clamp(105px, 13vw, 150px); transform-origin: 50% 100%; }
+.mascot-boss .cat-whisper { right: 72%; top: 18%; }
+.mascot-boss:hover { transform: translateY(-4px) scale(1.06) rotate(1deg); }
+.human-cat-stage .section-heading { padding-right: 150px; }
+
+.work-cat-stage { padding-top: 58px; }
+.mascot-working { right: 7%; top: -4px; width: clamp(112px, 14vw, 165px); transform-origin: 50% 80%; }
+.mascot-working .cat-whisper { right: 68%; top: 22%; }
+.mascot-working:hover { transform: translate(-10px,5px) scale(1.09) rotate(-2deg); }
+.work-cat-stage .section-heading { padding-right: 160px; }
+.work-cat-stage::after { content: "···"; position: absolute; right: 2%; top: 78px; color: #353535; letter-spacing: 10px; font-size: 18px; transform: rotate(-8deg); }
+
+.queue-cat-stage { padding-top: 50px; overflow: visible; }
+.mascot-queue { right: 0; top: 4px; width: clamp(150px, 20vw, 235px); transform-origin: 78% 65%; }
+.mascot-queue .cat-whisper { right: 72%; top: 4%; min-width: 165px; }
+.mascot-queue:hover { transform: translate(-5px,-2px) scale(1.07) rotate(.8deg); }
+.queue-cat-stage .section-heading { padding-right: 220px; }
+
+@media (min-width: 980px) {
+  .mascot-hero { right: -10px; }
+  .hero-orbit { opacity: .4; transform: translateX(-40px); }
+}
+@media (max-width: 780px) {
+  .mascot-hero { width: 150px; right: -8px; bottom: 12px; opacity: .9; }
+  .mascot-hero .cat-whisper { left: auto; right: 60%; top: 8%; }
+  .human-cat-stage .section-heading, .work-cat-stage .section-heading, .queue-cat-stage .section-heading { padding-right: 0; }
+  .mascot-boss, .mascot-working, .mascot-queue { position: relative; display: block; right: auto; top: auto; margin: -8px 0 6px auto; }
+  .mascot-boss { width: 92px; }
+  .mascot-working { width: 105px; }
+  .mascot-queue { width: 145px; }
+  .cat-whisper { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot, .mascot img, .cat-whisper { transition: none !important; animation: none !important; }
+}
