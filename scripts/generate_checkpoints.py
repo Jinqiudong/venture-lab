@@ -64,6 +64,8 @@ def first_plain_line(body: str) -> str:
 def checkpoint_from_comment(comment: dict, url: str) -> dict | None:
     body = comment.get("body") or ""
     created_at = comment.get("created_at")
+    if "venture-auto-stop" in body:
+        return {"kind": "error", "title": "Auto-stop: needs you", "note": first_plain_line(body), "at": created_at, "url": url}
     if "venture-checkpoint:agent-failed" in body:
         title = "Agent failed"
         match = re.search(r"###\s+❌\s+(.+)", body)
