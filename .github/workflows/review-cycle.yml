@@ -107,10 +107,6 @@ jobs:
           persist-credentials: false
           path: target
 
-      - name: Fetch base branch
-        working-directory: target
-        run: git fetch --no-tags origin main
-
       - name: Build Reviewer prompt
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
