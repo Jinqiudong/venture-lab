@@ -28,10 +28,12 @@ jobs:
     outputs:
       should_dispatch: ${{ steps.decide.outputs.should_dispatch }}
       should_review: ${{ steps.decide.outputs.should_review }}
+      auto_stop: ${{ steps.decide.outputs.auto_stop }}
       repo: ${{ steps.decide.outputs.repo }}
       issue: ${{ steps.decide.outputs.issue }}
       project: ${{ steps.decide.outputs.project }}
       title: ${{ steps.decide.outputs.title }}
+      failure_count: ${{ steps.decide.outputs.failure_count }}
     steps:
       - name: Checkout control plane
         uses: actions/checkout@v4
@@ -44,7 +46,38 @@ jobs:
 
       - name: Decide next orchestration action
         id: decide
+        env:
+          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/orchestrate.py
+
+  auto-stop:
+    needs: decide
+    if: needs.decide.outputs.auto_stop == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mark issue for human intervention
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.decide.outputs.repo }}
+          ISSUE_NUMBER: ${{ needs.decide.outputs.issue }}
+          FAILURE_COUNT: ${{ needs.decide.outputs.failure_count }}
+        run: |
+          marker="<!-- venture-auto-stop -->"
+          if gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER/comments" --paginate --jq '.[].body' 2>/dev/null | grep -Fq "$marker"; then
+            echo "Auto-stop already recorded."
+            exit 0
+          fi
+          BODY_FILE=$(mktemp)
+          {
+            printf '%s\n' "$marker"
+            printf '### 🛑 Auto-stop: needs human intervention\n\n'
+            printf 'Builder has failed or been cancelled **%s times** without producing a PR.\n\n' "$FAILURE_COUNT"
+            printf '**Automation:** paused for this Issue; the Orchestrator will not retry it automatically.\n\n'
+            printf '**Next:** diagnose the Builder runtime, then explicitly clear this checkpoint before retrying.\n'
+          } > "$BODY_FILE"
+          gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
 
   wake-review:
     needs: decide
@@ -63,6 +96,7 @@ jobs:
     needs: decide
     if: needs.decide.outputs.should_dispatch == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       TARGET_REPO: ${{ needs.decide.outputs.repo }}
       ISSUE_NUMBER: ${{ needs.decide.outputs.issue }}
@@ -120,6 +154,8 @@ jobs:
             printf '%s\n' '- Do not create, merge, or approve a pull request yourself.'
             printf '%s\n' '- Do not access GitHub credentials or secrets.'
             printf '%s\n' '- The workflow will commit and open the PR after you finish.'
+            printf '%s\n' '- Prioritize a minimal implementation that satisfies the acceptance criteria.'
+            printf '%s\n' '- Do not spend time on simulator UI polish or unrelated refactors.'
           } > builder-prompt.md
 
       - name: Publish Builder checkpoint
@@ -148,6 +184,7 @@ jobs:
           permission-profile: ":workspace"
           working-directory: target
           prompt-file: builder-prompt.md
+          effort: medium
           allow-bots: true
 
       - name: Inspect Builder changes
