@@ -1,0 +1,181 @@
+/* Final visual tuning layer for mascot sizing and safe text clearance. */
+
+/* Hero: keep the cat crisp and supportive rather than dominant. */
+.hero-cat-stage {
+  min-height: 470px;
+}
+.hero-copy {
+  max-width: 64%;
+}
+.mascot-hero {
+  right: 0;
+  top: 3%;
+  width: clamp(360px, 38vw, 510px);
+  max-width: 42%;
+  z-index: 7;
+}
+.mascot-hero:hover {
+  transform: translate(-6px,-4px) scale(1.018) rotate(-.35deg);
+}
+.hero-cat-stage.is-noticing .mascot-hero {
+  transform: translate(-3px,-2px) scale(1.006);
+}
+.hero-doodle {
+  right: 28%;
+  top: 18%;
+}
+
+/* Give every status panel a protected header/content zone. */
+.status-panel {
+  padding-top: 24px;
+}
+.status-panel .section-heading {
+  padding-right: 118px;
+}
+.status-panel .section-description {
+  max-width: calc(100% - 112px);
+  min-height: 34px;
+}
+.status-panel .attention-grid,
+.status-panel .workflow-stack {
+  margin-top: 14px;
+}
+
+/* Perch mascots on the panel edge, outside primary reading flow. */
+.mascot-boss {
+  width: 96px;
+  right: 10px;
+  top: -22px;
+}
+.mascot-working {
+  width: 108px;
+  right: -2px;
+  top: 46px;
+}
+.mascot-queue {
+  width: 128px;
+  right: -10px;
+  top: 48px;
+}
+
+/* Context reactions stay subtle so they never drift onto text. */
+.human-cat-stage.is-reacting .mascot-boss {
+  transform: translate(-4px,6px) rotate(-.5deg);
+}
+.work-cat-stage.is-reacting .mascot-working {
+  transform: translate(-6px,8px) rotate(-1.5deg) scale(1.015);
+}
+.queue-cat-stage.is-reacting .mascot-queue {
+  transform: translate(-5px,5px) rotate(-.7deg) scale(1.01);
+}
+
+@media (max-width: 1060px) {
+  .hero-copy {
+    max-width: 70%;
+  }
+  .mascot-hero {
+    right: -2%;
+    width: clamp(330px, 42vw, 440px);
+    max-width: 44%;
+  }
+
+  .status-panel .section-heading {
+    padding-right: 104px;
+  }
+  .status-panel .section-description {
+    max-width: calc(100% - 96px);
+  }
+  .mascot-boss {
+    width: 88px;
+    right: 12px;
+    top: -18px;
+  }
+  .mascot-working {
+    width: 96px;
+    right: 10px;
+    top: 42px;
+  }
+  .mascot-queue {
+    width: 112px;
+    right: 8px;
+    top: 44px;
+  }
+}
+
+@media (max-width: 780px) {
+  .hero-cat-stage {
+    min-height: 520px;
+    padding-bottom: 170px;
+  }
+  .hero-copy {
+    max-width: 100%;
+  }
+  .mascot-hero {
+    width: min(280px, 72vw);
+    max-width: none;
+    right: -34px;
+    top: auto;
+    bottom: 24px;
+  }
+
+  .status-panel {
+    padding: 20px 14px 16px;
+  }
+  .status-panel .section-heading {
+    padding-right: 84px;
+  }
+  .status-panel .section-description {
+    max-width: calc(100% - 74px);
+    min-height: 46px;
+    margin-bottom: 14px;
+  }
+  .mascot-boss {
+    width: 72px;
+    right: 8px;
+    top: -12px;
+  }
+  .mascot-working {
+    width: 80px;
+    right: 6px;
+    top: 52px;
+  }
+  .mascot-queue {
+    width: 92px;
+    right: 2px;
+    top: 54px;
+  }
+}
+
+@media (max-width: 460px) {
+  .hero-cat-stage {
+    min-height: 500px;
+    padding-bottom: 155px;
+  }
+  .mascot-hero {
+    width: min(245px, 70vw);
+    right: -28px;
+    bottom: 26px;
+  }
+
+  .status-panel .section-heading {
+    padding-right: 72px;
+  }
+  .status-panel .section-description {
+    max-width: calc(100% - 64px);
+  }
+  .mascot-boss {
+    width: 62px;
+    right: 8px;
+    top: -8px;
+  }
+  .mascot-working {
+    width: 68px;
+    right: 6px;
+    top: 56px;
+  }
+  .mascot-queue {
+    width: 78px;
+    right: 2px;
+    top: 58px;
+  }
+}
