@@ -1,0 +1,472 @@
+name: Agent Review Cycle
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [portfolio-refresh, orchestrator-tick]
+  schedule:
+    - cron: "23,53 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - "agents/**"
+      - ".github/workflows/review-cycle.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-review-cycle
+  cancel-in-progress: false
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.pick.outputs.configured }}
+      found: ${{ steps.pick.outputs.found }}
+      repo: ${{ steps.pick.outputs.repo }}
+      pr: ${{ steps.pick.outputs.pr }}
+      head: ${{ steps.pick.outputs.head }}
+      branch: ${{ steps.pick.outputs.branch }}
+      issue: ${{ steps.pick.outputs.issue }}
+      title: ${{ steps.pick.outputs.title }}
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Find next managed PR
+        id: pick
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "found=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$GH_TOKEN" ] || [ -z "$OPENAI_API_KEY" ]; then
+            echo "Agent runtime not configured; review cycle is idle."
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+          while IFS= read -r repo; do
+            [ -z "$repo" ] && continue
+            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt)
+            count=$(printf '%s' "$prs" | jq 'length')
+            [ "$count" -eq 0 ] && continue
+            for idx in $(seq 0 $((count - 1))); do
+              pr=$(printf '%s' "$prs" | jq -r ".[$idx].number")
+              head=$(printf '%s' "$prs" | jq -r ".[$idx].headRefOid")
+              branch=$(printf '%s' "$prs" | jq -r ".[$idx].headRefName")
+              title=$(printf '%s' "$prs" | jq -r ".[$idx].title")
+              body=$(printf '%s' "$prs" | jq -r ".[$idx].body // \"\"")
+              issue=$(printf '%s\n' "$body" | grep -oE 'Closes #[0-9]+' | head -1 | grep -oE '[0-9]+' || true)
+              [ -z "$issue" ] && continue
+
+              if gh api "repos/$repo/issues/$pr/comments" --paginate --jq '.[].body' 2>/dev/null | grep -Fq "<!-- venture-human-ready:$head -->"; then
+                continue
+              fi
+
+              echo "found=true" >> "$GITHUB_OUTPUT"
+              echo "repo=$repo" >> "$GITHUB_OUTPUT"
+              echo "pr=$pr" >> "$GITHUB_OUTPUT"
+              echo "head=$head" >> "$GITHUB_OUTPUT"
+              echo "branch=$branch" >> "$GITHUB_OUTPUT"
+              echo "issue=$issue" >> "$GITHUB_OUTPUT"
+              echo "title=$title" >> "$GITHUB_OUTPUT"
+              echo "Selected $repo PR #$pr ($head)"
+              exit 0
+            done
+          done < <(jq -r '.projects[].repo' control/dashboard/projects.json)
+
+          echo "No managed PR needs review."
+
+  review:
+    needs: select
+    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.parse.outputs.verdict }}
+      request_changes: ${{ steps.parse.outputs.request_changes }}
+      needs_human: ${{ steps.parse.outputs.needs_human }}
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.select.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          ref: ${{ needs.select.outputs.branch }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - name: Fetch base branch
+        working-directory: target
+        run: git fetch --no-tags origin main
+
+      - name: Build Reviewer prompt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          ISSUE_NUMBER: ${{ needs.select.outputs.issue }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+        run: |
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          PR_BODY=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json body --jq '.body // ""')
+          {
+            cat control/agents/reviewer.md
+            printf '\n\n---\n# Review assignment\n'
+            printf 'Repository: %s\nIssue: #%s\nPR: #%s\n\n' "$TARGET_REPO" "$ISSUE_NUMBER" "$PR_NUMBER"
+            printf '## Issue contract\n%s\n\n## Pull request description\n%s\n' "$ISSUE_BODY" "$PR_BODY"
+            printf '\nInspect the checkout and `git diff origin/main...HEAD`. Return only schema-valid JSON.\n'
+          } > reviewer-prompt.md
+
+      - name: Run independent Reviewer
+        id: reviewer
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":read-only"
+          working-directory: target
+          prompt-file: reviewer-prompt.md
+          output-schema-file: ${{ github.workspace }}/control/agents/review-schema.json
+          output-file: ${{ github.workspace }}/review-result.json
+          allow-bots: true
+
+      - name: Parse Reviewer result
+        id: parse
+        run: |
+          cat review-result.json | jq .
+          verdict=$(jq -r '.verdict' review-result.json)
+          needs_human=$(jq -r '.needs_human' review-result.json)
+          echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+          echo "needs_human=$needs_human" >> "$GITHUB_OUTPUT"
+          if [ "$verdict" = "request_changes" ]; then echo "request_changes=true" >> "$GITHUB_OUTPUT"; else echo "request_changes=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Publish Reviewer report
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          {
+            printf '<!-- venture-review:%s -->\n' "$HEAD_SHA"
+            printf '### 🤖 Independent Reviewer\n\n'
+            jq -r '"**Verdict:** `" + .verdict + "`\n\n" + .summary + "\n\n" + (if (.findings|length)>0 then "#### Findings\n" + ([.findings[] | "- **" + .severity + " — " + .title + ":** " + .detail] | join("\n")) else "No blocking findings." end) + (if .needs_human then "\n\n**Needs product input:** " + .human_question else "" end)' review-result.json
+          } > review-comment.md
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file review-comment.md
+
+      - name: Upload Reviewer result
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewer-result
+          path: review-result.json
+          retention-days: 3
+
+  fix_review:
+    needs: [select, review]
+    if: needs.review.outputs.request_changes == 'true' && needs.review.outputs.needs_human != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.select.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          ref: ${{ needs.select.outputs.branch }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewer-result
+          path: reports
+
+      - name: Build Fixer prompt
+        run: |
+          {
+            cat control/agents/fixer.md
+            printf '\n\n---\n# Reviewer report\n'
+            cat reports/review-result.json
+          } > fixer-prompt.md
+
+      - name: Run Fixer
+        id: fixer
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          working-directory: target
+          prompt-file: fixer-prompt.md
+          allow-bots: true
+
+      - name: Commit and push fixes
+        working-directory: target
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          BRANCH_NAME: ${{ needs.select.outputs.branch }}
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "Fixer produced no changes."
+            exit 0
+          fi
+          git config user.name "venture-lab-fixer[bot]"
+          git config user.email "venture-lab-fixer@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: address independent review findings"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "HEAD:${BRANCH_NAME}"
+
+      - name: Report Fixer cycle
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          FIXER_SUMMARY: ${{ steps.fixer.outputs.final-message }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🔧 Fixer\n\n$FIXER_SUMMARY\n\nA fresh Reviewer pass will run against the new commit."
+
+  qa:
+    needs: [select, review]
+    if: needs.review.outputs.verdict == 'approve' && needs.review.outputs.needs_human != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.parse.outputs.verdict }}
+      needs_human: ${{ steps.parse.outputs.needs_human }}
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.select.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          ref: ${{ needs.select.outputs.branch }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - name: Build QA prompt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          ISSUE_NUMBER: ${{ needs.select.outputs.issue }}
+        run: |
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          {
+            cat control/agents/qa.md
+            printf '\n\n---\n# QA assignment\nRepository: %s\nIssue: #%s\n\n## Issue contract\n%s\n' "$TARGET_REPO" "$ISSUE_NUMBER" "$ISSUE_BODY"
+            printf '\nInspect repository docs/workflows to discover the appropriate build/test commands. Return only schema-valid JSON.\n'
+          } > qa-prompt.md
+
+      - name: Run independent QA
+        id: qa_agent
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          working-directory: target
+          prompt-file: qa-prompt.md
+          output-schema-file: ${{ github.workspace }}/control/agents/qa-schema.json
+          output-file: ${{ github.workspace }}/qa-result.json
+          allow-bots: true
+
+      - name: Parse QA result
+        id: parse
+        run: |
+          cat qa-result.json | jq .
+          echo "verdict=$(jq -r '.verdict' qa-result.json)" >> "$GITHUB_OUTPUT"
+          echo "needs_human=$(jq -r '.needs_human' qa-result.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish QA report
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          {
+            printf '<!-- venture-qa:%s -->\n' "$HEAD_SHA"
+            printf '### 🧪 Independent QA\n\n'
+            jq -r '"**Verdict:** `" + .verdict + "`\n\n" + .summary + "\n\n#### Checks\n" + ([.checks[] | "- `" + .command + "` — **" + .result + "**"] | join("\n")) + (if (.blocking_failures|length)>0 then "\n\n#### Blocking failures\n" + ([.blocking_failures[] | "- " + .] | join("\n")) else "" end) + (if .needs_human then "\n\n**Human validation required:** " + .human_validation else "" end)' qa-result.json
+          } > qa-comment.md
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file qa-comment.md
+
+      - name: Upload QA result
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-result
+          path: qa-result.json
+          retention-days: 3
+
+  fix_qa:
+    needs: [select, review, qa]
+    if: needs.qa.outputs.verdict == 'fail' && needs.qa.outputs.needs_human != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.select.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          ref: ${{ needs.select.outputs.branch }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: qa-result
+          path: reports
+
+      - name: Build QA Fixer prompt
+        run: |
+          {
+            cat control/agents/fixer.md
+            printf '\n\n---\n# QA failure report\n'
+            cat reports/qa-result.json
+          } > fixer-prompt.md
+
+      - name: Run QA Fixer
+        id: fixer
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          working-directory: target
+          prompt-file: fixer-prompt.md
+          allow-bots: true
+
+      - name: Commit and push QA fixes
+        working-directory: target
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          BRANCH_NAME: ${{ needs.select.outputs.branch }}
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "QA Fixer produced no changes."
+            exit 0
+          fi
+          git config user.name "venture-lab-fixer[bot]"
+          git config user.email "venture-lab-fixer@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: address QA failures"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "HEAD:${BRANCH_NAME}"
+
+      - name: Report QA Fixer cycle
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          FIXER_SUMMARY: ${{ steps.fixer.outputs.final-message }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🔧 QA Fixer\n\n$FIXER_SUMMARY\n\nThe review cycle will restart against the new commit."
+
+  handoff:
+    needs: [select, review, qa]
+    if: always() && needs.select.outputs.found == 'true' && (needs.review.outputs.needs_human == 'true' || needs.qa.outputs.verdict == 'pass' || needs.qa.outputs.needs_human == 'true')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.select.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          ref: ${{ needs.select.outputs.branch }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewer-result
+          path: reports
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: qa-result
+          path: reports
+
+      - name: Build Human Handoff prompt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          ISSUE_NUMBER: ${{ needs.select.outputs.issue }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+        run: |
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          PR_BODY=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json body --jq '.body // ""')
+          [ -f reports/qa-result.json ] || printf '{"verdict":"not_run","summary":"QA did not run because human input is needed first."}' > reports/qa-result.json
+          {
+            cat control/agents/handoff.md
+            printf '\n\n---\n# Handoff context\nRepository: %s\nIssue: #%s\nPR: #%s\n\n' "$TARGET_REPO" "$ISSUE_NUMBER" "$PR_NUMBER"
+            printf '## Issue contract\n%s\n\n## PR description\n%s\n\n## Reviewer result\n' "$ISSUE_BODY" "$PR_BODY"
+            cat reports/review-result.json
+            printf '\n\n## QA result\n'
+            cat reports/qa-result.json
+            printf '\nReturn only schema-valid JSON.\n'
+          } > handoff-prompt.md
+
+      - name: Generate Product Owner handoff
+        id: handoff_agent
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":read-only"
+          working-directory: target
+          prompt-file: handoff-prompt.md
+          output-schema-file: ${{ github.workspace }}/control/agents/handoff-schema.json
+          output-file: ${{ github.workspace }}/handoff-result.json
+          allow-bots: true
+
+      - name: Publish Human Handoff
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          {
+            printf '<!-- venture-human-ready:%s -->\n' "$HEAD_SHA"
+            printf '## 👤 Needs You — Product Owner Handoff\n\n'
+            printf '### Done\n'
+            jq -r '.done[] | "- " + .' handoff-result.json
+            printf '\n### Your job\n'
+            jq -r '.your_job' handoff-result.json
+            printf '\n\n### How to review it\n'
+            jq -r '.steps | to_entries[] | "" + ((.key + 1)|tostring) + ". " + .value' handoff-result.json
+            printf '\n### Tell the AI team\n'
+            jq -r '.questions[] | "- " + .' handoff-result.json
+            printf '\n### If you approve\n'
+            jq -r '.approve_action + "\n\n**Then:** " + .after_approve' handoff-result.json
+          } > handoff-comment.md
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file handoff-comment.md
