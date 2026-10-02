@@ -21,6 +21,17 @@ class RuntimeGuardTests(unittest.TestCase):
             "<!-- venture-fix-cycle:3 sha:fedcba9 -->",
         )
 
+    def test_existing_fixer_comments_count_as_cycles(self):
+        comments = [
+            "### 🔧 Fixer\n\nAddressed reviewer findings.",
+            "### 🔧 QA Fixer\n\nFixed test failure.",
+            "### 🔧 Fixer\n\nSecond reviewer pass fix.",
+        ]
+        self.assertEqual(fix_cycle_count(comments), 3)
+        state = classify_runtime(comments, "fedcba9")
+        self.assertTrue(state.stopped)
+        self.assertFalse(state.auto_fix_allowed)
+
     def test_human_ready_wins_for_current_sha(self):
         state = classify_runtime([
             "<!-- venture-review:abcdef1 -->",
