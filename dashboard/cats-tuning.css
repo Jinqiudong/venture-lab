@@ -1,4 +1,4 @@
-/* Final visual tuning layer for mascot sizing and safe text clearance. */
+/* Final visual tuning layer for mascot sizing, safe text clearance, and the vertical command board. */
 
 /* Hero: keep the cat crisp and supportive rather than dominant. */
 .hero-cat-stage {
@@ -25,48 +25,117 @@
   top: 18%;
 }
 
-/* Give every status panel a protected header/content zone. */
+/* Vertical work board: each workflow stage gets the full reading width. */
+.status-board {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  margin-top: 34px;
+}
 .status-panel {
-  padding-top: 24px;
+  min-height: 0;
+  padding: 26px 24px 24px;
+  overflow: visible;
 }
 .status-panel .section-heading {
-  padding-right: 118px;
+  padding-right: 142px;
+  margin-bottom: 0;
 }
 .status-panel .section-description {
-  max-width: calc(100% - 112px);
-  min-height: 34px;
+  max-width: min(720px, calc(100% - 150px));
+  min-height: 0;
+  margin: 8px 0 20px;
 }
 .status-panel .attention-grid,
 .status-panel .workflow-stack {
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
-/* Perch mascots on the panel edge, outside primary reading flow. */
+/* Full-width cards read like a work queue rather than narrow dashboard tiles. */
+.status-panel .project-workflow-group {
+  padding: 14px;
+}
+.status-panel .project-workflow-cards {
+  grid-template-columns: 1fr;
+}
+.status-panel .attention-card,
+.status-panel .workflow-card {
+  padding: 18px 20px;
+}
+.status-panel .attention-card h3,
+.status-panel .workflow-card h3 {
+  font-size: clamp(17px, 1.7vw, 22px);
+  line-height: 1.18;
+  max-width: 820px;
+}
+.status-panel .attention-card p {
+  max-width: 800px;
+}
+.status-panel .workflow-head {
+  align-items: flex-start;
+}
+.status-panel .workflow-head > div:first-child {
+  min-width: 0;
+}
+.status-panel .pipeline {
+  max-width: 820px;
+  margin: 22px 0 17px;
+  gap: 6px;
+}
+.status-panel .pipeline-step small {
+  font-size: 8px;
+}
+.status-panel .workflow-foot {
+  align-items: center;
+}
+
+/* Compact action/status chips: no more oversized circles in narrow columns. */
+.status-panel .status,
+.status-panel .health {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 9px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.status-panel .attention-card > a {
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+.status-panel .workflow-links {
+  margin-left: auto;
+}
+
+/* Mascots perch at the section edge, outside the main reading lane. */
 .mascot-boss {
-  width: 96px;
-  right: 10px;
-  top: -22px;
+  width: 104px;
+  right: 26px;
+  top: -18px;
 }
 .mascot-working {
-  width: 108px;
-  right: -2px;
-  top: 46px;
+  width: 112px;
+  right: 24px;
+  top: 18px;
 }
 .mascot-queue {
-  width: 128px;
-  right: -10px;
-  top: 48px;
+  width: 132px;
+  right: 18px;
+  top: 18px;
 }
 
 /* Context reactions stay subtle so they never drift onto text. */
 .human-cat-stage.is-reacting .mascot-boss {
-  transform: translate(-4px,6px) rotate(-.5deg);
+  transform: translate(-4px,5px) rotate(-.5deg);
 }
 .work-cat-stage.is-reacting .mascot-working {
-  transform: translate(-6px,8px) rotate(-1.5deg) scale(1.015);
+  transform: translate(-5px,6px) rotate(-1.2deg) scale(1.012);
 }
 .queue-cat-stage.is-reacting .mascot-queue {
-  transform: translate(-5px,5px) rotate(-.7deg) scale(1.01);
+  transform: translate(-5px,4px) rotate(-.6deg) scale(1.008);
 }
 
 @media (max-width: 1060px) {
@@ -79,26 +148,29 @@
     max-width: 44%;
   }
 
+  .status-panel {
+    padding: 24px 20px 20px;
+  }
   .status-panel .section-heading {
-    padding-right: 104px;
+    padding-right: 118px;
   }
   .status-panel .section-description {
-    max-width: calc(100% - 96px);
+    max-width: calc(100% - 126px);
   }
   .mascot-boss {
-    width: 88px;
-    right: 12px;
-    top: -18px;
+    width: 92px;
+    right: 18px;
+    top: -16px;
   }
   .mascot-working {
-    width: 96px;
-    right: 10px;
-    top: 42px;
+    width: 100px;
+    right: 16px;
+    top: 16px;
   }
   .mascot-queue {
-    width: 112px;
-    right: 8px;
-    top: 44px;
+    width: 116px;
+    right: 12px;
+    top: 16px;
   }
 }
 
@@ -118,31 +190,53 @@
     bottom: 24px;
   }
 
+  .status-board {
+    gap: 16px;
+    margin-top: 24px;
+  }
   .status-panel {
     padding: 20px 14px 16px;
   }
   .status-panel .section-heading {
-    padding-right: 84px;
+    padding-right: 82px;
   }
   .status-panel .section-description {
-    max-width: calc(100% - 74px);
-    min-height: 46px;
+    max-width: calc(100% - 78px);
     margin-bottom: 14px;
   }
+  .status-panel .attention-card,
+  .status-panel .workflow-card {
+    padding: 14px;
+  }
+  .status-panel .workflow-head,
+  .status-panel .workflow-foot {
+    gap: 10px;
+  }
+  .status-panel .workflow-card h3,
+  .status-panel .attention-card h3 {
+    font-size: 16px;
+  }
+  .status-panel .pipeline {
+    max-width: none;
+    overflow-x: auto;
+    grid-template-columns: repeat(6, minmax(62px, 1fr));
+    padding-bottom: 4px;
+  }
+
   .mascot-boss {
-    width: 72px;
+    width: 70px;
     right: 8px;
-    top: -12px;
+    top: -10px;
   }
   .mascot-working {
-    width: 80px;
+    width: 76px;
     right: 6px;
-    top: 52px;
+    top: 46px;
   }
   .mascot-queue {
-    width: 92px;
+    width: 88px;
     right: 2px;
-    top: 54px;
+    top: 46px;
   }
 }
 
@@ -158,24 +252,34 @@
   }
 
   .status-panel .section-heading {
-    padding-right: 72px;
+    padding-right: 68px;
   }
   .status-panel .section-description {
-    max-width: calc(100% - 64px);
+    max-width: calc(100% - 62px);
+  }
+  .status-panel .workflow-head {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .status-panel .workflow-foot {
+    align-items: flex-start;
+  }
+  .status-panel .workflow-links {
+    margin-left: 0;
   }
   .mascot-boss {
-    width: 62px;
-    right: 8px;
-    top: -8px;
+    width: 60px;
+    right: 7px;
+    top: -6px;
   }
   .mascot-working {
-    width: 68px;
-    right: 6px;
-    top: 56px;
+    width: 64px;
+    right: 5px;
+    top: 50px;
   }
   .mascot-queue {
-    width: 78px;
-    right: 2px;
-    top: 58px;
+    width: 74px;
+    right: 0;
+    top: 52px;
   }
 }
