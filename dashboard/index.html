@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Venture Lab portfolio dashboard" />
+  <title>My AI Ventures</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">VENTURE LAB</p>
+        <h1>My AI Ventures</h1>
+        <p class="subtitle">A read-only control center for project health, engineering flow, and decisions that need attention.</p>
+      </div>
+      <div class="updated" id="updated">Refreshing portfolio…</div>
+    </header>
+
+    <section class="attention-section">
+      <div class="section-heading">
+        <h2>Needs My Attention</h2>
+        <span>Human decisions and next actions</span>
+      </div>
+      <div id="attention" class="attention-grid"></div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Portfolio</h2>
+        <span>Live GitHub signals + lightweight strategy metadata</span>
+      </div>
+      <div id="projects" class="project-grid"></div>
+    </section>
+
+    <footer>
+      Product repositories remain the source of truth. Venture Lab only aggregates status.
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

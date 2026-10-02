@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-10-02T01:00:00+00:00",
+  "projects": [
+    {
+      "name": "AniDream",
+      "repo": "Jinqiudong/AniDream",
+      "stage": "Mobile MVP",
+      "health": "yellow",
+      "current_focus": "Shared Web + iOS architecture, auth, and persistent user data",
+      "attention": "Start with architecture Issue #3 before implementation.",
+      "open_issues": null,
+      "open_prs": null,
+      "ci": "unknown",
+      "latest_activity": null,
+      "live": false,
+      "error": "Live data will refresh from GitHub Actions. Private repositories require PORTFOLIO_GITHUB_TOKEN."
+    },
+    {
+      "name": "Digital You",
+      "repo": "Jinqiudong/digital-you",
+      "stage": "MVP Definition",
+      "health": "green",
+      "current_focus": "Define the first measurable dance-improvement loop",
+      "attention": "Finalize first skill metrics and MVP data model.",
+      "open_issues": null,
+      "open_prs": null,
+      "ci": "unknown",
+      "latest_activity": null,
+      "live": false,
+      "error": "Live data will refresh from GitHub Actions. Private repositories require PORTFOLIO_GITHUB_TOKEN."
+    }
+  ]
+}
