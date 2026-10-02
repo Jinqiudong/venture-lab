@@ -10,14 +10,20 @@ const formatDate = (value) => {
 };
 
 const statusLabel = (status) => ({
-  ready: "Ready",
+  ready: "Ready for Builder",
   decision: "Decision needed",
+  human_handoff: "Experience review",
+  blocked_on_human: "Waiting on you",
   blocked: "Blocked",
-  review: "In review",
+  review: "AI review",
+  reviewing: "AI review",
   merged: "Merged",
   done: "Done",
   coding: "Coding",
+  building: "Building",
   ci: "CI running",
+  qa: "QA",
+  changes_requested: "Fixing review findings",
 }[status] || status || "Unknown");
 
 const projectSlug = (name = "project") => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -26,12 +32,12 @@ const stageState = (item, stage) => {
   const status = item.workflow_stage;
   if (["merged", "done"].includes(status)) return "done";
   if (stage === "Issue") return "done";
-  if (status === "blocked" || status === "decision") return "todo";
+  if (["blocked", "decision", "blocked_on_human"].includes(status)) return "todo";
   if (status === "ready") return stage === "Branch" ? "current" : "todo";
-  if (stage === "Branch") return ["coding", "ci", "review"].includes(status) ? "done" : "todo";
-  if (stage === "PR") return item.pr ? "done" : (status === "coding" ? "current" : "todo");
-  if (stage === "CI") return status === "ci" ? "current" : (status === "review" ? "done" : "todo");
-  if (stage === "Review") return status === "review" ? "current" : "todo";
+  if (stage === "Branch") return ["coding", "building", "ci", "review", "reviewing", "qa", "human_handoff"].includes(status) ? "done" : "todo";
+  if (stage === "PR") return item.pr ? "done" : (["coding", "building"].includes(status) ? "current" : "todo");
+  if (stage === "CI") return status === "ci" || status === "qa" ? "current" : (["review", "reviewing", "human_handoff"].includes(status) ? "done" : "todo");
+  if (stage === "Review") return ["review", "reviewing"].includes(status) ? "current" : (status === "human_handoff" ? "done" : "todo");
   return "todo";
 };
 
@@ -53,14 +59,21 @@ const issueHref = (item) => {
 };
 
 const attentionCard = (item) => {
-  const link = issueHref(item);
+  const link = item.pr_url || issueHref(item);
   const slug = projectSlug(item.project_name);
+  const handoff = item.human_handoff || {};
+  const questions = Array.isArray(handoff.questions) && handoff.questions.length
+    ? `<ul>${handoff.questions.map((question) => `<li>${question}</li>`).join("")}</ul>`
+    : "";
   return `
     <article class="attention-card searchable project-${slug}" data-search="${[item.project_name, item.title, item.next_action, statusLabel(item.workflow_stage)].join(" ").toLowerCase()}">
       <div>
         <div class="attention-meta"><span class="project-dot"></span>${item.project_name} / ${statusLabel(item.workflow_stage)}</div>
-        <h3>${item.title || "Work item"}</h3>
-        <p>${item.next_action || "Pick the next move"}</p>
+        <h3>${handoff.title || item.title || "Work item"}</h3>
+        <p>${handoff.what_you_need_to_do || item.next_action || "A product decision is needed."}</p>
+        ${handoff.where_to_look ? `<p><strong>Where to look:</strong> ${handoff.where_to_look}</p>` : ""}
+        ${questions}
+        ${handoff.approve_action ? `<p><strong>If approved:</strong> ${handoff.approve_action}</p>` : ""}
       </div>
       <a href="${link}" target="_blank" rel="noreferrer">Open ↗</a>
     </article>
@@ -75,22 +88,13 @@ const workflowCard = (item) => {
   return `
     <article class="workflow-card searchable project-${slug} ${item.workflow_stage === "blocked" ? "is-blocked" : ""} ${["merged", "done"].includes(item.workflow_stage) ? "is-complete" : ""}" data-search="${search}">
       <div class="workflow-head">
-        <div>
-          <div class="workflow-meta"><span class="project-dot"></span>${item.project_name} / ${item.project_stage}</div>
-          <h3>${item.issue ? `#${item.issue} ` : ""}${item.title || "Work item"}</h3>
-        </div>
+        <div><div class="workflow-meta"><span class="project-dot"></span>${item.project_name} / ${item.project_stage}</div><h3>${item.issue ? `#${item.issue} ` : ""}${item.title || "Work item"}</h3></div>
         <span class="status status-${item.workflow_stage}">${["merged", "done"].includes(item.workflow_stage) ? "✓ " : ""}${statusLabel(item.workflow_stage)}</span>
       </div>
       ${pipeline(item)}
       <div class="workflow-foot">
-        <div>
-          <strong>${["merged", "done"].includes(item.workflow_stage) ? "Completed" : (item.next_action || "No next action set")}</strong>
-          ${blocked ? `<span>${blocked}</span>` : ""}
-        </div>
-        <div class="workflow-links">
-          <a href="${issueLink}" target="_blank" rel="noreferrer">Issue ↗</a>
-          ${item.pr_url ? `<a href="${item.pr_url}" target="_blank" rel="noreferrer">PR #${item.pr} ↗</a>` : ""}
-        </div>
+        <div><strong>${["merged", "done"].includes(item.workflow_stage) ? "Completed" : (item.next_action || "AI team owns the next move")}</strong>${blocked ? `<span>${blocked}</span>` : ""}</div>
+        <div class="workflow-links"><a href="${issueLink}" target="_blank" rel="noreferrer">Issue ↗</a>${item.pr_url ? `<a href="${item.pr_url}" target="_blank" rel="noreferrer">PR #${item.pr} ↗</a>` : ""}</div>
       </div>
     </article>
   `;
@@ -105,16 +109,7 @@ const workflowGroups = (items) => {
   }
   return [...groups.entries()].map(([name, groupItems]) => {
     const slug = projectSlug(name);
-    const activeCount = groupItems.filter((item) => !["done", "merged"].includes(item.workflow_stage)).length;
-    return `
-      <section class="project-workflow-group project-${slug}">
-        <div class="project-group-head">
-          <div><span class="project-dot"></span><strong>${name}</strong></div>
-          <span>${activeCount} active · ${groupItems.length} tracked</span>
-        </div>
-        <div class="project-workflow-cards">${groupItems.map(workflowCard).join("")}</div>
-      </section>
-    `;
+    return `<section class="project-workflow-group project-${slug}"><div class="project-group-head"><div><span class="project-dot"></span><strong>${name}</strong></div><span>${groupItems.length} item${groupItems.length === 1 ? "" : "s"}</span></div><div class="project-workflow-cards">${groupItems.map(workflowCard).join("")}</div></section>`;
   }).join("");
 };
 
@@ -123,20 +118,9 @@ const projectCard = (project) => {
   const search = [project.name, project.repo, project.stage, project.current_focus, project.health].join(" ").toLowerCase();
   return `
     <article class="portfolio-card searchable project-${slug}" data-search="${search}">
-      <div class="portfolio-topline">
-        <div>
-          <div class="repo"><span class="project-dot"></span>${project.repo}</div>
-          <h3>${project.name}</h3>
-        </div>
-        <span class="health health-${project.health}">${healthLabel[project.health] || project.health}</span>
-      </div>
-      <div class="stage">${project.stage}</div>
-      <p>${project.current_focus}</p>
-      <div class="portfolio-stats">
-        <span>${project.open_issues ?? "—"} issues</span>
-        <span>${project.open_prs ?? "—"} PRs</span>
-        <span>${project.live ? "synced" : "fallback"}</span>
-      </div>
+      <div class="portfolio-topline"><div><div class="repo"><span class="project-dot"></span>${project.repo}</div><h3>${project.name}</h3></div><span class="health health-${project.health}">${healthLabel[project.health] || project.health}</span></div>
+      <div class="stage">${project.stage}</div><p>${project.current_focus}</p>
+      <div class="portfolio-stats"><span>${project.open_issues ?? "—"} issues</span><span>${project.open_prs ?? "—"} PRs</span><span>${project.live ? "synced" : "fallback"}</span></div>
       <a class="repo-link" href="https://github.com/${project.repo}" target="_blank" rel="noreferrer">Open repo ↗</a>
     </article>
   `;
@@ -158,13 +142,11 @@ function wireSearch() {
   const input = document.querySelector("#command-search");
   if (!input) return;
   input.addEventListener("input", (event) => applyFilter(event.target.value));
-  document.querySelectorAll("[data-filter]").forEach((button) => {
-    button.addEventListener("click", () => {
-      input.value = button.dataset.filter || "";
-      applyFilter(input.value);
-      input.focus();
-    });
-  });
+  document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
+    input.value = button.dataset.filter || "";
+    applyFilter(input.value);
+    input.focus();
+  }));
   document.addEventListener("keydown", (event) => {
     if (event.key === "/" && document.activeElement !== input) {
       event.preventDefault();
@@ -175,7 +157,8 @@ function wireSearch() {
 
 async function loadDashboard() {
   const attentionNode = document.querySelector("#attention-list");
-  const workflowsNode = document.querySelector("#workflows");
+  const aiTeamNode = document.querySelector("#ai-team-list");
+  const queueNode = document.querySelector("#queue-list");
   const projectsNode = document.querySelector("#projects-grid");
   const updatedNode = document.querySelector("#updated");
 
@@ -185,23 +168,20 @@ async function loadDashboard() {
     dashboardData = await response.json();
 
     const needsYou = dashboardData.needs_you || [];
-    const workItems = dashboardData.work_items || (dashboardData.projects || []).flatMap((p) => p.work_items || []);
+    const aiTeam = dashboardData.ai_team || [];
+    const queue = dashboardData.queue || [];
 
-    attentionNode.innerHTML = needsYou.length
-      ? needsYou.map(attentionCard).join("")
-      : `<div class="empty-state">Nothing needs you right now.</div>`;
-
-    workflowsNode.innerHTML = workItems.length
-      ? workflowGroups(workItems)
-      : `<div class="empty-state">Nothing is on the burner yet.</div>`;
-
+    attentionNode.innerHTML = needsYou.length ? needsYou.map(attentionCard).join("") : `<div class="empty-state">Nothing needs you right now. The AI team owns the next move.</div>`;
+    aiTeamNode.innerHTML = aiTeam.length ? workflowGroups(aiTeam) : `<div class="empty-state">No AI work is active or ready.</div>`;
+    queueNode.innerHTML = queue.length ? workflowGroups(queue) : `<div class="empty-state">Queue is clear.</div>`;
     projectsNode.innerHTML = (dashboardData.projects || []).map(projectCard).join("");
     updatedNode.textContent = `Synced ${formatDate(dashboardData.generated_at)}`;
     wireSearch();
   } catch (error) {
     updatedNode.textContent = "Sync failed";
     attentionNode.innerHTML = `<div class="empty-state">Could not load dashboard data.</div>`;
-    workflowsNode.innerHTML = `<div class="empty-state">Workflow data is unavailable.</div>`;
+    aiTeamNode.innerHTML = `<div class="empty-state">AI Team data is unavailable.</div>`;
+    queueNode.innerHTML = `<div class="empty-state">Queue data is unavailable.</div>`;
     projectsNode.innerHTML = `<div class="empty-state">Project data is unavailable.</div>`;
     wireSearch();
   }
