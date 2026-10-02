@@ -30,9 +30,9 @@
         <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
       </div>
       <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
-      <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot" data-cat-message="Paw-sitive idea?">
-        <img src="assets/cat-hero.webp" data-remove-white="true" alt="Your cat reaching into the Idea Cauldron hero" />
-        <span class="cat-whisper">Paw-sitive idea?</span>
+      <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot">
+        <img src="assets/cat-hero.webp" alt="Your cat reaching into the Idea Cauldron hero" />
+        <span class="cat-whisper">Got another idea?</span>
       </button>
     </section>
 
@@ -48,27 +48,27 @@
 
     <section id="attention" class="panel-section cat-stage human-cat-stage">
       <div class="section-heading"><div><span class="section-index">01</span><h2>Needs You</h2></div><span class="section-note">Only decisions, experience review, credentials, and approvals</span></div>
-      <button class="mascot mascot-boss" type="button" aria-label="Boss cat" data-cat-message="Your call, boss.">
-        <img src="assets/cat-boss.webp" data-remove-white="true" alt="Your cat in a tie at the laptop" />
-        <span class="cat-whisper">Your call, boss.</span>
+      <button class="mascot mascot-boss" type="button" aria-label="Boss cat">
+        <img src="assets/cat-boss.webp" data-remove-edge-white="true" alt="Your cat in a tie at the laptop" />
+        <span class="cat-whisper">Boss, your call.</span>
       </button>
       <div id="attention-list" class="attention-grid"></div>
     </section>
 
     <section id="ai-team" class="panel-section cat-stage work-cat-stage">
       <div class="section-heading"><div><span class="section-index">02</span><h2>AI Team</h2></div><span class="section-note">Ready → Build → Review → QA → Human handoff</span></div>
-      <button class="mascot mascot-working" type="button" aria-label="Working cat" data-cat-message="On it. Tiny paws, big commits.">
+      <button class="mascot mascot-working" type="button" aria-label="Working cat">
         <img src="assets/cat-working.webp" alt="Your cat walking through the active work area" />
-        <span class="cat-whisper">On it. Tiny paws, big commits.</span>
+        <span class="cat-whisper">Tiny paws. Big commits.</span>
       </button>
       <div id="ai-team-list" class="workflow-stack"></div>
     </section>
 
     <section id="queue" class="panel-section cat-stage queue-cat-stage">
       <div class="section-heading"><div><span class="section-index">03</span><h2>Queue</h2></div><span class="section-note">Blocked work waiting on dependencies</span></div>
-      <button class="mascot mascot-queue" type="button" aria-label="Queue cat" data-cat-message="Just chillin’ until the blocker moves.">
-        <img src="assets/cat-queue.webp" alt="Your cat lounging in the queue" />
-        <span class="cat-whisper">Just chillin’ until the blocker moves.</span>
+      <button class="mascot mascot-queue" type="button" aria-label="Queue cat">
+        <img src="assets/cat-queue.webp" data-remove-edge-white="true" alt="Your cat lounging in the queue" />
+        <span class="cat-whisper">Wake me when it’s unblocked.</span>
       </button>
       <div id="queue-list" class="workflow-stack"></div>
     </section>
@@ -90,82 +90,118 @@
   </main>
   <script src="app.js"></script>
   <script>
-    function removeConnectedWhiteBackground(img) {
+    const CAT_LINES = {
+      hero: ["Got another idea?", "Brew something weird ✦", "I found a spark."],
+      boss: ["Boss, your call.", "I need one decision.", "Approve? I brought a tie."],
+      work: ["Tiny paws. Big commits.", "On it.", "Reviewing the humans’ code… kidding."],
+      queue: ["Wake me when it’s unblocked.", "Still waiting…", "Queue life. Very demanding."]
+    };
+
+    function removeEdgeWhite(image) {
+      if (!image.dataset.removeEdgeWhite) return;
       const run = () => {
         try {
           const canvas = document.createElement('canvas');
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
           const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          ctx.drawImage(img, 0, 0);
+          ctx.drawImage(image, 0, 0);
           const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const { data } = frame;
+          const data = frame.data;
           const w = canvas.width;
           const h = canvas.height;
           const seen = new Uint8Array(w * h);
-          const queue = new Int32Array(w * h);
-          let head = 0;
-          let tail = 0;
-          const isWhite = (i) => {
-            const p = i * 4;
-            const r = data[p], g = data[p + 1], b = data[p + 2];
-            const hi = Math.max(r, g, b), lo = Math.min(r, g, b);
-            return lo >= 224 && hi - lo <= 34;
+          const queue = [];
+          const whiteish = (i) => data[i] > 224 && data[i + 1] > 224 && data[i + 2] > 224 && Math.max(data[i], data[i + 1], data[i + 2]) - Math.min(data[i], data[i + 1], data[i + 2]) < 20;
+          const push = (x, y) => {
+            const p = y * w + x;
+            if (seen[p]) return;
+            const i = p * 4;
+            if (!whiteish(i)) return;
+            seen[p] = 1;
+            queue.push(p);
           };
-          const add = (i) => {
-            if (i < 0 || i >= seen.length || seen[i] || !isWhite(i)) return;
-            seen[i] = 1;
-            queue[tail++] = i;
-          };
-          for (let x = 0; x < w; x++) { add(x); add((h - 1) * w + x); }
-          for (let y = 0; y < h; y++) { add(y * w); add(y * w + w - 1); }
-          while (head < tail) {
-            const i = queue[head++];
-            const x = i % w;
-            if (x > 0) add(i - 1);
-            if (x < w - 1) add(i + 1);
-            if (i >= w) add(i - w);
-            if (i < w * (h - 1)) add(i + w);
-          }
-          for (let i = 0; i < seen.length; i++) {
-            if (!seen[i]) continue;
-            const p = i * 4;
-            const whiteness = Math.min(data[p], data[p + 1], data[p + 2]);
-            data[p + 3] = whiteness > 246 ? 0 : Math.max(0, Math.min(255, (246 - whiteness) * 12));
+          for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+          for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+          for (let q = 0; q < queue.length; q++) {
+            const p = queue[q];
+            const x = p % w;
+            const y = Math.floor(p / w);
+            const i = p * 4;
+            data[i + 3] = 0;
+            if (x > 0) push(x - 1, y);
+            if (x < w - 1) push(x + 1, y);
+            if (y > 0) push(x, y - 1);
+            if (y < h - 1) push(x, y + 1);
           }
           ctx.putImageData(frame, 0, 0);
-          img.src = canvas.toDataURL('image/png');
-          img.dataset.removeWhite = 'done';
-        } catch (error) {
-          img.dataset.removeWhite = 'done';
-        }
+          image.src = canvas.toDataURL('image/png');
+          delete image.dataset.removeEdgeWhite;
+        } catch (_) {}
       };
-      if (img.complete && img.naturalWidth) run(); else img.addEventListener('load', run, { once: true });
+      if (image.complete) run(); else image.addEventListener('load', run, { once: true });
     }
 
-    document.querySelectorAll('img[data-remove-white="true"]').forEach(removeConnectedWhiteBackground);
+    document.querySelectorAll('.mascot img').forEach(removeEdgeWhite);
 
-    document.querySelectorAll('.mascot').forEach((cat) => {
-      cat.addEventListener('pointermove', (event) => {
-        const rect = cat.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / rect.width - .5;
-        const y = (event.clientY - rect.top) / rect.height - .5;
-        cat.style.setProperty('--cat-x', `${x * 18}px`);
-        cat.style.setProperty('--cat-y', `${y * 14}px`);
-        cat.style.setProperty('--cat-tilt', `${x * 6}deg`);
+    document.querySelectorAll('.cat-stage').forEach((stage) => {
+      const cat = stage.querySelector('.mascot');
+      if (!cat) return;
+      const key = cat.classList.contains('mascot-hero') ? 'hero' : cat.classList.contains('mascot-boss') ? 'boss' : cat.classList.contains('mascot-working') ? 'work' : 'queue';
+      const whisper = cat.querySelector('.cat-whisper');
+      let leaveTimer;
+
+      stage.addEventListener('pointermove', (event) => {
+        const rect = stage.getBoundingClientRect();
+        const x = (event.clientX - (rect.left + rect.width / 2)) / rect.width;
+        const y = (event.clientY - (rect.top + rect.height / 2)) / rect.height;
+        cat.style.setProperty('--cat-x', `${Math.max(-1, Math.min(1, x * 2)) * 7}px`);
+        cat.style.setProperty('--cat-y', `${Math.max(-1, Math.min(1, y * 2)) * 5}px`);
+        cat.style.setProperty('--cat-tilt', `${x * 2.4}deg`);
+        stage.classList.add('is-noticing');
+        clearTimeout(leaveTimer);
       });
-      cat.addEventListener('pointerleave', () => {
+
+      stage.addEventListener('pointerleave', () => {
         cat.style.removeProperty('--cat-x');
         cat.style.removeProperty('--cat-y');
         cat.style.removeProperty('--cat-tilt');
+        leaveTimer = setTimeout(() => stage.classList.remove('is-noticing'), 220);
       });
+
       cat.addEventListener('click', () => {
+        const lines = CAT_LINES[key];
+        whisper.textContent = lines[Math.floor(Math.random() * lines.length)];
         cat.classList.remove('is-booped');
         void cat.offsetWidth;
         cat.classList.add('is-booped');
-        window.setTimeout(() => cat.classList.remove('is-booped'), 800);
       });
     });
+
+    function wireContextualCatReactions() {
+      document.querySelectorAll('#attention .attention-card, #ai-team .workflow-card, #queue .workflow-card').forEach((card) => {
+        const stage = card.closest('.cat-stage');
+        const cat = stage?.querySelector('.mascot');
+        if (!stage || !cat) return;
+        card.addEventListener('pointerenter', () => {
+          stage.classList.add('is-reacting');
+          cat.style.setProperty('--react-x', '-10px');
+          cat.style.setProperty('--react-y', '8px');
+        });
+        card.addEventListener('pointerleave', () => {
+          stage.classList.remove('is-reacting');
+          cat.style.removeProperty('--react-x');
+          cat.style.removeProperty('--react-y');
+        });
+      });
+    }
+
+    const reactionObserver = new MutationObserver(wireContextualCatReactions);
+    ['attention-list', 'ai-team-list', 'queue-list'].forEach((id) => {
+      const node = document.getElementById(id);
+      if (node) reactionObserver.observe(node, { childList: true, subtree: true });
+    });
+    wireContextualCatReactions();
   </script>
 </body>
 </html>
