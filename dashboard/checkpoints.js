@@ -5,7 +5,14 @@ const checkpointTime = (value) => {
   return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
 };
 
-const checkpointKey = (project, issue) => `${project}#${issue}`;
+function ensureCheckpointStyles() {
+  if (document.querySelector('link[data-checkpoint-styles]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = './checkpoints.css';
+  link.dataset.checkpointStyles = 'true';
+  document.head.appendChild(link);
+}
 
 function findCard(project, issue) {
   const cards = [...document.querySelectorAll(".workflow-card, .attention-card")];
@@ -36,6 +43,7 @@ function checkpointMarkup(checkpoints) {
 }
 
 async function loadCheckpoints() {
+  ensureCheckpointStyles();
   try {
     const response = await fetch("./checkpoints.json", { cache: "no-store" });
     if (!response.ok) return;
