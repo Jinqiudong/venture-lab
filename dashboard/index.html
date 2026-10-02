@@ -23,10 +23,10 @@
   </header>
 
   <main class="shell" id="top">
-    <section class="hero cat-stage hero-cat-stage">
+    <section class="hero cat-stage hero-cat-stage" id="hero-stage">
       <div class="hero-copy">
         <div class="hero-badge">VENTURE LAB / PERSONAL R&D</div>
-        <h1>Idea<br />Cauldron</h1>
+        <h1><span class="hero-idea-word" id="hero-idea-word">Idea</span><br />Cauldron</h1>
         <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
         <div class="hero-actions">
           <a class="hero-action primary" href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">＋ New Idea</a>
@@ -34,12 +34,14 @@
         </div>
       </div>
       <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
-      <div class="hero-doodle" aria-hidden="true">let’s build<br />something cool ✦</div>
+      <div class="hero-doodle" aria-hidden="true">feed me<br />an idea ✦</div>
       <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot">
-        <img src="assets/cat-hero.webp" alt="Your cat reaching into the Idea Cauldron hero" />
+        <img src="assets/cat-hero-gpt.webp" alt="Your cat reaching across the Idea Cauldron title" />
+        <span class="cat-mouth-target" id="cat-mouth-target" aria-hidden="true"></span>
         <span class="cat-whisper">Got another idea?</span>
         <span class="cat-spark" aria-hidden="true">✦</span>
       </button>
+      <span class="idea-token" id="hero-idea-token" aria-hidden="true">Idea</span>
     </section>
 
     <section class="command-zone" aria-label="Dashboard search">
@@ -111,7 +113,7 @@
   <script src="app.js"></script>
   <script>
     const CAT_LINES = {
-      hero: ["Got another idea?", "Brew something weird ✦", "I found a spark."],
+      hero: ["mrrp. brewed ✦", "tasty idea.", "one more?"],
       boss: ["Boss, your call.", "I need one decision.", "Approve? I brought a tie."],
       work: ["Tiny paws. Big commits.", "On it.", "Reviewing the humans’ code… kidding."],
       queue: ["Wake me when it’s unblocked.", "Still waiting…", "Queue life. Very demanding."]
@@ -197,6 +199,66 @@
         cat.classList.add('is-booped');
       });
     });
+
+    const heroStage = document.getElementById('hero-stage');
+    const heroWord = document.getElementById('hero-idea-word');
+    const heroToken = document.getElementById('hero-idea-token');
+    const mouthTarget = document.getElementById('cat-mouth-target');
+    const heroCat = heroStage?.querySelector('.mascot-hero');
+    const heroWhisper = heroCat?.querySelector('.cat-whisper');
+    let ideaFlying = false;
+    let lastIdeaLaunch = 0;
+
+    function feedIdeaToCat() {
+      if (!heroStage || !heroWord || !heroToken || !mouthTarget || !heroCat || ideaFlying) return;
+      const now = performance.now();
+      if (now - lastIdeaLaunch < 1100) return;
+      lastIdeaLaunch = now;
+      ideaFlying = true;
+
+      const stageRect = heroStage.getBoundingClientRect();
+      const wordRect = heroWord.getBoundingClientRect();
+      const mouthRect = mouthTarget.getBoundingClientRect();
+      const startX = wordRect.left - stageRect.left + wordRect.width * .63;
+      const startY = wordRect.top - stageRect.top + wordRect.height * .52;
+      const endX = mouthRect.left - stageRect.left + mouthRect.width / 2;
+      const endY = mouthRect.top - stageRect.top + mouthRect.height / 2;
+      const dx = endX - startX;
+      const dy = endY - startY;
+
+      heroToken.style.left = `${startX}px`;
+      heroToken.style.top = `${startY}px`;
+      heroToken.style.opacity = '1';
+      heroStage.classList.add('is-feeding');
+
+      const animation = heroToken.animate([
+        { transform: 'translate(-50%, -50%) scale(.55) rotate(-5deg)', opacity: 0 },
+        { transform: 'translate(-50%, -50%) scale(1) rotate(2deg)', opacity: 1, offset: .13 },
+        { transform: `translate(calc(-50% + ${dx * .52}px), calc(-50% + ${dy * .30 - 26}px)) scale(1.05) rotate(-8deg)`, opacity: 1, offset: .55 },
+        { transform: `translate(calc(-50% + ${dx * .84}px), calc(-50% + ${dy * .76 - 10}px)) scale(.72) rotate(8deg)`, opacity: 1, offset: .82 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.08) rotate(18deg)`, opacity: 0 }
+      ], { duration: 980, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+
+      setTimeout(() => {
+        heroCat.classList.add('is-eating');
+        heroCat.classList.add('is-booped');
+        if (heroWhisper) heroWhisper.textContent = 'mrrp. brewed ✦';
+      }, 720);
+
+      animation.finished.finally(() => {
+        heroToken.style.opacity = '0';
+        heroToken.getAnimations().forEach((item) => item.cancel());
+        setTimeout(() => {
+          heroCat.classList.remove('is-eating', 'is-booped');
+          heroStage.classList.remove('is-feeding');
+          ideaFlying = false;
+        }, 460);
+      });
+    }
+
+    heroStage?.addEventListener('pointerenter', feedIdeaToCat);
+    heroWord?.addEventListener('pointerenter', feedIdeaToCat);
+    heroCat?.addEventListener('pointerenter', feedIdeaToCat);
 
     function wireContextualCatReactions() {
       document.querySelectorAll('#attention .attention-card, #ai-team .workflow-card, #queue .workflow-card').forEach((card) => {
