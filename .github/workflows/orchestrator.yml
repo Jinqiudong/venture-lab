@@ -15,7 +15,7 @@ on:
       - ".github/workflows/orchestrator.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: agent-orchestrator
@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_dispatch: ${{ steps.decide.outputs.should_dispatch }}
+      should_review: ${{ steps.decide.outputs.should_review }}
       repo: ${{ steps.decide.outputs.repo }}
       issue: ${{ steps.decide.outputs.issue }}
       project: ${{ steps.decide.outputs.project }}
@@ -43,6 +44,20 @@ jobs:
       - name: Decide next orchestration action
         id: decide
         run: python3 scripts/orchestrate.py
+
+  wake-review:
+    needs: decide
+    if: needs.decide.outputs.should_review == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake independent review cycle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
+            -f event_type='agent-review' \
+            -f 'client_payload[source]=agent-orchestrator'
+          echo "Dispatched agent-review event."
 
   build:
     needs: decide
@@ -161,6 +176,16 @@ jobs:
           PR_URL=$(gh pr create --repo "$TARGET_REPO" --base main --head "$BRANCH_NAME" --title "feat: $ISSUE_TITLE" --body-file "$BODY_FILE")
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Opened $PR_URL"
+
+      - name: Open review cycle after PR creation
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
+            -f event_type='agent-review' \
+            -f 'client_payload[source]=builder-pr-created'
+          echo "Dispatched agent-review event after Builder PR creation."
 
       - name: Report no-change Builder run
         if: steps.changes.outputs.has_changes != 'true'
