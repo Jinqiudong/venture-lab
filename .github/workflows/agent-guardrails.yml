@@ -1,0 +1,142 @@
+name: Agent Guardrails
+
+on:
+  workflow_run:
+    workflows: ["Agent Orchestrator", "Agent Review Cycle"]
+    types: [completed]
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  stop-stalled-runs:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop stalled agent runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          from datetime import datetime, timezone
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          data = json.loads(subprocess.check_output([
+              "gh", "api", f"repos/{repo}/actions/runs?status=in_progress&per_page=50"
+          ]))
+          now = datetime.now(timezone.utc)
+          limits = {"Agent Orchestrator": 35, "Agent Review Cycle": 50}
+          for run in data.get("workflow_runs", []):
+              name = run.get("name")
+              if name not in limits:
+                  continue
+              started = run.get("run_started_at") or run.get("created_at")
+              if not started:
+                  continue
+              dt = datetime.fromisoformat(started.replace("Z", "+00:00"))
+              age = (now - dt).total_seconds() / 60
+              if age <= limits[name]:
+                  continue
+              run_id = run["id"]
+              print(f"Cancelling stalled {name} run {run_id} after {age:.1f} minutes")
+              subprocess.run([
+                  "gh", "api", "--method", "POST",
+                  f"repos/{repo}/actions/runs/{run_id}/cancel"
+              ], check=False)
+          PY
+
+  report-failure:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          ref: feature/checkpoint-transparency
+
+      - name: Publish failure checkpoint
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_NAME: ${{ github.event.workflow_run.name }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, time
+          from pathlib import Path
+
+          run_id = os.environ["RUN_ID"]
+          run_name = os.environ["RUN_NAME"]
+          conclusion = os.environ["RUN_CONCLUSION"]
+          run_url = os.environ["RUN_URL"]
+          projects = json.loads(Path("dashboard/projects.json").read_text())["projects"]
+
+          def gh(*args, check=True):
+              proc = subprocess.run(["gh", *args], text=True, capture_output=True)
+              if check and proc.returncode:
+                  raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
+              return proc.stdout
+
+          def post(repo, number, target_kind, stage):
+              marker = f"<!-- venture-checkpoint:agent-failed:{run_id} -->"
+              existing = gh("api", f"repos/{repo}/issues/{number}/comments?per_page=100", "--jq", ".[].body", check=False)
+              if marker in existing:
+                  return True
+              title = "Builder failed" if run_name == "Agent Orchestrator" else "Agent review cycle failed"
+              body = (
+                  f"{marker}\n"
+                  f"### ❌ {title}\n\n"
+                  f"**Stage:** {stage}\n\n"
+                  f"**Result:** `{conclusion}`\n\n"
+                  f"**Impact:** the automated flow stopped before its next checkpoint.\n\n"
+                  f"**Next:** inspect the run, then retry once the cause is understood.\n\n"
+                  f"[View failed run]({run_url})"
+              )
+              gh("api", "--method", "POST", f"repos/{repo}/issues/{number}/comments", "-f", f"body={body}")
+              print(f"Posted failure checkpoint to {repo} #{number}")
+              return True
+
+          if run_name == "Agent Orchestrator":
+              marker = f"venture-checkpoint:builder-start:{run_id}"
+              for project in projects:
+                  repo = project["repo"]
+                  comments = gh("api", f"repos/{repo}/issues/comments?sort=created&direction=desc&per_page=100", check=False)
+                  if not comments:
+                      continue
+                  try:
+                      for comment in json.loads(comments):
+                          if marker not in (comment.get("body") or ""):
+                              continue
+                          issue_url = comment.get("issue_url") or ""
+                          number = int(issue_url.rstrip("/").split("/")[-1])
+                          post(repo, number, "issue", "Run Builder agent")
+                          raise SystemExit(0)
+                  except json.JSONDecodeError:
+                      pass
+              print("No Builder checkpoint marker found for failed run; nothing attached.")
+              raise SystemExit(0)
+
+          # Review-cycle failures: recover the selected repo/PR from completed run logs.
+          logs = ""
+          for _ in range(4):
+              proc = subprocess.run([
+                  "gh", "run", "view", run_id,
+                  "--repo", os.environ["GITHUB_REPOSITORY"], "--log"
+              ], text=True, capture_output=True)
+              if proc.returncode == 0:
+                  logs = proc.stdout
+                  break
+              time.sleep(5)
+          match = re.search(r"Selected\s+([\w.-]+/[\w.-]+)\s+PR\s+#(\d+)", logs)
+          if match:
+              repo, pr = match.group(1), int(match.group(2))
+              post(repo, pr, "pr", "Reviewer / QA / Fixer")
+          else:
+              print("Could not map failed review-cycle run to a PR; nothing attached.")
+          PY
