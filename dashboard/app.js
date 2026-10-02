@@ -195,4 +195,27 @@ async function loadDashboard() {
   }
 }
 
+async function loadHeroCat() {
+  const img = document.querySelector('.mascot-hero img');
+  if (!img) return;
+  const fallback = () => {
+    img.dataset.removeEdgeWhite = 'true';
+    img.src = 'assets/cat-hero.webp';
+    setTimeout(() => {
+      if (typeof removeEdgeWhite === 'function') removeEdgeWhite(img);
+    }, 0);
+  };
+  try {
+    const response = await fetch('./assets/cat-hero-gpt-fixed-small.b64', { cache: 'no-store' });
+    if (!response.ok) return fallback();
+    const b64 = (await response.text()).replace(/\s+/g, '');
+    if (!b64.startsWith('UklG')) return fallback();
+    img.onerror = fallback;
+    img.src = `data:image/webp;base64,${b64}`;
+  } catch (_) {
+    fallback();
+  }
+}
+
+loadHeroCat();
 loadDashboard();
