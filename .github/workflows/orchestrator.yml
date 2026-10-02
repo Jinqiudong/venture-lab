@@ -122,6 +122,24 @@ jobs:
             printf '%s\n' '- The workflow will commit and open the PR after you finish.'
           } > builder-prompt.md
 
+      - name: Publish Builder checkpoint
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          marker="<!-- venture-checkpoint:builder-start:${GITHUB_RUN_ID} -->"
+          if ! gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER/comments" --paginate --jq '.[].body' 2>/dev/null | grep -Fq "$marker"; then
+            BODY_FILE=$(mktemp)
+            {
+              printf '%s\n' "$marker"
+              printf '### 🛠 Builder started\n\n'
+              printf 'Implementing **#%s %s** from the canonical Issue contract.\n\n' "$ISSUE_NUMBER" "$ISSUE_TITLE"
+              printf '**Why now:** dependencies are satisfied and this is the next ready work item.\n\n'
+              printf '**Next checkpoint:** PR opened.\n\n'
+              printf '[View agent run](https://github.com/%s/actions/runs/%s)\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            } > "$BODY_FILE"
+            gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
+          fi
+
       - name: Run Builder agent
         id: codex
         uses: openai/codex-action@v1
@@ -182,7 +200,9 @@ jobs:
         run: |
           gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/review-cycle.yml/dispatches" \
             -f ref='main'
-          echo "Dispatched Agent Review Cycle after Builder PR creation."
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Review Cycle and Dashboard after Builder PR creation."
 
       - name: Report no-change Builder run
         if: steps.changes.outputs.has_changes != 'true'
