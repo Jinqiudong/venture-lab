@@ -16,10 +16,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: agent-orchestrator
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   decide:
@@ -47,17 +48,16 @@ jobs:
 
   wake-review:
     needs: decide
-    if: needs.decide.outputs.should_review == 'true' && !(github.event_name == 'repository_dispatch' && (github.event.client_payload.source == 'agent-orchestrator' || github.event.client_payload.source == 'builder-pr-created'))
+    if: needs.decide.outputs.should_review == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Wake independent review cycle
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
-            -f event_type='portfolio-refresh' \
-            -f 'client_payload[source]=agent-orchestrator'
-          echo "Dispatched portfolio-refresh for independent review."
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/review-cycle.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Agent Review Cycle directly."
 
   build:
     needs: decide
@@ -182,10 +182,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/dispatches" \
-            -f event_type='portfolio-refresh' \
-            -f 'client_payload[source]=builder-pr-created'
-          echo "Dispatched portfolio-refresh after Builder PR creation."
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/review-cycle.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Agent Review Cycle after Builder PR creation."
 
       - name: Report no-change Builder run
         if: steps.changes.outputs.has_changes != 'true'
