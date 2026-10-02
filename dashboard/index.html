@@ -11,13 +11,11 @@
 <body>
   <div class="noise"></div>
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="Idea Cauldron home">
-      <span class="sigil">◌</span>
-      <span>Idea Cauldron</span>
-    </a>
+    <a class="brand" href="#top" aria-label="Idea Cauldron home"><span class="sigil">◌</span><span>Idea Cauldron</span></a>
     <nav>
       <a href="#attention">Needs You</a>
-      <a href="#burner">On the Burner</a>
+      <a href="#ai-team">AI Team</a>
+      <a href="#queue">Queue</a>
       <a href="#projects">Projects</a>
       <a href="#vault">Idea Vault</a>
     </nav>
@@ -30,19 +28,11 @@
         <h1>Idea<br />Cauldron</h1>
         <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
       </div>
-      <div class="hero-orbit" aria-hidden="true">
-        <span class="orbit orbit-a"></span>
-        <span class="orbit orbit-b"></span>
-        <span class="orbit-core">✦</span>
-      </div>
+      <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
     </section>
 
     <section class="command-zone" aria-label="Dashboard search">
-      <div class="command-bar">
-        <span class="prompt">⌘</span>
-        <input id="command-search" type="search" placeholder="Search project, issue, PR, blocker…" autocomplete="off" />
-        <kbd>/</kbd>
-      </div>
+      <div class="command-bar"><span class="prompt">⌘</span><input id="command-search" type="search" placeholder="Search project, issue, PR, blocker…" autocomplete="off" /><kbd>/</kbd></div>
       <div class="quick-links">
         <button type="button" data-filter="AniDream">AniDream</button>
         <button type="button" data-filter="Digital You">Digital You</button>
@@ -52,67 +42,35 @@
     </section>
 
     <section id="attention" class="panel-section">
-      <div class="section-heading">
-        <div>
-          <span class="section-index">01</span>
-          <h2>Needs You</h2>
-        </div>
-        <span class="section-note">Decide · approve · start</span>
-      </div>
+      <div class="section-heading"><div><span class="section-index">01</span><h2>Needs You</h2></div><span class="section-note">Only decisions, experience review, credentials, and approvals</span></div>
       <div id="attention-list" class="attention-grid"></div>
     </section>
 
-    <section id="burner" class="panel-section">
-      <div class="section-heading">
-        <div>
-          <span class="section-index">02</span>
-          <h2>On the Burner</h2>
-        </div>
-        <span class="section-note">Issue → Branch → PR → CI → Review → Merge</span>
-      </div>
-      <div id="workflows" class="workflow-stack"></div>
+    <section id="ai-team" class="panel-section">
+      <div class="section-heading"><div><span class="section-index">02</span><h2>AI Team</h2></div><span class="section-note">Ready → Build → Review → QA → Human handoff</span></div>
+      <div id="ai-team-list" class="workflow-stack"></div>
+    </section>
+
+    <section id="queue" class="panel-section">
+      <div class="section-heading"><div><span class="section-index">03</span><h2>Queue</h2></div><span class="section-note">Blocked work waiting on dependencies</span></div>
+      <div id="queue-list" class="workflow-stack"></div>
     </section>
 
     <section id="projects" class="panel-section">
-      <div class="section-heading">
-        <div>
-          <span class="section-index">03</span>
-          <h2>Projects</h2>
-        </div>
-        <span class="section-note">Where each experiment stands</span>
-      </div>
+      <div class="section-heading"><div><span class="section-index">04</span><h2>Projects</h2></div><span class="section-note">Where each experiment stands</span></div>
       <div id="projects-grid" class="portfolio-grid"></div>
     </section>
 
     <section id="vault" class="panel-section vault-section">
-      <div class="section-heading">
-        <div>
-          <span class="section-index">04</span>
-          <h2>Idea Vault</h2>
-        </div>
-        <span class="section-note">Sparks waiting for a reason to exist</span>
-      </div>
+      <div class="section-heading"><div><span class="section-index">05</span><h2>Idea Vault</h2></div><span class="section-note">Sparks waiting for a reason to exist</span></div>
       <div class="vault-grid">
-        <article class="vault-card">
-          <span>INBOX</span>
-          <strong>Capture the spark</strong>
-          <p>New ideas start here before they earn a repository.</p>
-          <a href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">Open idea intake ↗</a>
-        </article>
-        <article class="vault-card muted">
-          <span>SOON</span>
-          <strong>Research / Validate / Park</strong>
-          <p>A lightweight board for ideas that are not ready to build yet.</p>
-        </article>
+        <article class="vault-card"><span>INBOX</span><strong>Capture the spark</strong><p>New ideas start here before they earn a repository.</p><a href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">Open idea intake ↗</a></article>
+        <article class="vault-card muted"><span>SOON</span><strong>Research / Validate / Park</strong><p>A lightweight board for ideas that are not ready to build yet.</p></article>
       </div>
     </section>
 
-    <footer>
-      <span>Idea Cauldron</span>
-      <span id="updated">Syncing…</span>
-    </footer>
+    <footer><span>Idea Cauldron</span><span id="updated">Syncing…</span></footer>
   </main>
-
   <script src="app.js"></script>
 </body>
 </html>
