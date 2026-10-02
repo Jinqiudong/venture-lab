@@ -1,0 +1,93 @@
+:root {
+  --success: #5ee58a;
+  --success-soft: rgba(94, 229, 138, .16);
+  --anidream: #9b8cff;
+  --digital-you: #55d6c2;
+}
+
+.project-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #777;
+  box-shadow: 0 0 12px rgba(255,255,255,.08);
+}
+
+.project-anidream .project-dot { background: var(--anidream); box-shadow: 0 0 12px rgba(155,140,255,.28); }
+.project-digital-you .project-dot { background: var(--digital-you); box-shadow: 0 0 12px rgba(85,214,194,.25); }
+
+.project-workflow-group {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #1e1e1e;
+  border-radius: 18px;
+  background: rgba(255,255,255,.012);
+}
+.project-workflow-group + .project-workflow-group { margin-top: 14px; }
+.project-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 4px 4px;
+}
+.project-group-head > div { display: flex; align-items: center; }
+.project-group-head strong { font-size: 12px; letter-spacing: .02em; }
+.project-group-head > span { color: #585858; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.project-workflow-cards { display: grid; gap: 10px; }
+
+.project-anidream.project-workflow-group { border-color: rgba(155,140,255,.18); }
+.project-digital-you.project-workflow-group { border-color: rgba(85,214,194,.16); }
+.project-anidream.workflow-card { border-left-color: rgba(155,140,255,.55); }
+.project-digital-you.workflow-card { border-left-color: rgba(85,214,194,.5); }
+
+.status-merged,
+.status-done {
+  color: var(--success);
+  border-color: rgba(94,229,138,.34);
+  background: var(--success-soft);
+}
+
+.workflow-card.is-complete {
+  border-color: rgba(94,229,138,.18);
+}
+.workflow-card.is-complete .workflow-foot strong { color: var(--success); }
+
+.pipeline-step.done { color: #85d79f; }
+.pipeline-step.done::before { background: rgba(94,229,138,.55); }
+.pipeline-step.done .dot {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: -2px;
+  color: #051009;
+  background: var(--success);
+  border-color: var(--success);
+  box-shadow: 0 0 14px rgba(94,229,138,.28);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.pipeline-step.current { color: #fff; }
+.pipeline-step.current .dot {
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 16px rgba(255,255,255,.42);
+}
+
+.workflow-card.is-blocked .pipeline-step.done .dot {
+  opacity: .72;
+}
+
+.attention-card.project-anidream { border-left: 2px solid rgba(155,140,255,.55); }
+.attention-card.project-digital-you { border-left: 2px solid rgba(85,214,194,.5); }
+.portfolio-card.project-anidream { border-top-color: rgba(155,140,255,.38); }
+.portfolio-card.project-digital-you { border-top-color: rgba(85,214,194,.34); }
+
+@media (max-width: 780px) {
+  .project-group-head { align-items: flex-start; gap: 8px; }
+  .project-group-head > span { text-align: right; }
+}
