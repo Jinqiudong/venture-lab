@@ -28,11 +28,17 @@
         <div class="hero-badge">VENTURE LAB / PERSONAL R&D</div>
         <h1>Idea<br />Cauldron</h1>
         <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
+        <div class="hero-actions">
+          <a class="hero-action primary" href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">＋ New Idea</a>
+          <a class="hero-action" href="#projects">Browse Projects →</a>
+        </div>
       </div>
       <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
+      <div class="hero-doodle" aria-hidden="true">let’s build<br />something cool ✦</div>
       <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot">
         <img src="assets/cat-hero.webp" alt="Your cat reaching into the Idea Cauldron hero" />
         <span class="cat-whisper">Got another idea?</span>
+        <span class="cat-spark" aria-hidden="true">✦</span>
       </button>
     </section>
 
@@ -46,34 +52,48 @@
       </div>
     </section>
 
-    <section id="attention" class="panel-section cat-stage human-cat-stage">
-      <div class="section-heading"><div><span class="section-index">01</span><h2>Needs You</h2></div><span class="section-note">Only decisions, experience review, credentials, and approvals</span></div>
-      <button class="mascot mascot-boss" type="button" aria-label="Boss cat">
-        <img src="assets/cat-boss.webp" data-remove-edge-white="true" alt="Your cat in a tie at the laptop" />
-        <span class="cat-whisper">Boss, your call.</span>
-      </button>
-      <div id="attention-list" class="attention-grid"></div>
-    </section>
+    <div class="status-board" aria-label="Work status board">
+      <section id="attention" class="panel-section cat-stage human-cat-stage status-panel status-panel-human">
+        <div class="section-heading">
+          <div><span class="section-index">01</span><h2>Needs You</h2><span class="section-count" id="attention-count">0</span></div>
+        </div>
+        <p class="section-description">Human decisions, experience review, credentials, and approvals.</p>
+        <button class="mascot mascot-boss" type="button" aria-label="Boss cat">
+          <img src="assets/cat-boss.webp" data-remove-edge-white="true" alt="Your cat in a tie at the laptop" />
+          <span class="cat-whisper">Boss, your call.</span>
+          <span class="cat-spark" aria-hidden="true">✦</span>
+        </button>
+        <div id="attention-list" class="attention-grid"></div>
+      </section>
 
-    <section id="ai-team" class="panel-section cat-stage work-cat-stage">
-      <div class="section-heading"><div><span class="section-index">02</span><h2>AI Team</h2></div><span class="section-note">Ready → Build → Review → QA → Human handoff</span></div>
-      <button class="mascot mascot-working" type="button" aria-label="Working cat">
-        <img src="assets/cat-working.webp" alt="Your cat walking through the active work area" />
-        <span class="cat-whisper">Tiny paws. Big commits.</span>
-      </button>
-      <div id="ai-team-list" class="workflow-stack"></div>
-    </section>
+      <section id="ai-team" class="panel-section cat-stage work-cat-stage status-panel status-panel-ai">
+        <div class="section-heading">
+          <div><span class="section-index">02</span><h2>AI Team</h2><span class="section-count" id="ai-team-count">0</span></div>
+        </div>
+        <p class="section-description">Agents are working, coding, reviewing, and testing.</p>
+        <button class="mascot mascot-working" type="button" aria-label="Working cat">
+          <img src="assets/cat-working.webp" alt="Your cat walking through the active work area" />
+          <span class="cat-whisper">Tiny paws. Big commits.</span>
+          <span class="cat-spark" aria-hidden="true">✦</span>
+        </button>
+        <div id="ai-team-list" class="workflow-stack"></div>
+      </section>
 
-    <section id="queue" class="panel-section cat-stage queue-cat-stage">
-      <div class="section-heading"><div><span class="section-index">03</span><h2>Queue</h2></div><span class="section-note">Blocked work waiting on dependencies</span></div>
-      <button class="mascot mascot-queue" type="button" aria-label="Queue cat">
-        <img src="assets/cat-queue.webp" data-remove-edge-white="true" alt="Your cat lounging in the queue" />
-        <span class="cat-whisper">Wake me when it’s unblocked.</span>
-      </button>
-      <div id="queue-list" class="workflow-stack"></div>
-    </section>
+      <section id="queue" class="panel-section cat-stage queue-cat-stage status-panel status-panel-queue">
+        <div class="section-heading">
+          <div><span class="section-index">03</span><h2>Queue</h2><span class="section-count" id="queue-count">0</span></div>
+        </div>
+        <p class="section-description">Blocked work waiting for its turn.</p>
+        <button class="mascot mascot-queue" type="button" aria-label="Queue cat">
+          <img src="assets/cat-queue.webp" data-remove-edge-white="true" alt="Your cat lounging in the queue" />
+          <span class="cat-whisper">Wake me when it’s unblocked.</span>
+          <span class="cat-spark" aria-hidden="true">✦</span>
+        </button>
+        <div id="queue-list" class="workflow-stack"></div>
+      </section>
+    </div>
 
-    <section id="projects" class="panel-section">
+    <section id="projects" class="panel-section projects-section">
       <div class="section-heading"><div><span class="section-index">04</span><h2>Projects</h2></div><span class="section-note">Where each experiment stands</span></div>
       <div id="projects-grid" class="portfolio-grid"></div>
     </section>
@@ -180,6 +200,8 @@
 
     function wireContextualCatReactions() {
       document.querySelectorAll('#attention .attention-card, #ai-team .workflow-card, #queue .workflow-card').forEach((card) => {
+        if (card.dataset.catWired) return;
+        card.dataset.catWired = 'true';
         const stage = card.closest('.cat-stage');
         const cat = stage?.querySelector('.mascot');
         if (!stage || !cat) return;
