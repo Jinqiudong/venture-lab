@@ -1,0 +1,52 @@
+name: New Venture Idea
+description: Capture a new product or business idea before deciding whether it deserves a standalone project.
+title: "[Idea] "
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / unmet need
+      description: What real problem or desire does this idea address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: user
+    attributes:
+      label: Target user
+      description: Who would care enough to use or pay for this?
+    validations:
+      required: true
+
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Product hypothesis
+      description: What is the proposed solution and why might it work?
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / signals
+      description: What observations, personal pain, market signals, competitors, or data support the idea?
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Cheapest next validation
+      description: What is the fastest way to reduce uncertainty before building?
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Initial stage
+      options:
+        - IDEA
+        - RESEARCH
+        - VALIDATE
+        - PARKED
+    validations:
+      required: true
