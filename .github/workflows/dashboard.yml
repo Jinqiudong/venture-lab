@@ -11,11 +11,13 @@ on:
     paths:
       - "dashboard/**"
       - "scripts/generate_dashboard.py"
+      - "scripts/generate_checkpoints.py"
       - ".github/workflows/dashboard.yml"
   pull_request:
     paths:
       - "dashboard/**"
       - "scripts/generate_dashboard.py"
+      - "scripts/generate_checkpoints.py"
       - ".github/workflows/dashboard.yml"
 
 permissions:
@@ -40,8 +42,29 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/generate_dashboard.py
 
+      - name: Generate checkpoint notes
+        env:
+          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/generate_checkpoints.py
+
+      - name: Attach checkpoint UI
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("dashboard/index.html")
+          text = path.read_text()
+          marker = '<script src="app.js"></script>'
+          addition = marker + '\n  <script src="checkpoints.js"></script>'
+          if 'checkpoints.js' not in text:
+              text = text.replace(marker, addition)
+          path.write_text(text)
+          PY
+
       - name: Validate generated JSON
-        run: python3 -m json.tool dashboard/data.json > /dev/null
+        run: |
+          python3 -m json.tool dashboard/data.json > /dev/null
+          python3 -m json.tool dashboard/checkpoints.json > /dev/null
 
       - name: Configure Pages
         if: github.event_name != 'pull_request'

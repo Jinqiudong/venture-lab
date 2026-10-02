@@ -1,0 +1,26 @@
+name: Checkpoint Dashboard Refresh
+
+on:
+  workflow_run:
+    workflows: ["Agent Orchestrator", "Agent Review Cycle"]
+    types: [completed]
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: checkpoint-dashboard-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh Idea Cauldron checkpoint feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Portfolio Dashboard after agent checkpoint cycle."
