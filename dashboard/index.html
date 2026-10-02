@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Venture Lab portfolio dashboard" />
+  <meta name="description" content="Venture Lab workflow cockpit" />
   <title>My AI Ventures</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,30 +12,47 @@
     <header class="hero">
       <div>
         <p class="eyebrow">VENTURE LAB</p>
-        <h1>My AI Ventures</h1>
-        <p class="subtitle">A read-only control center for project health, engineering flow, and decisions that need attention.</p>
+        <h1>Workflow Cockpit</h1>
+        <p class="subtitle">See what needs you, what is moving, and what is blocked across every AI venture.</p>
       </div>
-      <div class="updated" id="updated">Refreshing portfolio…</div>
+      <div class="updated" id="updated">Refreshing…</div>
     </header>
 
     <section class="attention-section">
       <div class="section-heading">
-        <h2>Needs My Attention</h2>
-        <span>Human decisions and next actions</span>
+        <div>
+          <p class="section-kicker">01</p>
+          <h2>Needs You</h2>
+        </div>
+        <span>Only decisions, approvals, and starts that require a human</span>
       </div>
       <div id="attention" class="attention-grid"></div>
     </section>
 
     <section>
       <div class="section-heading">
-        <h2>Portfolio</h2>
-        <span>Live GitHub signals + lightweight strategy metadata</span>
+        <div>
+          <p class="section-kicker">02</p>
+          <h2>Active Workflows</h2>
+        </div>
+        <span>Issue → Branch → PR → CI → Review → Merge</span>
       </div>
-      <div id="projects" class="project-grid"></div>
+      <div id="workflows" class="workflow-stack"></div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">03</p>
+          <h2>Portfolio Overview</h2>
+        </div>
+        <span>Compact project-level context</span>
+      </div>
+      <div id="projects" class="portfolio-grid"></div>
     </section>
 
     <footer>
-      Product repositories remain the source of truth. Venture Lab only aggregates status.
+      Product repositories are the source of truth. Venture Lab is a read-only operating view.
     </footer>
   </main>
   <script src="app.js"></script>
