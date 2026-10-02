@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from orchestrator.state import classify_stage, first_ready
 
-ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "dashboard" / "data.json"
 
 
@@ -15,7 +19,12 @@ def main() -> None:
 
     data = json.loads(DATA_PATH.read_text())
     items = data.get("work_items", [])
-    active = [item for item in items if classify_stage(item.get("workflow_stage", "blocked")) == "ai_team" and item.get("workflow_stage") != "ready"]
+    active = [
+        item
+        for item in items
+        if classify_stage(item.get("workflow_stage", "blocked")) == "ai_team"
+        and item.get("workflow_stage") != "ready"
+    ]
     next_ready = None if active else first_ready(items)
 
     decision = {
