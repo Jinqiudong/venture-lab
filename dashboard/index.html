@@ -3,58 +3,115 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Venture Lab workflow cockpit" />
-  <title>My AI Ventures</title>
+  <meta name="description" content="Idea Cauldron — ideas, builds, and next moves." />
+  <title>Idea Cauldron</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">VENTURE LAB</p>
-        <h1>Workflow Cockpit</h1>
-        <p class="subtitle">See what needs you, what is moving, and what is blocked across every AI venture.</p>
-      </div>
-      <div class="updated" id="updated">Refreshing…</div>
-    </header>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Idea Cauldron home">
+      <span class="sigil">◌</span>
+      <span>Idea Cauldron</span>
+    </a>
+    <nav>
+      <a href="#attention">Needs You</a>
+      <a href="#burner">On the Burner</a>
+      <a href="#projects">Projects</a>
+      <a href="#vault">Idea Vault</a>
+    </nav>
+  </header>
 
-    <section class="attention-section">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">01</p>
-          <h2>Needs You</h2>
-        </div>
-        <span>Only decisions, approvals, and starts that require a human</span>
+  <main class="shell" id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="hero-badge">VENTURE LAB / PERSONAL R&D</div>
+        <h1>Idea<br />Cauldron</h1>
+        <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
       </div>
-      <div id="attention" class="attention-grid"></div>
+      <div class="hero-orbit" aria-hidden="true">
+        <span class="orbit orbit-a"></span>
+        <span class="orbit orbit-b"></span>
+        <span class="orbit-core">✦</span>
+      </div>
     </section>
 
-    <section>
+    <section class="command-zone" aria-label="Dashboard search">
+      <div class="command-bar">
+        <span class="prompt">⌘</span>
+        <input id="command-search" type="search" placeholder="Search project, issue, PR, blocker…" autocomplete="off" />
+        <kbd>/</kbd>
+      </div>
+      <div class="quick-links">
+        <button type="button" data-filter="AniDream">AniDream</button>
+        <button type="button" data-filter="Digital You">Digital You</button>
+        <button type="button" data-filter="Blocked">Blocked</button>
+        <button type="button" data-filter="Review">Review</button>
+      </div>
+    </section>
+
+    <section id="attention" class="panel-section">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">02</p>
-          <h2>Active Workflows</h2>
+          <span class="section-index">01</span>
+          <h2>Needs You</h2>
         </div>
-        <span>Issue → Branch → PR → CI → Review → Merge</span>
+        <span class="section-note">Decide · approve · start</span>
+      </div>
+      <div id="attention-list" class="attention-grid"></div>
+    </section>
+
+    <section id="burner" class="panel-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">02</span>
+          <h2>On the Burner</h2>
+        </div>
+        <span class="section-note">Issue → Branch → PR → CI → Review → Merge</span>
       </div>
       <div id="workflows" class="workflow-stack"></div>
     </section>
 
-    <section>
+    <section id="projects" class="panel-section">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">03</p>
-          <h2>Portfolio Overview</h2>
+          <span class="section-index">03</span>
+          <h2>Projects</h2>
         </div>
-        <span>Compact project-level context</span>
+        <span class="section-note">Where each experiment stands</span>
       </div>
-      <div id="projects" class="portfolio-grid"></div>
+      <div id="projects-grid" class="portfolio-grid"></div>
+    </section>
+
+    <section id="vault" class="panel-section vault-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">04</span>
+          <h2>Idea Vault</h2>
+        </div>
+        <span class="section-note">Sparks waiting for a reason to exist</span>
+      </div>
+      <div class="vault-grid">
+        <article class="vault-card">
+          <span>INBOX</span>
+          <strong>Capture the spark</strong>
+          <p>New ideas start here before they earn a repository.</p>
+          <a href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">Open idea intake ↗</a>
+        </article>
+        <article class="vault-card muted">
+          <span>SOON</span>
+          <strong>Research / Validate / Park</strong>
+          <p>A lightweight board for ideas that are not ready to build yet.</p>
+        </article>
+      </div>
     </section>
 
     <footer>
-      Product repositories are the source of truth. Venture Lab is a read-only operating view.
+      <span>Idea Cauldron</span>
+      <span id="updated">Syncing…</span>
     </footer>
   </main>
+
   <script src="app.js"></script>
 </body>
 </html>
