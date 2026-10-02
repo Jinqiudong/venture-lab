@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -11,6 +12,16 @@ if str(ROOT) not in sys.path:
 from orchestrator.state import classify_stage, first_ready
 
 DATA_PATH = ROOT / "dashboard" / "data.json"
+
+
+def write_github_output(values: dict[str, str]) -> None:
+    output_path = os.getenv("GITHUB_OUTPUT")
+    if not output_path:
+        return
+    with open(output_path, "a", encoding="utf-8") as handle:
+        for key, value in values.items():
+            safe = str(value).replace("\n", " ").replace("\r", " ")
+            handle.write(f"{key}={safe}\n")
 
 
 def main() -> None:
@@ -40,6 +51,14 @@ def main() -> None:
         "next_ready": None,
     }
 
+    outputs = {
+        "should_dispatch": "false",
+        "repo": "",
+        "issue": "",
+        "project": "",
+        "title": "",
+    }
+
     if next_ready:
         decision["next_ready"] = {
             "project": next_ready.get("project_name"),
@@ -48,7 +67,17 @@ def main() -> None:
             "title": next_ready.get("title"),
             "action": "dispatch_builder",
         }
+        outputs.update(
+            {
+                "should_dispatch": "true",
+                "repo": next_ready.get("repo") or "",
+                "issue": str(next_ready.get("issue") or ""),
+                "project": next_ready.get("project_name") or "",
+                "title": next_ready.get("title") or "",
+            }
+        )
 
+    write_github_output(outputs)
     print(json.dumps(decision, ensure_ascii=False, indent=2))
 
 
