@@ -1,55 +1,64 @@
-.cat-stage { position: relative; isolation: isolate; }
-.mascot { --cat-x: 0px; --cat-y: 0px; --cat-tilt: 0deg; position: absolute; z-index: 5; border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 18px 28px rgba(0,0,0,.55)); transition: transform .28s cubic-bezier(.2,.9,.25,1), filter .28s ease, opacity .2s ease; }
-.mascot img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; transform: translate(var(--cat-x), var(--cat-y)) rotate(var(--cat-tilt)); transition: transform .12s ease-out; }
-.mascot:hover { transform: translateY(-5px) scale(1.07); filter: drop-shadow(0 24px 36px rgba(0,0,0,.7)) drop-shadow(0 0 18px rgba(255,255,255,.08)); }
+.cat-stage { position: relative; isolation: isolate; overflow: visible; }
+.mascot { --cat-x: 0px; --cat-y: 0px; --cat-tilt: 0deg; position: absolute; z-index: 6; border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; filter: drop-shadow(0 18px 28px rgba(0,0,0,.55)); transition: transform .32s cubic-bezier(.2,.9,.25,1), filter .28s ease; will-change: transform; }
+.mascot::after { content: "✦"; position: absolute; right: 8%; top: 8%; color: #fff; font-size: 14px; opacity: 0; transform: scale(.4) rotate(-12deg); transition: opacity .18s ease, transform .28s cubic-bezier(.2,.9,.25,1); text-shadow: 0 0 14px rgba(255,255,255,.55); pointer-events: none; }
+.mascot:hover::after, .mascot:focus-visible::after, .mascot.is-booped::after { opacity: .9; transform: scale(1) rotate(8deg); }
+.mascot img { display: block; width: 100%; height: auto; pointer-events: none; user-select: none; transform: translate(var(--cat-x), var(--cat-y)) rotate(var(--cat-tilt)); transition: transform .11s ease-out, opacity .16s ease; }
+.mascot img[data-remove-white="true"] { opacity: 0; }
+.mascot img[data-remove-white="done"] { opacity: 1; }
+.mascot:hover { transform: translateY(-8px) scale(1.12); filter: drop-shadow(0 26px 38px rgba(0,0,0,.72)) drop-shadow(0 0 20px rgba(255,255,255,.10)); }
 .mascot:focus-visible { outline: 1px solid #666; outline-offset: 8px; border-radius: 16px; }
-.cat-whisper { position: absolute; z-index: 8; max-width: 190px; padding: 8px 10px; border: 1px solid #333; border-radius: 10px; color: #ddd; background: rgba(9,9,9,.88); backdrop-filter: blur(12px); font: 700 10px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .02em; opacity: 0; transform: translateY(6px) scale(.96); pointer-events: none; transition: opacity .18s ease, transform .18s ease; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.cat-whisper { position: absolute; z-index: 10; max-width: 210px; padding: 9px 11px; border: 1px solid #3b3b3b; border-radius: 12px; color: #efefef; background: rgba(7,7,7,.92); backdrop-filter: blur(14px); font: 700 10px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .02em; opacity: 0; transform: translateY(9px) scale(.92); pointer-events: none; transition: opacity .18s ease, transform .22s cubic-bezier(.2,.9,.25,1); box-shadow: 0 16px 34px rgba(0,0,0,.52); }
 .mascot:hover .cat-whisper, .mascot:focus-visible .cat-whisper, .mascot.is-booped .cat-whisper { opacity: 1; transform: translateY(0) scale(1); }
-.mascot.is-booped img { animation: catBoop .52s cubic-bezier(.2,.8,.2,1); }
-@keyframes catBoop { 0% { transform: scale(1) rotate(0); } 35% { transform: scale(1.12) rotate(-2deg); } 65% { transform: scale(.98) rotate(1deg); } 100% { transform: scale(1) rotate(0); } }
+.mascot.is-booped img { animation: catBoop .58s cubic-bezier(.2,.8,.2,1); }
+@keyframes catBoop { 0% { transform: scale(1) rotate(0); } 30% { transform: scale(1.16) rotate(-3deg); } 62% { transform: scale(.97) rotate(2deg); } 100% { transform: scale(1) rotate(0); } }
 
+/* Hero: paw reaches toward the title, but the readable title block stays clear. */
 .hero-cat-stage { overflow: visible; }
-.hero-copy { position: relative; z-index: 3; }
-.mascot-hero { right: -24px; bottom: -18px; width: clamp(190px, 25vw, 300px); transform-origin: 68% 78%; }
-.mascot-hero img { transform-origin: 70% 80%; }
-.mascot-hero .cat-whisper { left: -54px; top: 24%; }
-.mascot-hero:hover { transform: translate(-8px,-8px) scale(1.11) rotate(-1deg); }
+.hero-copy { position: relative; z-index: 3; max-width: 72%; }
+.hero-orbit { z-index: 1; }
+.mascot-hero { right: 0; bottom: 4px; width: clamp(210px, 25vw, 310px); transform-origin: 66% 76%; }
+.mascot-hero .cat-whisper { left: -48px; top: 16%; }
+.mascot-hero:hover { transform: translate(-10px,-10px) scale(1.15) rotate(-1.2deg); }
 .hero h1 { position: relative; z-index: 2; }
-.hero h1::after { content: ""; position: absolute; right: -8%; bottom: 4%; width: 32%; height: 1px; background: linear-gradient(90deg, transparent, #555, transparent); opacity: .65; }
+.hero h1::after { content: ""; position: absolute; right: -6%; bottom: 4%; width: 28%; height: 1px; background: linear-gradient(90deg, transparent, #555, transparent); opacity: .55; }
 
-.human-cat-stage { padding-top: 46px; }
-.mascot-boss { right: 8px; top: 4px; width: clamp(105px, 13vw, 150px); transform-origin: 50% 100%; }
-.mascot-boss .cat-whisper { right: 72%; top: 18%; }
-.mascot-boss:hover { transform: translateY(-4px) scale(1.06) rotate(1deg); }
-.human-cat-stage .section-heading { padding-right: 150px; }
+/* Needs You: small executive cat sits just outside the card edge. */
+.human-cat-stage { padding-top: 36px; }
+.mascot-boss { right: -38px; top: 74px; width: clamp(86px, 9vw, 112px); transform-origin: 50% 100%; }
+.mascot-boss .cat-whisper { right: 74%; top: 10%; min-width: 112px; }
+.mascot-boss:hover { transform: translate(-7px,-7px) scale(1.10) rotate(1.5deg); }
 
-.work-cat-stage { padding-top: 58px; }
-.mascot-working { right: 7%; top: -4px; width: clamp(112px, 14vw, 165px); transform-origin: 50% 80%; }
-.mascot-working .cat-whisper { right: 68%; top: 22%; }
-.mascot-working:hover { transform: translate(-10px,5px) scale(1.09) rotate(-2deg); }
-.work-cat-stage .section-heading { padding-right: 160px; }
-.work-cat-stage::after { content: "···"; position: absolute; right: 2%; top: 78px; color: #353535; letter-spacing: 10px; font-size: 18px; transform: rotate(-8deg); }
+/* AI Team: walking cat crosses the card border, never the heading or status text. */
+.work-cat-stage { padding-top: 40px; }
+.mascot-working { right: -54px; top: 112px; width: clamp(96px, 10vw, 126px); transform-origin: 50% 82%; }
+.mascot-working .cat-whisper { right: 70%; top: 18%; min-width: 178px; }
+.mascot-working:hover { transform: translate(-14px,5px) scale(1.14) rotate(-2.5deg); }
+.work-cat-stage::after { content: "···"; position: absolute; right: -8px; top: 112px; color: #303030; letter-spacing: 9px; font-size: 15px; transform: rotate(-8deg); }
 
-.queue-cat-stage { padding-top: 50px; overflow: visible; }
-.mascot-queue { right: 0; top: 4px; width: clamp(150px, 20vw, 235px); transform-origin: 78% 65%; }
-.mascot-queue .cat-whisper { right: 72%; top: 4%; min-width: 165px; }
-.mascot-queue:hover { transform: translate(-5px,-2px) scale(1.07) rotate(.8deg); }
-.queue-cat-stage .section-heading { padding-right: 220px; }
+/* Queue: lounging cat rests on the outer frame instead of covering the label. */
+.queue-cat-stage { padding-top: 40px; }
+.mascot-queue { right: -62px; top: 104px; width: clamp(150px, 16vw, 205px); transform-origin: 76% 65%; }
+.mascot-queue .cat-whisper { right: 72%; top: 0; min-width: 172px; }
+.mascot-queue:hover { transform: translate(-9px,-5px) scale(1.10) rotate(1deg); }
 
 @media (min-width: 980px) {
-  .mascot-hero { right: -10px; }
-  .hero-orbit { opacity: .4; transform: translateX(-40px); }
+  .hero-orbit { opacity: .32; transform: translateX(-24px); }
+}
+@media (max-width: 1180px) {
+  .mascot-boss { right: -12px; }
+  .mascot-working { right: -16px; }
+  .mascot-queue { right: -18px; }
 }
 @media (max-width: 780px) {
-  .mascot-hero { width: 150px; right: -8px; bottom: 12px; opacity: .9; }
-  .mascot-hero .cat-whisper { left: auto; right: 60%; top: 8%; }
-  .human-cat-stage .section-heading, .work-cat-stage .section-heading, .queue-cat-stage .section-heading { padding-right: 0; }
-  .mascot-boss, .mascot-working, .mascot-queue { position: relative; display: block; right: auto; top: auto; margin: -8px 0 6px auto; }
-  .mascot-boss { width: 92px; }
-  .mascot-working { width: 105px; }
-  .mascot-queue { width: 145px; }
+  .hero-copy { max-width: 100%; }
+  .mascot-hero { width: 142px; right: -4px; bottom: 18px; opacity: .94; }
+  .mascot-hero .cat-whisper { left: auto; right: 56%; top: 6%; }
+  .mascot-boss, .mascot-working, .mascot-queue { position: relative; display: block; right: auto; top: auto; margin: -4px 0 8px auto; }
+  .mascot-boss { width: 82px; }
+  .mascot-working { width: 96px; }
+  .mascot-queue { width: 132px; }
   .cat-whisper { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mascot, .mascot img, .cat-whisper { transition: none !important; animation: none !important; }
+  .mascot, .mascot img, .cat-whisper, .mascot::after { transition: none !important; animation: none !important; }
 }
