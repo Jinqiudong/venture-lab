@@ -51,6 +51,21 @@
   margin-top: 8px;
 }
 
+/* Needs You gets a dedicated mascot rail above the task cards. */
+.status-panel-human {
+  padding-top: 26px;
+}
+.status-panel-human .section-heading,
+.status-panel-human .section-description {
+  padding-right: 150px;
+}
+.status-panel-human .section-description {
+  max-width: min(760px, calc(100% - 160px));
+}
+.status-panel-human .attention-grid {
+  margin-top: 58px;
+}
+
 /* Full-width cards read like a work queue rather than narrow dashboard tiles. */
 .status-panel .project-workflow-group {
   padding: 14px;
@@ -101,6 +116,8 @@
   white-space: nowrap;
 }
 .status-panel .attention-card > a {
+  position: relative;
+  z-index: 6;
   flex: 0 0 auto;
   padding: 8px 11px;
   border-radius: 9px;
@@ -110,11 +127,15 @@
   margin-left: auto;
 }
 
-/* Mascots perch at the section edge, outside the main reading lane. */
+/* Mascots perch in the section header, never in the task reading lane. */
 .mascot-boss {
-  width: 104px;
-  right: 26px;
-  top: -18px;
+  width: 96px;
+  right: 28px;
+  top: 18px;
+}
+.mascot-boss .cat-whisper {
+  right: 72%;
+  top: -6px;
 }
 .mascot-working {
   width: 112px;
@@ -129,7 +150,7 @@
 
 /* Context reactions stay subtle so they never drift onto text. */
 .human-cat-stage.is-reacting .mascot-boss {
-  transform: translate(-4px,5px) rotate(-.5deg);
+  transform: translate(-2px,3px) rotate(-.35deg);
 }
 .work-cat-stage.is-reacting .mascot-working {
   transform: translate(-5px,6px) rotate(-1.2deg) scale(1.012);
@@ -157,10 +178,17 @@
   .status-panel .section-description {
     max-width: calc(100% - 126px);
   }
+  .status-panel-human .section-heading,
+  .status-panel-human .section-description {
+    padding-right: 132px;
+  }
+  .status-panel-human .attention-grid {
+    margin-top: 50px;
+  }
   .mascot-boss {
-    width: 92px;
+    width: 86px;
     right: 18px;
-    top: -16px;
+    top: 16px;
   }
   .mascot-working {
     width: 100px;
@@ -204,6 +232,13 @@
     max-width: calc(100% - 78px);
     margin-bottom: 14px;
   }
+  .status-panel-human .section-heading,
+  .status-panel-human .section-description {
+    padding-right: 88px;
+  }
+  .status-panel-human .attention-grid {
+    margin-top: 36px;
+  }
   .status-panel .attention-card,
   .status-panel .workflow-card {
     padding: 14px;
@@ -224,9 +259,9 @@
   }
 
   .mascot-boss {
-    width: 70px;
+    width: 66px;
     right: 8px;
-    top: -10px;
+    top: 16px;
   }
   .mascot-working {
     width: 76px;
@@ -237,6 +272,9 @@
     width: 88px;
     right: 2px;
     top: 46px;
+  }
+  .mascot-boss .cat-whisper {
+    display: none;
   }
 }
 
@@ -257,6 +295,13 @@
   .status-panel .section-description {
     max-width: calc(100% - 62px);
   }
+  .status-panel-human .section-heading,
+  .status-panel-human .section-description {
+    padding-right: 70px;
+  }
+  .status-panel-human .attention-grid {
+    margin-top: 30px;
+  }
   .status-panel .workflow-head {
     flex-direction: row;
     align-items: flex-start;
@@ -268,9 +313,9 @@
     margin-left: 0;
   }
   .mascot-boss {
-    width: 60px;
+    width: 58px;
     right: 7px;
-    top: -6px;
+    top: 18px;
   }
   .mascot-working {
     width: 64px;
