@@ -36,11 +36,12 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertTrue(state.auto_fix_allowed)
 
     def test_retry_cap_stops_automation(self):
+        shas = ["abc0001", "abc0002", "abc0003"]
         comments = [
-            f"<!-- venture-fix-cycle:{i} sha:abc{i} -->"
+            f"<!-- venture-fix-cycle:{i} sha:{shas[i - 1]} -->"
             for i in range(1, MAX_AUTO_FIX_CYCLES + 1)
         ]
-        state = classify_runtime(comments, "latest01")
+        state = classify_runtime(comments, "fedcba9")
         self.assertEqual(state.fix_cycles, MAX_AUTO_FIX_CYCLES)
         self.assertTrue(state.stopped)
         self.assertEqual(state.stage, "human_handoff")
