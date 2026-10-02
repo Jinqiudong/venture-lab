@@ -36,6 +36,9 @@ def main() -> None:
         if classify_stage(item.get("workflow_stage", "blocked")) == "ai_team"
         and item.get("workflow_stage") != "ready"
     ]
+    review_pending = [
+        item for item in active if item.get("workflow_stage") in {"review", "reviewing", "qa", "changes_requested"}
+    ]
     next_ready = None if active else first_ready(items)
 
     decision = {
@@ -48,11 +51,13 @@ def main() -> None:
             }
             for item in active
         ],
+        "review_wakeup": bool(review_pending),
         "next_ready": None,
     }
 
     outputs = {
         "should_dispatch": "false",
+        "should_review": "true" if review_pending else "false",
         "repo": "",
         "issue": "",
         "project": "",
