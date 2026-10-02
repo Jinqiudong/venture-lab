@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run runtime guard unit tests
-        run: python -m pytest -q tests/test_runtime.py
+        run: python -m unittest -q tests.test_runtime
 
       - name: Check runtime configuration
         id: config
