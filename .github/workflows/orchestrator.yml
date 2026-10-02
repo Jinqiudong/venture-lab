@@ -12,13 +12,19 @@ permissions:
 
 concurrency:
   group: agent-orchestrator
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   decide:
     runs-on: ubuntu-latest
+    outputs:
+      should_dispatch: ${{ steps.decide.outputs.should_dispatch }}
+      repo: ${{ steps.decide.outputs.repo }}
+      issue: ${{ steps.decide.outputs.issue }}
+      project: ${{ steps.decide.outputs.project }}
+      title: ${{ steps.decide.outputs.title }}
     steps:
-      - name: Checkout
+      - name: Checkout control plane
         uses: actions/checkout@v4
 
       - name: Refresh project state
@@ -28,8 +34,131 @@ jobs:
         run: python3 scripts/generate_dashboard.py
 
       - name: Decide next orchestration action
+        id: decide
         run: python3 scripts/orchestrate.py
 
-      - name: Phase 1 guardrail
+  build:
+    needs: decide
+    if: needs.decide.outputs.should_dispatch == 'true'
+    runs-on: ubuntu-latest
+    env:
+      TARGET_REPO: ${{ needs.decide.outputs.repo }}
+      ISSUE_NUMBER: ${{ needs.decide.outputs.issue }}
+      PROJECT_NAME: ${{ needs.decide.outputs.project }}
+      ISSUE_TITLE: ${{ needs.decide.outputs.title }}
+      BRANCH_NAME: agent/issue-${{ needs.decide.outputs.issue }}
+    steps:
+      - name: Validate agent runtime configuration
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
         run: |
-          echo "Phase 1 is decision-only. Builder dispatch and autonomous PR creation are intentionally disabled until Phase 2."
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is not configured in venture-lab Actions secrets." >&2
+            exit 1
+          fi
+          if [ -z "$AGENT_GITHUB_TOKEN" ]; then
+            echo "AGENT_GITHUB_TOKEN is not configured in venture-lab Actions secrets." >&2
+            exit 1
+          fi
+
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+        with:
+          path: control-plane
+
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ needs.decide.outputs.repo }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+
+      - name: Prepare implementation branch
+        working-directory: target
+        run: |
+          git fetch origin main
+          git checkout -B "$BRANCH_NAME" origin/main
+
+      - name: Build agent prompt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          {
+            cat control-plane/agents/builder.md
+            printf '\n\n---\n\n# Assigned work\n\n'
+            printf 'Project: %s\n' "$PROJECT_NAME"
+            printf 'Repository: %s\n' "$TARGET_REPO"
+            printf 'Issue: #%s\n' "$ISSUE_NUMBER"
+            printf 'Title: %s\n\n' "$ISSUE_TITLE"
+            printf '## Issue body\n\n%s\n' "$ISSUE_BODY"
+            printf '\n## Orchestration constraints\n\n'
+            printf '%s\n' '- Work only inside the checked-out repository.'
+            printf '%s\n' '- Do not create, merge, or approve a pull request yourself.'
+            printf '%s\n' '- Do not access GitHub credentials or secrets.'
+            printf '%s\n' '- The workflow will commit and open the PR after you finish.'
+          } > builder-prompt.md
+
+      - name: Run Builder agent
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          working-directory: target
+          prompt-file: builder-prompt.md
+          allow-bots: true
+
+      - name: Inspect Builder changes
+        id: changes
+        working-directory: target
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            git status --short
+          fi
+
+      - name: Commit and push implementation
+        if: steps.changes.outputs.has_changes == 'true'
+        working-directory: target
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          git config user.name "venture-lab-builder[bot]"
+          git config user.email "venture-lab-builder@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: implement issue #$ISSUE_NUMBER"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "HEAD:${BRANCH_NAME}" --force-with-lease
+
+      - name: Open implementation pull request
+        if: steps.changes.outputs.has_changes == 'true'
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          BUILDER_SUMMARY: ${{ steps.codex.outputs.final-message }}
+        run: |
+          BODY_FILE=$(mktemp)
+          {
+            printf 'Closes #%s\n\n' "$ISSUE_NUMBER"
+            printf '## Autonomous Builder\n'
+            printf 'Implemented by the Venture Lab Builder agent from the canonical GitHub Issue contract.\n\n'
+            printf '## Builder report\n%s\n\n' "$BUILDER_SUMMARY"
+            printf '## Human gate\n'
+            printf 'This PR is intentionally **not auto-merged**. Independent review/QA and any required product handoff happen before human merge.\n'
+          } > "$BODY_FILE"
+          PR_URL=$(gh pr create --repo "$TARGET_REPO" --base main --head "$BRANCH_NAME" --title "feat: $ISSUE_TITLE" --body-file "$BODY_FILE")
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "Opened $PR_URL"
+
+      - name: Report no-change Builder run
+        if: steps.changes.outputs.has_changes != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          BUILDER_SUMMARY: ${{ steps.codex.outputs.final-message }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body "### Builder could not produce an implementation\n\n$BUILDER_SUMMARY\n\nThe orchestrator did not close or modify the Issue. Human/product clarification may be required."
