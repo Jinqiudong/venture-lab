@@ -100,9 +100,7 @@ jobs:
 
       - name: Prepare implementation branch
         working-directory: target
-        run: |
-          git fetch origin main
-          git checkout -B "$BRANCH_NAME" origin/main
+        run: git checkout -B "$BRANCH_NAME" origin/main
 
       - name: Build agent prompt
         env:
