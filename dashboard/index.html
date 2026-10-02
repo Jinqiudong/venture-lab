@@ -22,13 +22,17 @@
   </header>
 
   <main class="shell" id="top">
-    <section class="hero">
+    <section class="hero cat-stage hero-cat-stage">
       <div class="hero-copy">
         <div class="hero-badge">VENTURE LAB / PERSONAL R&D</div>
         <h1>Idea<br />Cauldron</h1>
         <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
       </div>
       <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
+      <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot" data-cat-message="Paw-sitive idea?">
+        <img src="assets/cat-hero.webp" alt="Your cat reaching into the Idea Cauldron hero" />
+        <span class="cat-whisper">Paw-sitive idea?</span>
+      </button>
     </section>
 
     <section class="command-zone" aria-label="Dashboard search">
@@ -41,18 +45,30 @@
       </div>
     </section>
 
-    <section id="attention" class="panel-section">
+    <section id="attention" class="panel-section cat-stage human-cat-stage">
       <div class="section-heading"><div><span class="section-index">01</span><h2>Needs You</h2></div><span class="section-note">Only decisions, experience review, credentials, and approvals</span></div>
+      <button class="mascot mascot-boss" type="button" aria-label="Boss cat" data-cat-message="Your call, boss.">
+        <img src="assets/cat-boss.webp" alt="Your cat in a tie at the laptop" />
+        <span class="cat-whisper">Your call, boss.</span>
+      </button>
       <div id="attention-list" class="attention-grid"></div>
     </section>
 
-    <section id="ai-team" class="panel-section">
+    <section id="ai-team" class="panel-section cat-stage work-cat-stage">
       <div class="section-heading"><div><span class="section-index">02</span><h2>AI Team</h2></div><span class="section-note">Ready → Build → Review → QA → Human handoff</span></div>
+      <button class="mascot mascot-working" type="button" aria-label="Working cat" data-cat-message="On it. Tiny paws, big commits.">
+        <img src="assets/cat-working.webp" alt="Your cat walking through the active work area" />
+        <span class="cat-whisper">On it. Tiny paws, big commits.</span>
+      </button>
       <div id="ai-team-list" class="workflow-stack"></div>
     </section>
 
-    <section id="queue" class="panel-section">
+    <section id="queue" class="panel-section cat-stage queue-cat-stage">
       <div class="section-heading"><div><span class="section-index">03</span><h2>Queue</h2></div><span class="section-note">Blocked work waiting on dependencies</span></div>
+      <button class="mascot mascot-queue" type="button" aria-label="Queue cat" data-cat-message="Just chillin’ until the blocker moves.">
+        <img src="assets/cat-queue.webp" alt="Your cat lounging in the queue" />
+        <span class="cat-whisper">Just chillin’ until the blocker moves.</span>
+      </button>
       <div id="queue-list" class="workflow-stack"></div>
     </section>
 
@@ -72,5 +88,27 @@
     <footer><span>Idea Cauldron</span><span id="updated">Syncing…</span></footer>
   </main>
   <script src="app.js"></script>
+  <script>
+    document.querySelectorAll('.mascot').forEach((cat) => {
+      cat.addEventListener('pointermove', (event) => {
+        const rect = cat.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - .5;
+        const y = (event.clientY - rect.top) / rect.height - .5;
+        cat.style.setProperty('--cat-x', `${x * 10}px`);
+        cat.style.setProperty('--cat-y', `${y * 8}px`);
+        cat.style.setProperty('--cat-tilt', `${x * 3}deg`);
+      });
+      cat.addEventListener('pointerleave', () => {
+        cat.style.removeProperty('--cat-x');
+        cat.style.removeProperty('--cat-y');
+        cat.style.removeProperty('--cat-tilt');
+      });
+      cat.addEventListener('click', () => {
+        cat.classList.remove('is-booped');
+        void cat.offsetWidth;
+        cat.classList.add('is-booped');
+      });
+    });
+  </script>
 </body>
 </html>
