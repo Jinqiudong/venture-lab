@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["done", "your_job", "steps", "questions", "approve_action", "after_approve"],
+  "properties": {
+    "done": {"type": "array", "items": {"type": "string"}},
+    "your_job": {"type": "string"},
+    "steps": {"type": "array", "items": {"type": "string"}},
+    "questions": {"type": "array", "items": {"type": "string"}},
+    "approve_action": {"type": "string"},
+    "after_approve": {"type": "string"}
+  }
+}
