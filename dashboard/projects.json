@@ -1,0 +1,20 @@
+{
+  "projects": [
+    {
+      "name": "AniDream",
+      "repo": "Jinqiudong/AniDream",
+      "stage": "Mobile MVP",
+      "health": "yellow",
+      "current_focus": "Shared Web + iOS architecture, auth, and persistent user data",
+      "attention": "Start with architecture Issue #3 before implementation."
+    },
+    {
+      "name": "Digital You",
+      "repo": "Jinqiudong/digital-you",
+      "stage": "MVP Definition",
+      "health": "green",
+      "current_focus": "Define the first measurable dance-improvement loop",
+      "attention": "Finalize first skill metrics and MVP data model."
+    }
+  ]
+}
