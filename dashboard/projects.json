@@ -24,6 +24,48 @@
           "status": "blocked",
           "blocked_by": [3, 4],
           "next_action": "Wait for architecture and auth"
+        },
+        {
+          "issue": 6,
+          "status": "blocked",
+          "blocked_by": [4, 5],
+          "ready_action": "Start Web sign-in and session integration"
+        },
+        {
+          "issue": 7,
+          "status": "blocked",
+          "blocked_by": [3],
+          "ready_action": "Start native SwiftUI app shell"
+        },
+        {
+          "issue": 8,
+          "status": "blocked",
+          "blocked_by": [4, 7],
+          "ready_action": "Start iOS sign-in and session integration"
+        },
+        {
+          "issue": 9,
+          "status": "blocked",
+          "blocked_by": [5, 7, 8],
+          "ready_action": "Start iOS dream create and archive flow"
+        },
+        {
+          "issue": 10,
+          "status": "blocked",
+          "blocked_by": [5, 6, 9],
+          "ready_action": "Unify shared AI result flow across Web and iOS"
+        },
+        {
+          "issue": 11,
+          "status": "blocked",
+          "blocked_by": [6, 8, 9, 10],
+          "ready_action": "Run cross-client end-to-end coverage"
+        },
+        {
+          "issue": 12,
+          "status": "blocked",
+          "blocked_by": [11],
+          "ready_action": "Prepare staging and TestFlight beta"
         }
       ]
     },
