@@ -1,0 +1,1 @@
+(async()=>{const img=document.querySelector('.mascot-hero img');if(!img)return;try{const r=await fetch('./assets/cat-hero-final.b64.txt',{cache:'no-store'});if(!r.ok)return;const b64=(await r.text()).replace(/\s+/g,'');if(b64.startsWith('UklG')) img.src='data:image/webp;base64,'+b64;}catch(e){}})();
