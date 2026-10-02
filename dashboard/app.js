@@ -41,8 +41,15 @@ const pipeline = (item) => `
   </div>
 `;
 
+const itemIssueLink = (item) => {
+  if (item.issue_url) return item.issue_url;
+  if (item.repo && item.issue) return `https://github.com/${item.repo}/issues/${item.issue}`;
+  if (item.repo) return `https://github.com/${item.repo}`;
+  return "#";
+};
+
 const attentionCard = (item) => {
-  const link = item.issue_url || (item.repo ? `https://github.com/${item.repo}` : "#");
+  const link = itemIssueLink(item);
   return `
     <article class="attention-card searchable" data-search="${[item.project_name, item.title, item.next_action, statusLabel(item.workflow_stage)].join(" ").toLowerCase()}">
       <div>
@@ -57,7 +64,7 @@ const attentionCard = (item) => {
 
 const workflowCard = (item) => {
   const blocked = item.blocked_by?.length ? `Blocked by ${item.blocked_by.map((n) => `#${n}`).join(", ")}` : "";
-  const issueLink = item.issue_url || (item.issue ? `https://github.com/${item.repo}/issues/${item.issue}` : `https://github.com/${item.repo}`);
+  const issueLink = itemIssueLink(item);
   const search = [item.project_name, item.project_stage, item.issue ? `#${item.issue}` : "", item.title, item.next_action, statusLabel(item.workflow_stage), blocked].join(" ").toLowerCase();
   return `
     <article class="workflow-card searchable ${item.workflow_stage === "blocked" ? "is-blocked" : ""}" data-search="${search}">
