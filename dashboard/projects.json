@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Shared Web + iOS architecture, auth, and persistent user data",
+      "current_focus": "Deliver iOS auth through scoped tasks #23–#27; #8 remains the live acceptance gate",
       "work_items": [
         {
           "issue": 3,
@@ -16,61 +16,130 @@
         {
           "issue": 4,
           "status": "blocked",
-          "blocked_by": [3],
+          "blocked_by": [
+            3
+          ],
           "next_action": "Wait for architecture decision"
         },
         {
           "issue": 5,
           "status": "blocked",
-          "blocked_by": [3, 4],
+          "blocked_by": [
+            3,
+            4
+          ],
           "next_action": "Wait for architecture and auth"
         },
         {
           "issue": 6,
           "status": "blocked",
-          "blocked_by": [4, 5],
+          "blocked_by": [
+            4,
+            5
+          ],
           "ready_action": "Start Web sign-in and session integration"
         },
         {
           "issue": 7,
           "status": "blocked",
-          "blocked_by": [3],
+          "blocked_by": [
+            3
+          ],
           "ready_action": "Start native SwiftUI app shell"
         },
         {
           "issue": 8,
+          "status": "human_handoff",
+          "blocked_by": [
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "needs_human": true,
+          "next_action": "Tracking parent only: wait for #23–#27 PRs to merge, then validate live Supabase sign-in → /me → relaunch/restore → sign-out before closing #8."
+        },
+        {
+          "issue": 23,
           "status": "blocked",
-          "blocked_by": [4, 7],
-          "ready_action": "Start iOS sign-in and session integration"
+          "blocked_by": [
+            4,
+            7
+          ],
+          "ready_action": "Builder: iOS auth 1/5: add Supabase SDK and public configuration"
+        },
+        {
+          "issue": 24,
+          "status": "blocked",
+          "blocked_by": [
+            23
+          ],
+          "ready_action": "Builder: iOS auth 2/5: add testable session manager and secure persistence"
+        },
+        {
+          "issue": 25,
+          "status": "blocked",
+          "blocked_by": [
+            24
+          ],
+          "ready_action": "Builder: iOS auth 3/5: attach bearer tokens and verify /me"
+        },
+        {
+          "issue": 26,
+          "status": "blocked",
+          "blocked_by": [
+            24,
+            25
+          ],
+          "ready_action": "Builder: iOS auth 4/5: connect Profile sign-in and account UI"
+        },
+        {
+          "issue": 27,
+          "status": "blocked",
+          "blocked_by": [
+            26
+          ],
+          "ready_action": "Builder: iOS auth 5/5: run deterministic auth tests in CI and document acceptance"
         },
         {
           "issue": 9,
           "status": "blocked",
-          "blocked_by": [5, 7, 8],
+          "blocked_by": [
+            5,
+            7,
+            8
+          ],
           "ready_action": "Start iOS dream create and archive flow"
         },
         {
           "issue": 10,
           "status": "blocked",
-          "blocked_by": [5, 6, 9],
+          "blocked_by": [
+            5,
+            6,
+            9
+          ],
           "ready_action": "Unify shared AI result flow across Web and iOS"
         },
         {
           "issue": 11,
           "status": "blocked",
-          "blocked_by": [6, 8, 9, 10],
+          "blocked_by": [
+            6,
+            8,
+            9,
+            10
+          ],
           "ready_action": "Run cross-client end-to-end coverage"
         },
         {
           "issue": 12,
           "status": "blocked",
-          "blocked_by": [11],
+          "blocked_by": [
+            11
+          ],
           "ready_action": "Prepare staging and TestFlight beta"
-        },
-        {
-          "issue": 21,
-          "status": "ready",
-          "next_action": "Run isolated Codex Builder smoke test"
         }
       ]
     },
