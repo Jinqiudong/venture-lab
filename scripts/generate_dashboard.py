@@ -17,6 +17,7 @@ TOKEN = os.getenv("PORTFOLIO_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
 HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human"}
 AI_STAGES = {"ready", "coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"}
 DONE_STAGES = {"done", "merged"}
+AUTO_STOP_MARKER = "venture-auto-stop"
 
 
 def request_json(path: str):
@@ -76,6 +77,14 @@ def linked_pr(repo: str, issue_number: int) -> dict | None:
     return candidates[0]
 
 
+def has_auto_stop(repo: str, issue_number: int) -> bool:
+    try:
+        comments = request_json(f"/repos/{repo}/issues/{issue_number}/comments?per_page=100")
+    except Exception:
+        return False
+    return any(AUTO_STOP_MARKER in (item.get("body") or "") for item in comments if isinstance(item, dict))
+
+
 def workflow_item(repo: str, item: dict) -> dict:
     enriched = dict(item)
     issue_number = item.get("issue")
@@ -100,8 +109,12 @@ def workflow_item(repo: str, item: dict) -> dict:
             enriched["pr"] = pr.get("number")
             enriched["pr_url"] = pr.get("html_url")
             enriched["workflow_stage"] = "review" if pr.get("state") == "open" else "merged"
-        if issue.get("state") == "closed" and not enriched.get("pr"):
+        elif issue.get("state") == "closed":
             enriched["workflow_stage"] = "done"
+        elif has_auto_stop(repo, int(issue_number)):
+            enriched["workflow_stage"] = "blocked_on_human"
+            enriched["needs_human"] = True
+            enriched["next_action"] = "Diagnose Builder runtime or rescope the task before retrying"
     except Exception:
         enriched.setdefault("title", f"Issue #{issue_number}")
     return enriched
@@ -139,7 +152,12 @@ def main() -> None:
         projects.append({**project, **repo_metrics(repo), "work_items": project_items})
         work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
 
-    needs_you = [item for item in work_items if item.get("needs_human") or item.get("workflow_stage") in HUMAN_STAGES]
+    needs_you = [
+        item
+        for item in work_items
+        if item.get("workflow_stage") not in DONE_STAGES
+        and (item.get("needs_human") or item.get("workflow_stage") in HUMAN_STAGES)
+    ]
     ai_team = [item for item in work_items if item.get("workflow_stage") in AI_STAGES and not item.get("needs_human")]
     queue = [item for item in work_items if item.get("workflow_stage") == "blocked"]
 
