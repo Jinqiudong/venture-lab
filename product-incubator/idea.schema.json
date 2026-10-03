@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Jinqiudong/venture-lab/product-incubator/idea.schema.json",
+  "title": "Idea Cauldron Product Incubation Record",
+  "type": "object",
+  "required": ["idea_issue", "stage", "thesis", "decision"],
+  "properties": {
+    "idea_issue": {"type": "integer", "minimum": 1},
+    "stage": {
+      "type": "string",
+      "enum": ["SPARK", "EXPLORE", "VALIDATE", "INCUBATE", "BUILD", "PARK", "REJECT"]
+    },
+    "thesis": {
+      "type": "object",
+      "properties": {
+        "problem": {"type": "string"},
+        "target_user": {"type": "string"},
+        "job_to_be_done": {"type": "string"},
+        "current_alternatives": {"type": "array", "items": {"type": "string"}},
+        "product_hypothesis": {"type": "string"},
+        "why_now": {"type": "string"},
+        "differentiation": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim", "strength"],
+        "properties": {
+          "claim": {"type": "string"},
+          "source": {"type": "string"},
+          "strength": {"type": "string", "enum": ["weak", "medium", "strong"]}
+        },
+        "additionalProperties": false
+      }
+    },
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "validation": {
+      "type": "object",
+      "properties": {
+        "riskiest_assumption": {"type": "string"},
+        "cheapest_next_validation": {"type": "string"},
+        "positive_signal": {"type": "string"},
+        "negative_signal": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "mvp": {
+      "type": "object",
+      "properties": {
+        "core_user_journey": {"type": "array", "items": {"type": "string"}},
+        "capabilities": {"type": "array", "items": {"type": "string"}},
+        "non_goals": {"type": "array", "items": {"type": "string"}},
+        "retention_hypothesis": {"type": "string"},
+        "success_metrics": {"type": "array", "items": {"type": "string"}},
+        "acceptance_criteria": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "owner_decisions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "build_handoff": {
+      "type": "object",
+      "properties": {
+        "suggested_repo_names": {"type": "array", "items": {"type": "string"}},
+        "epics": {"type": "array", "items": {"type": "string"}},
+        "candidate_workstreams": {"type": "array", "items": {"type": "string"}},
+        "human_acceptance_gate": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "object",
+      "required": ["recommendation", "confidence", "strongest_reason", "biggest_uncertainty", "next_action"],
+      "properties": {
+        "recommendation": {"type": "string", "enum": ["PROMOTE", "STAY", "PARK", "REJECT"]},
+        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+        "strongest_reason": {"type": "string"},
+        "biggest_uncertainty": {"type": "string"},
+        "next_action": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
