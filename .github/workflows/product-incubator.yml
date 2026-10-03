@@ -1,0 +1,46 @@
+name: Product Incubator
+
+on:
+  pull_request:
+    paths:
+      - "agents/product-incubator.md"
+      - "product-incubator/**"
+      - "scripts/validate_incubation.py"
+      - ".github/workflows/product-incubator.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-incubator-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-framework:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate schema JSON
+        run: python3 -m json.tool product-incubator/idea.schema.json > /dev/null
+      - name: Validate sample incubation record
+        run: |
+          cat > /tmp/sample-incubation.json <<'JSON'
+          {
+            "idea_issue": 9,
+            "stage": "EXPLORE",
+            "thesis": {
+              "problem": "Pet owners forget recurring grooming routines.",
+              "target_user": "Cat owners",
+              "product_hypothesis": "A playful grooming companion can make recurring care easier to remember."
+            },
+            "decision": {
+              "recommendation": "STAY",
+              "confidence": "medium",
+              "strongest_reason": "The product thesis is coherent but unvalidated.",
+              "biggest_uncertainty": "Whether grooming is frequent enough to support retention.",
+              "next_action": "Validate grooming frequency and interest in gamified reminders."
+            }
+          }
+          JSON
+          python3 scripts/validate_incubation.py /tmp/sample-incubation.json
