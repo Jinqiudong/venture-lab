@@ -12,6 +12,7 @@ on:
       - "agents/**"
       - "orchestrator/**"
       - "scripts/orchestrate.py"
+      - "scripts/checkpoint_watcher.py"
       - "dashboard/projects.json"
       - ".github/workflows/orchestrator.yml"
 
@@ -104,6 +105,7 @@ jobs:
       PROJECT_NAME: ${{ needs.decide.outputs.project }}
       ISSUE_TITLE: ${{ needs.decide.outputs.title }}
       BRANCH_NAME: agent/issue-${{ needs.decide.outputs.issue }}
+      CHECKPOINT_BRANCH: checkpoint/issue-${{ needs.decide.outputs.issue }}/run-${{ github.run_id }}
     steps:
       - name: Validate agent runtime configuration
         env:
@@ -171,11 +173,34 @@ jobs:
               printf '### 🛠 Builder started\n\n'
               printf 'Implementing **#%s %s** from the canonical Issue contract.\n\n' "$ISSUE_NUMBER" "$ISSUE_TITLE"
               printf '**Why now:** dependencies are satisfied and this is the next ready work item.\n\n'
+              printf '**Recovery:** work is checkpointed to `%s` while the Builder runs.\n\n' "$CHECKPOINT_BRANCH"
               printf '**Next checkpoint:** PR opened.\n\n'
               printf '[View agent run](https://github.com/%s/actions/runs/%s)\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
             } > "$BODY_FILE"
             gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
           fi
+
+      - name: Refresh dashboard after Builder checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Dashboard so the Builder checkpoint is visible immediately."
+
+      - name: Start workspace checkpoint watcher
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+          nohup python3 control-plane/scripts/checkpoint_watcher.py \
+            --source "$GITHUB_WORKSPACE/target" \
+            --issue "$ISSUE_NUMBER" \
+            --run-id "$GITHUB_RUN_ID" \
+            --interval 90 \
+            > "$RUNNER_TEMP/checkpoint-watcher.log" 2>&1 &
+          echo $! > "$RUNNER_TEMP/checkpoint-watcher.pid"
+          echo "Checkpoint watcher started for $CHECKPOINT_BRANCH"
 
       - name: Run Builder agent
         id: codex
@@ -187,6 +212,14 @@ jobs:
           prompt-file: builder-prompt.md
           effort: medium
           allow-bots: true
+
+      - name: Stop workspace checkpoint watcher
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/checkpoint-watcher.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/checkpoint-watcher.pid")" 2>/dev/null || true
+          fi
+          cat "$RUNNER_TEMP/checkpoint-watcher.log" 2>/dev/null || true
 
       - name: Inspect Builder changes
         id: changes
@@ -230,6 +263,7 @@ jobs:
           PR_URL=$(gh pr create --repo "$TARGET_REPO" --base main --head "$BRANCH_NAME" --title "feat: $ISSUE_TITLE" --body-file "$BODY_FILE")
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Opened $PR_URL"
+          git -C target push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" --delete "$CHECKPOINT_BRANCH" 2>/dev/null || true
 
       - name: Open review cycle after PR creation
         if: steps.changes.outputs.has_changes == 'true'
