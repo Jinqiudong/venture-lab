@@ -177,6 +177,14 @@ jobs:
             gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
           fi
 
+      - name: Refresh dashboard after Builder checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
+            -f ref='main'
+          echo "Dispatched Dashboard so the Builder checkpoint is visible immediately."
+
       - name: Run Builder agent
         id: codex
         uses: openai/codex-action@v1
