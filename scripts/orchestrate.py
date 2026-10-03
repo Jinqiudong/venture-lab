@@ -42,20 +42,18 @@ def request_json(path: str):
         return json.load(response)
 
 
-def failure_gate(repo: str, issue: int) -> tuple[bool, int]:
-    """Return (auto_stop, failure_count) for unresolved repeated Builder failures."""
+def failure_gate(repo: str, issue: int) -> tuple[bool, int, bool]:
+    """Return (auto_stop, failure_count, already_recorded)."""
     try:
         comments = request_json(f"/repos/{repo}/issues/{issue}/comments?per_page=100")
     except Exception:
         # Fail open on telemetry trouble: never block work because GitHub comments could not be read.
-        return False, 0
+        return False, 0, False
 
     bodies = [item.get("body") or "" for item in comments if isinstance(item, dict)]
-    if any(AUTO_STOP_MARKER in body for body in bodies):
-        return True, sum(FAILURE_MARKER in body for body in bodies)
-
     failure_count = sum(FAILURE_MARKER in body for body in bodies)
-    return failure_count >= 2, failure_count
+    already_recorded = any(AUTO_STOP_MARKER in body for body in bodies)
+    return failure_count >= 2 or already_recorded, failure_count, already_recorded
 
 
 def main() -> None:
@@ -87,6 +85,7 @@ def main() -> None:
         "review_wakeup": bool(review_pending),
         "next_ready": None,
         "auto_stop": None,
+        "skipped_auto_stops": [],
     }
 
     outputs = {
@@ -109,7 +108,19 @@ def main() -> None:
             if not repo or not issue:
                 continue
 
-            stopped, count = failure_gate(repo, int(issue))
+            stopped, count, already_recorded = failure_gate(repo, int(issue))
+            if stopped and already_recorded:
+                decision["skipped_auto_stops"].append(
+                    {
+                        "project": candidate.get("project_name"),
+                        "repo": repo,
+                        "issue": issue,
+                        "failure_count": count,
+                        "action": "skip_recorded_auto_stop",
+                    }
+                )
+                continue
+
             if stopped:
                 decision["auto_stop"] = {
                     "project": candidate.get("project_name"),
