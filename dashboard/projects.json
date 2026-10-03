@@ -66,6 +66,11 @@
           "status": "blocked",
           "blocked_by": [11],
           "ready_action": "Prepare staging and TestFlight beta"
+        },
+        {
+          "issue": 21,
+          "status": "ready",
+          "next_action": "Run isolated Codex Builder smoke test"
         }
       ]
     },
