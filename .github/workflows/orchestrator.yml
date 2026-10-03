@@ -12,6 +12,7 @@ on:
       - "agents/**"
       - "orchestrator/**"
       - "scripts/orchestrate.py"
+      - "dashboard/projects.json"
       - ".github/workflows/orchestrator.yml"
 
 permissions:
