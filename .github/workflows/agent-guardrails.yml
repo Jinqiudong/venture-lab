@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   stop-stalled-runs:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Stop stalled agent runs
@@ -30,7 +29,7 @@ jobs:
               "gh", "api", f"repos/{repo}/actions/runs?status=in_progress&per_page=50"
           ]))
           now = datetime.now(timezone.utc)
-          limits = {"Agent Orchestrator": 35, "Agent Review Cycle": 50}
+          limits = {"Agent Orchestrator": 30, "Agent Review Cycle": 50}
           for run in data.get("workflow_runs", []):
               name = run.get("name")
               if name not in limits:
@@ -57,7 +56,7 @@ jobs:
       - name: Checkout control plane
         uses: actions/checkout@v4
         with:
-          ref: feature/checkpoint-transparency
+          ref: main
 
       - name: Publish failure checkpoint
         env:
@@ -89,13 +88,21 @@ jobs:
               if marker in existing:
                   return True
               title = "Builder failed" if run_name == "Agent Orchestrator" else "Agent review cycle failed"
+              recovery = ""
+              if run_name == "Agent Orchestrator":
+                  checkpoint_branch = f"checkpoint/issue-{number}/run-{run_id}"
+                  recovery = (
+                      f"\n\n**Recovery:** Builder work may have been persisted on "
+                      f"`{checkpoint_branch}`. Check that branch before retrying so completed model work is not repeated."
+                  )
               body = (
                   f"{marker}\n"
                   f"### ❌ {title}\n\n"
                   f"**Stage:** {stage}\n\n"
                   f"**Result:** `{conclusion}`\n\n"
-                  f"**Impact:** the automated flow stopped before its next checkpoint.\n\n"
-                  f"**Next:** inspect the run, then retry once the cause is understood.\n\n"
+                  f"**Impact:** the automated flow stopped before its next checkpoint."
+                  f"{recovery}\n\n"
+                  f"**Next:** inspect the run and recovery checkpoint, then retry only what remains.\n\n"
                   f"[View failed run]({run_url})"
               )
               gh("api", "--method", "POST", f"repos/{repo}/issues/{number}/comments", "-f", f"body={body}")
@@ -122,7 +129,6 @@ jobs:
               print("No Builder checkpoint marker found for failed run; nothing attached.")
               raise SystemExit(0)
 
-          # Review-cycle failures: recover the selected repo/PR from completed run logs.
           logs = ""
           for _ in range(4):
               proc = subprocess.run([
