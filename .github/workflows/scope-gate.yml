@@ -1,0 +1,72 @@
+name: Scope Gate Shadow
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 */6 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/projects.json"
+      - "scripts/analyze_scope.py"
+      - "agents/scope-analyst.md"
+      - ".github/workflows/scope-gate.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scope-gate-shadow
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate current portfolio state
+        env:
+          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/generate_dashboard.py
+
+      - name: Analyze ready Issue scope
+        env:
+          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/analyze_scope.py
+
+      - name: Validate scope output
+        run: python3 -m json.tool dashboard/scope-analysis.json > /dev/null
+
+      - name: Publish shadow summary
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("dashboard/scope-analysis.json").read_text())
+          print("## Scope Gate — shadow mode")
+          print()
+          print("This run does not block Builders, create Issues, or change scheduling.")
+          print()
+          results = data.get("results", [])
+          if not results:
+              print("No ready Issues to analyze.")
+          for item in results:
+              print(f"### {item['repo']}#{item['issue']} — {item['verdict']}")
+              print(f"Confidence: **{item['confidence']}** · Score: **{item['score']}**")
+              for signal in item.get("signals", []):
+                  print(f"- {signal}")
+              print()
+          PY
+
+      - name: Upload scope analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: scope-analysis
+          path: dashboard/scope-analysis.json
+          retention-days: 14
