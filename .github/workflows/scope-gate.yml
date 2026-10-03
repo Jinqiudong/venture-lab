@@ -4,6 +4,13 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "23 */6 * * *"
+  pull_request:
+    paths:
+      - "dashboard/projects.json"
+      - "scripts/analyze_scope.py"
+      - "agents/scope-analyst.md"
+      - ".github/workflows/scope-gate.yml"
+      - "tests/test_scope_analysis.py"
   push:
     branches: [main]
     paths:
@@ -11,12 +18,13 @@ on:
       - "scripts/analyze_scope.py"
       - "agents/scope-analyst.md"
       - ".github/workflows/scope-gate.yml"
+      - "tests/test_scope_analysis.py"
 
 permissions:
   contents: read
 
 concurrency:
-  group: scope-gate-shadow
+  group: scope-gate-shadow-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -25,6 +33,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Run scope unit tests
+        run: python3 -m unittest tests/test_scope_analysis.py
 
       - name: Generate current portfolio state
         env:
