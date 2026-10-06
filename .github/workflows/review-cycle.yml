@@ -128,18 +128,6 @@ jobs:
       request_changes: ${{ steps.parse.outputs.request_changes }}
       needs_human: ${{ steps.parse.outputs.needs_human }}
     steps:
-      - name: Mark one-shot Fixer attempt
-        env:
-          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
-          TARGET_REPO: ${{ needs.select.outputs.repo }}
-          PR_NUMBER: ${{ needs.select.outputs.pr }}
-          HEAD_SHA: ${{ needs.select.outputs.head }}
-        run: |
-          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "<!-- venture-fixer-attempt:$HEAD_SHA -->
-### 🔧 Fixer attempt
-
-One automatic Fixer attempt is being used for this exact PR HEAD. If this HEAD remains blocked, automation will stop instead of retrying Fixer."
-
       - name: Checkout control plane
         uses: actions/checkout@v4
         with:
@@ -226,6 +214,15 @@ One automatic Fixer attempt is being used for this exact PR HEAD. If this HEAD r
     if: needs.review.outputs.request_changes == 'true' && needs.select.outputs.fixer_used != 'true' && (needs.review.outputs.needs_human != 'true' || needs.resume_human_decision.outputs.resumed == 'true')
     runs-on: ubuntu-latest
     steps:
+      - name: Mark one-shot Fixer attempt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "<!-- venture-fixer-attempt:$HEAD_SHA --> One automatic Fixer attempt is being used for this exact PR HEAD."
+
       - name: Checkout control plane
         uses: actions/checkout@v4
         with:
@@ -293,27 +290,6 @@ One automatic Fixer attempt is being used for this exact PR HEAD. If this HEAD r
           FIXER_SUMMARY: ${{ steps.fixer.outputs.final-message }}
         run: |
           gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🔧 Fixer\n\n$FIXER_SUMMARY\n\nA fresh Reviewer pass will run against the new commit."
-
-
-  stop_after_fixer_budget:
-    needs: [select, review]
-    if: needs.review.outputs.request_changes == 'true' && needs.select.outputs.fixer_used == 'true' && needs.review.outputs.needs_human != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Report exhausted Fixer budget
-        env:
-          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
-          TARGET_REPO: ${{ needs.select.outputs.repo }}
-          PR_NUMBER: ${{ needs.select.outputs.pr }}
-          HEAD_SHA: ${{ needs.select.outputs.head }}
-        run: |
-          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "<!-- venture-auto-stop:$HEAD_SHA -->
-### ⏸️ Automation stopped
-
-This exact PR HEAD already used its one automatic Fixer attempt and is still blocked. No additional Reviewer/Fixer loop will run for this HEAD.
-
-Push a new commit (new HEAD) to reset the one-shot Fixer budget, or resolve the blocker manually."
-
 
   qa:
     needs: [select, review]
