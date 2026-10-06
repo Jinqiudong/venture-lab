@@ -230,11 +230,16 @@ const incubationIdeaCard = (idea) => {
   const decision = idea.decision || {};
   const title = idea.title || `Idea #${idea.idea_issue}`;
   const url = `https://github.com/Jinqiudong/venture-lab/issues/${idea.idea_issue}`;
-  return `<a class="incubation-idea" href="${url}" target="_blank" rel="noreferrer">
-    <span class="incubation-idea-meta">#${idea.idea_issue} · ${escapeHtml(decision.recommendation || "—")} · ${escapeHtml(decision.confidence || "—")}</span>
+  const guidance = idea.guidance || {};
+  const completed = Array.isArray(guidance.completed) ? guidance.completed : [];
+  const prompt = guidance.chat_prompt || `Use the Idea Cauldron Product Incubator on Idea #${idea.idea_issue}.`;
+  return `<article class="incubation-idea">
+    <span class="incubation-idea-meta">#${idea.idea_issue} · ${escapeHtml(idea.stage || "—")} · Step ${escapeHtml(guidance.step || "—")} of ${escapeHtml(guidance.total_steps || 6)}</span>
     <strong>${escapeHtml(title)}</strong>
-    <small>${escapeHtml(decision.next_action || "No next action recorded.")}</small>
-  </a>`;
+    <small><b>${escapeHtml(guidance.phase || "Next")}</b> · ${escapeHtml(guidance.current || decision.next_action || "No next action recorded.")}</small>
+    ${completed.length ? `<small>✓ ${completed.map(escapeHtml).join(" · ✓ ")}</small>` : ""}
+    <div class="workflow-links"><a href="${url}" target="_blank" rel="noreferrer">Idea ↗</a><button type="button" class="copy-incubation-prompt" data-prompt="${escapeHtml(prompt)}">Copy ChatGPT prompt</button></div>
+  </article>`;
 };
 
 const renderIncubationBoard = (ideas = []) => {
@@ -267,3 +272,16 @@ async function loadIncubationBoard() {
 }
 
 loadIncubationBoard();
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest(".copy-incubation-prompt");
+  if (!button) return;
+  try {
+    await navigator.clipboard.writeText(button.dataset.prompt || "");
+    const original = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = original; }, 1200);
+  } catch (_) {
+    button.textContent = "Copy failed";
+  }
+});
