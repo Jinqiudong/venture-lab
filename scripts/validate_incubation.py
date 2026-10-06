@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
+
 STAGES = {"SPARK", "EXPLORE", "VALIDATE", "INCUBATE", "BUILD", "PARK", "REJECT"}
 RECOMMENDATIONS = {"PROMOTE", "STAY", "PARK", "REJECT"}
 CONFIDENCE = {"low", "medium", "high"}
@@ -14,7 +16,20 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "product-incubator" / "idea.schema.json"
+
+
+def validate_schema(record: dict) -> None:
+    schema = json.loads(SCHEMA_PATH.read_text())
+    errors = sorted(Draft202012Validator(schema).iter_errors(record), key=lambda error: list(error.path))
+    if errors:
+        error = errors[0]
+        location = ".".join(str(part) for part in error.path) or "<root>"
+        raise ValueError(f"schema validation failed at {location}: {error.message}")
+
+
 def validate(record: dict) -> None:
+    validate_schema(record)
     require(isinstance(record.get("idea_issue"), int) and record["idea_issue"] > 0, "idea_issue must be a positive integer")
     stage = record.get("stage")
     require(stage in STAGES, f"invalid stage: {stage!r}")
