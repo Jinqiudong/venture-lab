@@ -26,5 +26,25 @@
     "biggest_uncertainty": "Whether recurring grooming creates enough real user need and frequency for retention.",
     "next_action": "Validate grooming frequency, missed-care pain, current alternatives, and repeat-use interest before promoting to VALIDATE."
   },
-  "title": "猫猫美容中心"
+  "title": "猫猫美容中心",
+  "guidance": {
+    "phase": "Problem",
+    "step": 1,
+    "total_steps": 6,
+    "completed": [
+      "Idea understood",
+      "Initial product hypothesis"
+    ],
+    "current": "Validate whether recurring grooming is a real, frequent-enough problem",
+    "up_next": [
+      "Core experience",
+      "MVP definition",
+      "Validation",
+      "Ready to build"
+    ],
+    "learning": [
+      "Product Hypothesis"
+    ],
+    "chat_prompt": "Use the Idea Cauldron Product Incubator on Idea #9. Read the canonical record and PLAYBOOK.md. Continue from the current Problem phase. Teach concepts only when useful, do routine PM work autonomously, and ask me only the next 1–3 strategic product questions."
+  }
 }
