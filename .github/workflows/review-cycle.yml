@@ -33,6 +33,7 @@ jobs:
       title: ${{ steps.pick.outputs.title }}
       fixer_used: ${{ steps.pick.outputs.fixer_used }}
       ci_pending: ${{ steps.pick.outputs.ci_pending }}
+      reuse_evidence: ${{ steps.pick.outputs.reuse_evidence }}
     steps:
       - name: Checkout control plane
         uses: actions/checkout@v4
@@ -49,6 +50,7 @@ jobs:
           echo "found=false" >> "$GITHUB_OUTPUT"
           echo "fixer_used=false" >> "$GITHUB_OUTPUT"
           echo "ci_pending=false" >> "$GITHUB_OUTPUT"
+          echo "reuse_evidence=false" >> "$GITHUB_OUTPUT"
           if [ -z "$GH_TOKEN" ] || [ -z "$OPENAI_API_KEY" ]; then
             echo "Agent runtime not configured; review cycle is idle."
             exit 0
@@ -74,8 +76,15 @@ jobs:
               decision_at=$(printf '%s' "$comments" | jq -r '[.[] | select((.body // "") | contains("<!-- venture-human-decision -->")) | .created_at] | max // ""')
               fixer_used=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-fixer-attempt:$head -->" 'any(.[]; (.body // "") | contains($marker))')
               ci_pending=$(gh run list --repo "$repo" --commit "$head" --limit 50 --json status,event 2>/dev/null | jq -r 'any(.[]; .event=="pull_request" and (.status=="queued" or .status=="in_progress" or .status=="waiting" or .status=="pending"))' || printf 'false')
+              review_approved=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-review:$head -->" 'any(.[]; ((.body // "") | contains($marker)) and ((.body // "") | contains("**Verdict:** `approve`")))')
+              qa_passed=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-qa:$head -->" 'any(.[]; ((.body // "") | contains($marker)) and ((.body // "") | contains("**Verdict:** `pass`")))')
+              reuse_evidence=false
               if [ -n "$handoff_at" ] && { [ -z "$decision_at" ] || [[ "$decision_at" < "$handoff_at" ]]; }; then
-                continue
+                if [ "$review_approved" = "true" ] && [ "$qa_passed" = "true" ]; then
+                  reuse_evidence=true
+                else
+                  continue
+                fi
               fi
 
               echo "found=true" >> "$GITHUB_OUTPUT"
@@ -87,12 +96,46 @@ jobs:
               echo "title=$title" >> "$GITHUB_OUTPUT"
               echo "fixer_used=$fixer_used" >> "$GITHUB_OUTPUT"
               echo "ci_pending=$ci_pending" >> "$GITHUB_OUTPUT"
+              echo "reuse_evidence=$reuse_evidence" >> "$GITHUB_OUTPUT"
               echo "Selected $repo PR #$pr ($head)"
               exit 0
             done
           done < <(jq -r '.projects[].repo' control/dashboard/projects.json)
 
           echo "No managed PR needs review."
+
+
+  merge_recovery:
+    needs: select
+    if: needs.select.outputs.found == 'true' && needs.select.outputs.reuse_evidence == 'true' && needs.select.outputs.ci_pending != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-evaluate risk and merge using exact-HEAD evidence
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          ISSUE_NUMBER: ${{ needs.select.outputs.issue }}
+          REVIEWED_HEAD: ${{ needs.select.outputs.head }}
+        run: |
+          CURRENT_HEAD=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefOid --jq '.headRefOid')
+          [ "$CURRENT_HEAD" = "$REVIEWED_HEAD" ] || { echo "PR head moved; refusing evidence reuse."; exit 1; }
+
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          FILES=$(gh pr diff "$PR_NUMBER" --repo "$TARGET_REPO" --name-only)
+
+          if printf '%s\n' "$ISSUE_BODY" | grep -Eiq '(needs[ _-]?human|human acceptance|manual approval|required human|product owner approval|human gate)'; then
+            echo "Issue contract explicitly requires Product Owner handoff."
+            exit 0
+          fi
+          if printf '%s\n' "$FILES" | grep -Eiq '(^|/)\.github/workflows/|(^|/)(secrets?|entitlements?|privacy|legal)(/|$)|(^|/)(migrations?|schema)(/|$)|(^|/)(billing|payments?)(/|$)'; then
+            echo "Changed paths match a high-risk category; Product Owner handoff required."
+            exit 0
+          fi
+
+          echo "Reusing Reviewer approve + QA pass for exact HEAD $REVIEWED_HEAD."
+          gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
+
 
   resume_human_decision:
     needs: select
@@ -119,7 +162,7 @@ jobs:
 
   review:
     needs: select
-    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true' && needs.select.outputs.ci_pending != 'true'
+    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true' && needs.select.outputs.ci_pending != 'true' && needs.select.outputs.reuse_evidence != 'true'
     runs-on: ubuntu-latest
     outputs:
       verdict: ${{ steps.parse.outputs.verdict }}
