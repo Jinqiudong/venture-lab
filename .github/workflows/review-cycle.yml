@@ -90,7 +90,7 @@ jobs:
 
   resume_human_decision:
     needs: select
-    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true'
+    if: always()
     runs-on: ubuntu-latest
     outputs:
       resumed: ${{ steps.detect.outputs.resumed }}
