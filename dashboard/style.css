@@ -138,3 +138,28 @@ footer { margin-top: 28px; padding: 20px 0 4px; border-top: 1px solid var(--line
   .incubation-stage::before { top: 0; bottom: 0; left: 5px; right: auto; width: 1px; height: auto; }
   .incubation-stage::after { top: 50%; left: 5px; transform: translate(-50%, -50%); }
 }
+
+.incubation-card { grid-column: span 2; }
+.incubation-board { margin-top: 4px; }
+.incubation-lanes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.incubation-column { min-width: 0; border: 1px solid #202020; border-radius: 10px; background: #090909; }
+.incubation-column.has-ideas { border-color: #3a3a3a; }
+.incubation-column-head { display: flex; justify-content: space-between; gap: 6px; padding: 8px; border-bottom: 1px solid #1c1c1c; color: #686868; font-size: 8px; font-weight: 800; letter-spacing: .06em; }
+.incubation-column-head b { color: #aaa; }
+.incubation-column-body { min-height: 76px; padding: 6px; }
+.incubation-idea { display: block; padding: 8px; border: 1px solid #2d2d2d; border-radius: 8px; background: #111; text-decoration: none; }
+.incubation-idea:hover { border-color: #555; }
+.incubation-idea-meta { display: block; color: #737373; font-size: 7px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.incubation-idea strong { display: block; margin-top: 5px; font-size: 11px; }
+.incubation-idea small { display: block; margin-top: 6px; color: #777; font-size: 9px; line-height: 1.35; }
+.incubation-empty { display: block; padding: 14px 4px; color: #333; text-align: center; }
+.incubation-exit-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.incubation-exit { padding: 8px; border: 1px dashed #252525; border-radius: 9px; color: #626262; font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+.incubation-exit > b { float: right; color: #888; }
+.incubation-exit .incubation-idea { margin-top: 7px; }
+.incubation-loading { padding: 18px; border: 1px dashed #252525; border-radius: 9px; color: #666; font-size: 11px; }
+@media (max-width: 900px) {
+  .incubation-card { grid-column: auto; }
+  .incubation-lanes { grid-template-columns: 1fr; }
+  .incubation-column-body { min-height: auto; }
+}
