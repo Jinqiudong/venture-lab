@@ -10,27 +10,27 @@ from orchestrator.runtime import (
 
 
 class RuntimeGuardTests(unittest.TestCase):
-    def test_fix_cycle_count_and_next_marker(self):
+    def test_fixer_attempt_is_counted_only_for_exact_head(self):
         comments = [
-            "<!-- venture-fix-cycle:1 sha:abc1234 -->",
-            "<!-- venture-fix-cycle:2 sha:def5678 -->",
+            "<!-- venture-fixer-attempt:abc1234 -->",
+            "<!-- venture-fixer-attempt:def5678 -->",
         ]
-        self.assertEqual(fix_cycle_count(comments), 2)
+        self.assertEqual(fix_cycle_count(comments, "abc1234"), 1)
+        self.assertEqual(fix_cycle_count(comments, "fedcba9"), 0)
         self.assertEqual(
             next_fix_marker(comments, "fedcba9"),
-            "<!-- venture-fix-cycle:3 sha:fedcba9 -->",
+            "<!-- venture-fixer-attempt:fedcba9 -->",
         )
 
-    def test_existing_fixer_comments_count_as_cycles(self):
+    def test_legacy_fixer_comments_do_not_consume_new_head_budget(self):
         comments = [
             "### 🔧 Fixer\n\nAddressed reviewer findings.",
             "### 🔧 QA Fixer\n\nFixed test failure.",
-            "### 🔧 Fixer\n\nSecond reviewer pass fix.",
         ]
-        self.assertEqual(fix_cycle_count(comments), 3)
         state = classify_runtime(comments, "fedcba9")
-        self.assertTrue(state.stopped)
-        self.assertFalse(state.auto_fix_allowed)
+        self.assertEqual(state.fix_cycles, 0)
+        self.assertFalse(state.stopped)
+        self.assertTrue(state.auto_fix_allowed)
 
     def test_human_ready_wins_for_current_sha(self):
         state = classify_runtime([
@@ -46,17 +46,21 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertEqual(state.stage, "reviewing")
         self.assertTrue(state.auto_fix_allowed)
 
-    def test_retry_cap_stops_automation(self):
-        shas = ["abc0001", "abc0002", "abc0003"]
-        comments = [
-            f"<!-- venture-fix-cycle:{i} sha:{shas[i - 1]} -->"
-            for i in range(1, MAX_AUTO_FIX_CYCLES + 1)
-        ]
+    def test_one_attempt_stops_exact_head(self):
+        self.assertEqual(MAX_AUTO_FIX_CYCLES, 1)
+        comments = ["<!-- venture-fixer-attempt:fedcba9 -->"]
         state = classify_runtime(comments, "fedcba9")
-        self.assertEqual(state.fix_cycles, MAX_AUTO_FIX_CYCLES)
+        self.assertEqual(state.fix_cycles, 1)
         self.assertTrue(state.stopped)
         self.assertEqual(state.stage, "human_handoff")
         self.assertFalse(state.auto_fix_allowed)
+
+    def test_attempt_on_old_head_does_not_stop_new_head(self):
+        comments = ["<!-- venture-fixer-attempt:old0001 -->"]
+        state = classify_runtime(comments, "new0002")
+        self.assertEqual(state.fix_cycles, 0)
+        self.assertFalse(state.stopped)
+        self.assertTrue(state.auto_fix_allowed)
 
     def test_explicit_auto_stop_marker(self):
         marker = auto_stop_marker("abcdef1")
