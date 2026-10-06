@@ -1,6 +1,6 @@
 name: Agent Review Cycle
 
-on:
+'on':
   workflow_dispatch:
   repository_dispatch:
     types: [portfolio-refresh, orchestrator-tick]
