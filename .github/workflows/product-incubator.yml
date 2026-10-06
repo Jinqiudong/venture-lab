@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install validator dependency
+        run: python3 -m pip install --disable-pip-version-check jsonschema
       - name: Validate schema JSON
         run: python3 -m json.tool product-incubator/idea.schema.json > /dev/null
       - name: Validate sample incubation record
@@ -44,3 +46,23 @@ jobs:
           }
           JSON
           python3 scripts/validate_incubation.py /tmp/sample-incubation.json
+      - name: Reject invalid incubation record
+        run: |
+          cat > /tmp/invalid-incubation.json <<'JSON'
+          {
+            "idea_issue": 9,
+            "stage": "EXPLORE",
+            "thesis": {"problem": "Missing target user and product hypothesis"},
+            "decision": {
+              "recommendation": "STAY",
+              "confidence": "medium",
+              "strongest_reason": "Still exploring.",
+              "biggest_uncertainty": "Who needs this?",
+              "next_action": "Clarify the target user."
+            }
+          }
+          JSON
+          if python3 scripts/validate_incubation.py /tmp/invalid-incubation.json; then
+            echo "Invalid record unexpectedly passed validation" >&2
+            exit 1
+          fi
