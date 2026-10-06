@@ -33,6 +33,8 @@ jobs:
       branch: ${{ steps.pick.outputs.branch }}
       issue: ${{ steps.pick.outputs.issue }}
       title: ${{ steps.pick.outputs.title }}
+      fixer_used: ${{ steps.pick.outputs.fixer_used }}
+      ci_pending: ${{ steps.pick.outputs.ci_pending }}
     steps:
       - name: Checkout control plane
         uses: actions/checkout@v4
@@ -47,6 +49,8 @@ jobs:
         run: |
           echo "configured=false" >> "$GITHUB_OUTPUT"
           echo "found=false" >> "$GITHUB_OUTPUT"
+          echo "fixer_used=false" >> "$GITHUB_OUTPUT"
+          echo "ci_pending=false" >> "$GITHUB_OUTPUT"
           if [ -z "$GH_TOKEN" ] || [ -z "$OPENAI_API_KEY" ]; then
             echo "Agent runtime not configured; review cycle is idle."
             exit 0
@@ -70,6 +74,8 @@ jobs:
               comments=$(gh api "repos/$repo/issues/$pr/comments" --paginate 2>/dev/null || printf '[]')
               handoff_at=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-human-ready:$head -->" '[.[] | select((.body // "") | contains($marker)) | .created_at] | max // ""')
               decision_at=$(printf '%s' "$comments" | jq -r '[.[] | select((.body // "") | contains("<!-- venture-human-decision -->")) | .created_at] | max // ""')
+              fixer_used=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-fixer-attempt:$head -->" 'any(.[]; (.body // "") | contains($marker))')
+              ci_pending=$(gh run list --repo "$repo" --commit "$head" --limit 50 --json status,event 2>/dev/null | jq -r 'any(.[]; .event=="pull_request" and (.status=="queued" or .status=="in_progress" or .status=="waiting" or .status=="pending"))' || printf 'false')
               if [ -n "$handoff_at" ] && { [ -z "$decision_at" ] || [[ "$decision_at" < "$handoff_at" ]]; }; then
                 continue
               fi
@@ -81,6 +87,8 @@ jobs:
               echo "branch=$branch" >> "$GITHUB_OUTPUT"
               echo "issue=$issue" >> "$GITHUB_OUTPUT"
               echo "title=$title" >> "$GITHUB_OUTPUT"
+              echo "fixer_used=$fixer_used" >> "$GITHUB_OUTPUT"
+              echo "ci_pending=$ci_pending" >> "$GITHUB_OUTPUT"
               echo "Selected $repo PR #$pr ($head)"
               exit 0
             done
@@ -113,13 +121,25 @@ jobs:
 
   review:
     needs: select
-    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true'
+    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true' && needs.select.outputs.ci_pending != 'true'
     runs-on: ubuntu-latest
     outputs:
       verdict: ${{ steps.parse.outputs.verdict }}
       request_changes: ${{ steps.parse.outputs.request_changes }}
       needs_human: ${{ steps.parse.outputs.needs_human }}
     steps:
+      - name: Mark one-shot Fixer attempt
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "<!-- venture-fixer-attempt:$HEAD_SHA -->
+### 🔧 Fixer attempt
+
+One automatic Fixer attempt is being used for this exact PR HEAD. If this HEAD remains blocked, automation will stop instead of retrying Fixer."
+
       - name: Checkout control plane
         uses: actions/checkout@v4
         with:
@@ -203,7 +223,7 @@ jobs:
 
   fix_review:
     needs: [select, review, resume_human_decision]
-    if: needs.review.outputs.request_changes == 'true' && (needs.review.outputs.needs_human != 'true' || needs.resume_human_decision.outputs.resumed == 'true')
+    if: needs.review.outputs.request_changes == 'true' && needs.select.outputs.fixer_used != 'true' && (needs.review.outputs.needs_human != 'true' || needs.resume_human_decision.outputs.resumed == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout control plane
@@ -273,6 +293,27 @@ jobs:
           FIXER_SUMMARY: ${{ steps.fixer.outputs.final-message }}
         run: |
           gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🔧 Fixer\n\n$FIXER_SUMMARY\n\nA fresh Reviewer pass will run against the new commit."
+
+
+  stop_after_fixer_budget:
+    needs: [select, review]
+    if: needs.review.outputs.request_changes == 'true' && needs.select.outputs.fixer_used == 'true' && needs.review.outputs.needs_human != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report exhausted Fixer budget
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "<!-- venture-auto-stop:$HEAD_SHA -->
+### ⏸️ Automation stopped
+
+This exact PR HEAD already used its one automatic Fixer attempt and is still blocked. No additional Reviewer/Fixer loop will run for this HEAD.
+
+Push a new commit (new HEAD) to reset the one-shot Fixer budget, or resolve the blocker manually."
+
 
   qa:
     needs: [select, review]
