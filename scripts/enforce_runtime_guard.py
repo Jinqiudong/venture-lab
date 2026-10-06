@@ -71,11 +71,11 @@ def main() -> None:
                 f"{marker}\n"
                 f"<!-- venture-human-ready:{head} -->\n"
                 "## 👤 Needs You — automation stopped\n\n"
-                f"The AI team reached the safety cap of **{MAX_AUTO_FIX_CYCLES} automatic fix cycles** for this PR. "
-                "No more automatic code changes will be attempted on the current revision.\n\n"
+                f"This exact PR HEAD has used its **{MAX_AUTO_FIX_CYCLES} automatic Fixer attempt**. "
+                "No more automatic code changes will be attempted on this exact revision.\n\n"
                 "### Your job\n"
                 "Review the latest Reviewer / QA findings and decide whether to change product direction, clarify the Issue contract, or ask the AI team for another explicitly approved attempt.\n\n"
-                "A new human-approved commit can start a fresh review cycle."
+                "A new commit creates a new HEAD and resets the one-shot Fixer budget."
             )
             post(repo, number, message)
             stopped += 1
