@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["idea_issue", "stage", "thesis", "decision"],
   "properties": {
-    "idea_issue": {"type": "integer", "minimum": 1},
+    "idea_issue": {"type": "integer", "minimum": 1},\n    "title": {"type": "string", "minLength": 1},
     "stage": {
       "type": "string",
       "enum": ["SPARK", "EXPLORE", "VALIDATE", "INCUBATE", "BUILD", "PARK", "REJECT"]
