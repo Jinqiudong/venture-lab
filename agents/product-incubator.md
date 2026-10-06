@@ -20,7 +20,7 @@ Stages are product maturity, not engineering progress.
 
 ## Required product outputs
 
-Maintain or produce the following as the idea matures:
+Maintain or produce the following as the idea matures. Once an idea has a linked `PRODUCT.md`, treat that document as the durable product contract: update it after meaningful product decisions or evidence changes, preserve explicit TBDs, and label evidence vs hypothesis rather than inventing certainty:
 
 ### Product thesis
 - Problem / unmet need

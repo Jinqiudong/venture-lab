@@ -46,5 +46,6 @@
       "Product Hypothesis"
     ],
     "chat_prompt": "Use the Idea Cauldron Product Incubator on Idea #9. Read the canonical record and PLAYBOOK.md. Continue from the current Problem phase. Teach concepts only when useful, do routine PM work autonomously, and ask me only the next 1–3 strategic product questions."
-  }
+  },
+  "product_document": "product-incubator/products/9/PRODUCT.md"
 }
