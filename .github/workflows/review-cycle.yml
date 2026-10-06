@@ -1,6 +1,6 @@
 name: Agent Review Cycle
 
-'on':
+on:
   workflow_dispatch:
   repository_dispatch:
     types: [portfolio-refresh, orchestrator-tick]
@@ -90,7 +90,7 @@ jobs:
 
   resume_human_decision:
     needs: select
-    if: always()
+    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true'
     runs-on: ubuntu-latest
     outputs:
       resumed: ${{ steps.detect.outputs.resumed }}
@@ -281,9 +281,14 @@ jobs:
           TARGET_REPO: ${{ needs.select.outputs.repo }}
           PR_NUMBER: ${{ needs.select.outputs.pr }}
         run: |
-          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🖥️ Platform validation required
-
-Reviewer findings require macOS/Xcode execution that the Linux Fixer cannot perform. The Fixer cycle is intentionally paused instead of retrying the same impossible action. Route this requirement to repository platform CI and rerun review after CI evidence exists."
+          BODY_FILE=$(mktemp)
+          {
+            printf '### 🖥️ Platform validation required\n\n'
+            printf '%s\n' 'Reviewer findings require macOS/Xcode execution that the Linux Fixer cannot perform.'
+            printf '%s\n' 'The Fixer cycle is intentionally paused instead of retrying the same impossible action.'
+            printf '%s\n' 'Route this requirement to repository platform CI and rerun review after CI evidence exists.'
+          } > "$BODY_FILE"
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
 
       - name: Report Fixer cycle
         if: steps.platform_blocker.outputs.platform_only != 'true'
