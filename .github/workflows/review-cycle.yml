@@ -236,7 +236,17 @@ jobs:
             fi
           } > fixer-prompt.md
 
+      - name: Detect platform-only validation blocker
+        id: platform_blocker
+        run: |
+          if jq -e '[.findings[]? | ((.title // "") + " " + (.detail // ""))] | join(" ") | test("macOS|xcodebuild|iOS Simulator|XCTest"; "i")' reports/review-result.json >/dev/null; then
+            echo "platform_only=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "platform_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Fixer
+        if: steps.platform_blocker.outputs.platform_only != 'true'
         id: fixer
         uses: openai/codex-action@v1
         with:
@@ -247,6 +257,7 @@ jobs:
           allow-bots: true
 
       - name: Commit and push fixes
+        if: steps.platform_blocker.outputs.platform_only != 'true'
         working-directory: target
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
@@ -263,7 +274,19 @@ jobs:
           git commit -m "fix: address independent review findings"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "HEAD:${BRANCH_NAME}"
 
+      - name: Report platform validation blocker
+        if: steps.platform_blocker.outputs.platform_only == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body "### 🖥️ Platform validation required
+
+Reviewer findings require macOS/Xcode execution that the Linux Fixer cannot perform. The Fixer cycle is intentionally paused instead of retrying the same impossible action. Route this requirement to repository platform CI and rerun review after CI evidence exists."
+
       - name: Report Fixer cycle
+        if: steps.platform_blocker.outputs.platform_only != 'true'
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
           TARGET_REPO: ${{ needs.select.outputs.repo }}
