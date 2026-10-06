@@ -219,3 +219,51 @@ async function loadHeroCat() {
 
 loadHeroCat();
 loadDashboard();
+
+const incubationStages = ["SPARK", "EXPLORE", "VALIDATE", "INCUBATE", "BUILD"];
+
+const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+}[char]));
+
+const incubationIdeaCard = (idea) => {
+  const decision = idea.decision || {};
+  const title = idea.title || `Idea #${idea.idea_issue}`;
+  const url = `https://github.com/Jinqiudong/venture-lab/issues/${idea.idea_issue}`;
+  return `<a class="incubation-idea" href="${url}" target="_blank" rel="noreferrer">
+    <span class="incubation-idea-meta">#${idea.idea_issue} · ${escapeHtml(decision.recommendation || "—")} · ${escapeHtml(decision.confidence || "—")}</span>
+    <strong>${escapeHtml(title)}</strong>
+    <small>${escapeHtml(decision.next_action || "No next action recorded.")}</small>
+  </a>`;
+};
+
+const renderIncubationBoard = (ideas = []) => {
+  const board = document.getElementById("incubation-board");
+  if (!board) return;
+  const active = incubationStages.map((stage) => {
+    const stageIdeas = ideas.filter((idea) => idea.stage === stage);
+    return `<section class="incubation-column ${stageIdeas.length ? "has-ideas" : ""}">
+      <div class="incubation-column-head"><span>${stage}</span><b>${stageIdeas.length}</b></div>
+      <div class="incubation-column-body">${stageIdeas.length ? stageIdeas.map(incubationIdeaCard).join("") : '<span class="incubation-empty">—</span>'}</div>
+    </section>`;
+  }).join("");
+  const exits = ["PARK", "REJECT"].map((stage) => {
+    const stageIdeas = ideas.filter((idea) => idea.stage === stage);
+    return `<section class="incubation-exit"><span>${stage}</span><b>${stageIdeas.length}</b>${stageIdeas.map(incubationIdeaCard).join("")}</section>`;
+  }).join("");
+  board.innerHTML = `<div class="incubation-lanes">${active}</div><div class="incubation-exit-row">${exits}</div>`;
+};
+
+async function loadIncubationBoard() {
+  try {
+    const response = await fetch("./incubation.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    renderIncubationBoard(Array.isArray(payload.ideas) ? payload.ideas : []);
+  } catch (_) {
+    const board = document.getElementById("incubation-board");
+    if (board) board.innerHTML = '<div class="incubation-loading">Incubation data is unavailable.</div>';
+  }
+}
+
+loadIncubationBoard();
