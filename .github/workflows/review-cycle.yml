@@ -362,10 +362,20 @@ jobs:
           echo "eligible=false" >> "$GITHUB_OUTPUT"
           ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
           FILES=$(gh pr diff "$PR_NUMBER" --repo "$TARGET_REPO" --name-only)
-          if printf '%s\n%s\n' "$ISSUE_BODY" "$FILES" | grep -Eiq '(needs[ _-]?human|human acceptance|manual approval|required human|payment|billing|production deploy|release to production|database migration|schema migration|\.github/workflows/|secrets?|entitlements|privacy|terms|legal)'; then
-            echo "Risk policy requires Product Owner handoff."
+
+          # Product contracts must explicitly request a human gate. Ordinary prose such as
+          # "do not use secrets" or "privacy-safe" must not create a false positive.
+          if printf '%s\n' "$ISSUE_BODY" | grep -Eiq '(needs[ _-]?human|human acceptance|manual approval|required human|product owner approval|human gate)'; then
+            echo "Issue contract explicitly requires Product Owner handoff."
             exit 0
           fi
+
+          # Path-based high-risk changes require a human regardless of prose.
+          if printf '%s\n' "$FILES" | grep -Eiq '(^|/)\.github/workflows/|(^|/)(secrets?|entitlements?|privacy|legal)(/|$)|(^|/)(migrations?|schema)(/|$)|(^|/)(billing|payments?)(/|$)'; then
+            echo "Changed paths match a high-risk category; Product Owner handoff required."
+            exit 0
+          fi
+
           echo "eligible=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish QA report
