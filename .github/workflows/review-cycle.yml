@@ -118,7 +118,7 @@ jobs:
           PR_BODY=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json body --jq '.body // ""')
           HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefOid --jq '.headRefOid')
           CHECK_RUNS='[]'
-          WORKFLOW_RUNS=$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$TARGET_REPO/actions/runs?head_sha=$HEAD_SHA&per_page=50" | jq -c '[.workflow_runs[]? | {name,status,conclusion,event,html_url}]' 2>/dev/null || printf '[]')
+          WORKFLOW_RUNS=$(gh run list --repo "$TARGET_REPO" --commit "$HEAD_SHA" --limit 50 --json name,status,conclusion,event,url 2>/dev/null | jq -c '[.[] | {name,status,conclusion,event,html_url:.url}]' || printf '[]')
           {
             cat control/agents/reviewer.md
             printf '\n\n---\n# Review assignment\n'
@@ -273,7 +273,7 @@ jobs:
           ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
           HEAD_SHA=$(git -C target rev-parse HEAD)
           CHECK_RUNS='[]'
-          WORKFLOW_RUNS=$(curl -fsSL -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$TARGET_REPO/actions/runs?head_sha=$HEAD_SHA&per_page=50" | jq -c '[.workflow_runs[]? | {name,status,conclusion,event,html_url}]' 2>/dev/null || printf '[]')
+          WORKFLOW_RUNS=$(gh run list --repo "$TARGET_REPO" --commit "$HEAD_SHA" --limit 50 --json name,status,conclusion,event,url 2>/dev/null | jq -c '[.[] | {name,status,conclusion,event,html_url:.url}]' || printf '[]')
           {
             cat control/agents/qa.md
             printf '\n\n---\n# QA assignment\nRepository: %s\nIssue: #%s\n\n## Issue contract\n%s\n' "$TARGET_REPO" "$ISSUE_NUMBER" "$ISSUE_BODY"
