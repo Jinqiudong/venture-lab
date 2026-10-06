@@ -13,7 +13,9 @@ on:
       - ".github/workflows/review-cycle.yml"
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: agent-review-cycle
@@ -248,6 +250,7 @@ jobs:
     outputs:
       verdict: ${{ steps.parse.outputs.verdict }}
       needs_human: ${{ steps.parse.outputs.needs_human }}
+      auto_merge_eligible: ${{ steps.risk.outputs.eligible }}
     steps:
       - name: Checkout control plane
         uses: actions/checkout@v4
@@ -300,6 +303,24 @@ jobs:
           cat qa-result.json | jq .
           echo "verdict=$(jq -r '.verdict' qa-result.json)" >> "$GITHUB_OUTPUT"
           echo "needs_human=$(jq -r '.needs_human' qa-result.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Classify auto-merge eligibility
+        id: risk
+        if: steps.parse.outputs.verdict == 'pass' && steps.parse.outputs.needs_human != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          ISSUE_NUMBER: ${{ needs.select.outputs.issue }}
+        run: |
+          echo "eligible=false" >> "$GITHUB_OUTPUT"
+          ISSUE_BODY=$(gh api "repos/$TARGET_REPO/issues/$ISSUE_NUMBER" --jq '.body // ""')
+          FILES=$(gh pr diff "$PR_NUMBER" --repo "$TARGET_REPO" --name-only)
+          if printf '%s\n%s\n' "$ISSUE_BODY" "$FILES" | grep -Eiq '(needs[ _-]?human|human acceptance|manual approval|required human|payment|billing|production deploy|release to production|database migration|schema migration|\.github/workflows/|secrets?|entitlements|privacy|terms|legal)'; then
+            echo "Risk policy requires Product Owner handoff."
+            exit 0
+          fi
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish QA report
         env:
@@ -393,7 +414,7 @@ jobs:
 
   handoff:
     needs: [select, review, qa]
-    if: always() && needs.select.outputs.found == 'true' && (needs.review.outputs.needs_human == 'true' || needs.qa.outputs.verdict == 'pass' || needs.qa.outputs.needs_human == 'true')
+    if: always() && needs.select.outputs.found == 'true' && (needs.review.outputs.needs_human == 'true' || (needs.qa.outputs.verdict == 'pass' && needs.qa.outputs.auto_merge_eligible != 'true') || needs.qa.outputs.needs_human == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout control plane
@@ -476,3 +497,19 @@ jobs:
             jq -r '.approve_action + "\n\n**Then:** " + .after_approve' handoff-result.json
           } > handoff-comment.md
           gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file handoff-comment.md
+
+  auto_merge:
+    needs: [select, review, qa]
+    if: always() && needs.select.outputs.found == 'true' && needs.review.outputs.verdict == 'approve' && needs.review.outputs.needs_human != 'true' && needs.qa.outputs.verdict == 'pass' && needs.qa.outputs.needs_human != 'true' && needs.qa.outputs.auto_merge_eligible == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-check exact HEAD and auto-merge routine change
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          REVIEWED_HEAD: ${{ needs.select.outputs.head }}
+        run: |
+          CURRENT_HEAD=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefOid --jq '.headRefOid')
+          [ "$CURRENT_HEAD" = "$REVIEWED_HEAD" ] || { echo "PR head moved; refusing auto-merge."; exit 1; }
+          gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
