@@ -67,7 +67,10 @@ jobs:
               issue=$(printf '%s\n' "$body" | grep -oE 'Closes #[0-9]+' | head -1 | grep -oE '[0-9]+' || true)
               [ -z "$issue" ] && continue
 
-              if gh api "repos/$repo/issues/$pr/comments" --paginate --jq '.[].body' 2>/dev/null | grep -Fq "<!-- venture-human-ready:$head -->"; then
+              comments=$(gh api "repos/$repo/issues/$pr/comments" --paginate 2>/dev/null || printf '[]')
+              handoff_at=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-human-ready:$head -->" '[.[] | select((.body // "") | contains($marker)) | .created_at] | max // ""')
+              decision_at=$(printf '%s' "$comments" | jq -r '[.[] | select((.body // "") | contains("<!-- venture-human-decision -->")) | .created_at] | max // ""')
+              if [ -n "$handoff_at" ] && { [ -z "$decision_at" ] || [[ "$decision_at" < "$handoff_at" ]]; }; then
                 continue
               fi
 
@@ -84,6 +87,29 @@ jobs:
           done < <(jq -r '.projects[].repo' control/dashboard/projects.json)
 
           echo "No managed PR needs review."
+
+  resume_human_decision:
+    needs: select
+    if: needs.select.outputs.configured == 'true' && needs.select.outputs.found == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      resumed: ${{ steps.detect.outputs.resumed }}
+    steps:
+      - name: Detect resolved human handoff
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          TARGET_REPO: ${{ needs.select.outputs.repo }}
+          PR_NUMBER: ${{ needs.select.outputs.pr }}
+          HEAD_SHA: ${{ needs.select.outputs.head }}
+        run: |
+          echo "resumed=false" >> "$GITHUB_OUTPUT"
+          comments=$(gh api "repos/$TARGET_REPO/issues/$PR_NUMBER/comments" --paginate)
+          handoff_at=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-human-ready:$HEAD_SHA -->" '[.[] | select((.body // "") | contains($marker)) | .created_at] | max // ""')
+          decision_at=$(printf '%s' "$comments" | jq -r '[.[] | select((.body // "") | contains("<!-- venture-human-decision -->")) | .created_at] | max // ""')
+          if [ -n "$handoff_at" ] && [ -n "$decision_at" ] && [[ "$decision_at" > "$handoff_at" ]]; then
+            echo "resumed=true" >> "$GITHUB_OUTPUT"
+          fi
 
   review:
     needs: select
@@ -175,8 +201,8 @@ jobs:
           retention-days: 3
 
   fix_review:
-    needs: [select, review]
-    if: needs.review.outputs.request_changes == 'true' && needs.review.outputs.needs_human != 'true'
+    needs: [select, review, resume_human_decision]
+    if: needs.review.outputs.request_changes == 'true' && (needs.review.outputs.needs_human != 'true' || needs.resume_human_decision.outputs.resumed == 'true')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout control plane
@@ -205,6 +231,9 @@ jobs:
             cat control/agents/fixer.md
             printf '\n\n---\n# Reviewer report\n'
             cat reports/review-result.json
+            if [ "${{ needs.resume_human_decision.outputs.resumed }}" = "true" ]; then
+              printf '\n\n# Product Owner decision\nThe prior human gate has been resolved. Re-read the current canonical Issue contract and PR comments, implement the approved decision, and do not ask the already-resolved question again.\n'
+            fi
           } > fixer-prompt.md
 
       - name: Run Fixer
