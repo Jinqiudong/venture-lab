@@ -1,0 +1,67 @@
+name: Autonomous Flow Docs Guard
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/orchestrator.yml"
+      - ".github/workflows/review-cycle.yml"
+      - ".github/workflows/runtime-guard.yml"
+      - "scripts/orchestrate.py"
+      - "orchestrator/**"
+      - "agents/builder.md"
+      - "agents/reviewer.md"
+      - "agents/fixer.md"
+      - "agents/qa.md"
+      - "agents/handoff.md"
+      - "docs/AUTONOMOUS_FLOW.md"
+      - "docs/AUTONOMOUS_FLOW.zh-CN.md"
+      - ".github/workflows/autonomous-flow-docs-guard.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  require-synchronized-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require both architecture docs when process changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "Manual validation: both docs exist."
+            test -f docs/AUTONOMOUS_FLOW.md
+            test -f docs/AUTONOMOUS_FLOW.zh-CN.md
+            exit 0
+          fi
+
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          printf '%s\n' "$changed"
+
+          process_changed=false
+          if printf '%s\n' "$changed" | grep -Eq '^(\.github/workflows/(orchestrator|review-cycle|runtime-guard)\.yml|scripts/orchestrate\.py|orchestrator/|agents/(builder|reviewer|fixer|qa|handoff)\.md)$'; then
+            process_changed=true
+          fi
+
+          if [ "$process_changed" != "true" ]; then
+            echo "No core autonomous-flow process change."
+            exit 0
+          fi
+
+          printf '%s\n' "$changed" | grep -Fxq 'docs/AUTONOMOUS_FLOW.md' || {
+            echo "::error::Core process changed without updating docs/AUTONOMOUS_FLOW.md"
+            exit 1
+          }
+          printf '%s\n' "$changed" | grep -Fxq 'docs/AUTONOMOUS_FLOW.zh-CN.md' || {
+            echo "::error::Core process changed without updating docs/AUTONOMOUS_FLOW.zh-CN.md"
+            exit 1
+          }
+
+          echo "English and Chinese autonomous-flow docs were updated with the process change."
