@@ -4,14 +4,13 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-MAX_AUTO_FIX_CYCLES = 3
+MAX_AUTO_FIX_CYCLES = 1
 
 FIX_MARKER_RE = re.compile(r"<!--\s*venture-fix-cycle:(\d+)(?:\s+sha:([0-9a-f]{7,40}))?\s*-->", re.I)
 REVIEW_MARKER_RE = re.compile(r"<!--\s*venture-review:([0-9a-f]{7,40})\s*-->", re.I)
 QA_MARKER_RE = re.compile(r"<!--\s*venture-qa:([0-9a-f]{7,40})\s*-->", re.I)
 HUMAN_MARKER_RE = re.compile(r"<!--\s*venture-human-ready:([0-9a-f]{7,40})\s*-->", re.I)
 AUTO_STOP_RE = re.compile(r"<!--\s*venture-auto-stop(?::([0-9a-f]{7,40}))?\s*-->", re.I)
-LEGACY_FIX_RE = re.compile(r"^###\s*🔧\s*(?:QA\s+)?Fixer\b", re.I | re.M)
 
 
 @dataclass(frozen=True)
@@ -30,12 +29,14 @@ def _matches(pattern: re.Pattern[str], comments: Iterable[str]) -> list[re.Match
     return found
 
 
-def fix_cycle_count(comments: Iterable[str]) -> int:
-    bodies = list(comments)
-    explicit = _matches(FIX_MARKER_RE, bodies)
-    explicit_count = max((int(match.group(1)) for match in explicit), default=0)
-    legacy_count = sum(len(LEGACY_FIX_RE.findall(body or "")) for body in bodies)
-    return max(explicit_count, legacy_count)
+def fix_cycle_count(comments: Iterable[str], head_sha: str = "") -> int:
+    wanted = (head_sha or "").lower()
+    if not wanted:
+        return 0
+    return sum(
+        1 for match in _matches(FIX_MARKER_RE, comments)
+        if (match.group(1) or "").lower() == wanted
+    )
 
 
 def has_sha_marker(pattern: re.Pattern[str], comments: Iterable[str], head_sha: str) -> bool:
@@ -56,7 +57,7 @@ def is_auto_stopped(comments: Iterable[str], head_sha: str) -> bool:
 
 def classify_runtime(comments: Iterable[str], head_sha: str) -> RuntimeState:
     bodies = list(comments)
-    cycles = fix_cycle_count(bodies)
+    cycles = fix_cycle_count(bodies, head_sha)
     human_ready = has_sha_marker(HUMAN_MARKER_RE, bodies, head_sha)
     stopped = is_auto_stopped(bodies, head_sha) or cycles >= MAX_AUTO_FIX_CYCLES
 
@@ -79,8 +80,7 @@ def classify_runtime(comments: Iterable[str], head_sha: str) -> RuntimeState:
 
 
 def next_fix_marker(comments: Iterable[str], head_sha: str) -> str:
-    cycle = fix_cycle_count(comments) + 1
-    return f"<!-- venture-fix-cycle:{cycle} sha:{head_sha} -->"
+    return f"<!-- venture-fixer-attempt:{head_sha} -->"
 
 
 def auto_stop_marker(head_sha: str) -> str:
