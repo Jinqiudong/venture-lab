@@ -146,14 +146,15 @@ jobs:
           PR_BODY=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json body --jq '.body // ""')
           HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefOid --jq '.headRefOid')
           CHECK_RUNS='[]'
-          WORKFLOW_RUNS=$(gh run list --repo "$TARGET_REPO" --commit "$HEAD_SHA" --limit 50 --json name,status,conclusion,event,url 2>/dev/null | jq -c '[.[] | {name,status,conclusion,event,html_url:.url}]' || printf '[]')
+          WORKFLOW_RUNS=$(gh run list --repo "$TARGET_REPO" --commit "$HEAD_SHA" --limit 50 --json databaseId,name,status,conclusion,event,url 2>/dev/null | jq -c '[.[] | {id:.databaseId,name,status,conclusion,event,html_url:.url}]' || printf '[]')
+          FAILED_RUN_DETAILS=$(printf '%s' "$WORKFLOW_RUNS" | jq -r '.[] | select(.conclusion=="failure") | .id' | while read -r run_id; do [ -z "$run_id" ] && continue; gh run view "$run_id" --repo "$TARGET_REPO" --log-failed 2>/dev/null | tail -n 120 || true; done)
           {
             cat control/agents/reviewer.md
             printf '\n\n---\n# Review assignment\n'
             printf 'Repository: %s\nIssue: #%s\nPR: #%s\n\n' "$TARGET_REPO" "$ISSUE_NUMBER" "$PR_NUMBER"
             printf '## Issue contract\n%s\n\n## Pull request description\n%s\n' "$ISSUE_BODY" "$PR_BODY"
-            printf '\n## GitHub CI evidence for current PR HEAD (%s)\n### Check runs\n%s\n\n### Workflow runs\n%s\n' "$HEAD_SHA" "$CHECK_RUNS" "$WORKFLOW_RUNS"
-            printf '\nTreat successful GitHub Actions runs on the current PR HEAD as authoritative evidence for platform-specific CI that this Linux agent cannot execute locally. Do not mark platform-specific validation unverified merely because the current runner lacks that platform tool. A missing, pending, cancelled, or failed required check may still block approval.\n'
+            printf '\n## GitHub CI evidence for current PR HEAD (%s)\n### Check runs\n%s\n\n### Workflow runs\n%s\n\n### Failed workflow details\n%s\n' "$HEAD_SHA" "$CHECK_RUNS" "$WORKFLOW_RUNS" "$FAILED_RUN_DETAILS"
+            printf '\nTreat successful GitHub Actions runs on the current PR HEAD as authoritative evidence for platform-specific CI that this Linux agent cannot execute locally. If a required platform workflow failed, inspect the supplied failed-run details and convert concrete code/configuration failures into actionable findings for Fixer. Do not reduce a real linker/build/test failure to a generic request for someone to run macOS. A missing or pending check may still block approval.\n'
             printf '\nInspect the checkout and `git diff origin/main...HEAD`. Return only schema-valid JSON.\n'
           } > reviewer-prompt.md
 
@@ -231,22 +232,13 @@ jobs:
             cat control/agents/fixer.md
             printf '\n\n---\n# Reviewer report\n'
             cat reports/review-result.json
+            printf '\n\n# Platform-validation rule\nIf the report mixes code findings with platform-only validation findings, fix every actionable code/configuration finding. Do not skip the whole Fixer run merely because some validation requires macOS/Xcode. You may leave only the irreducible platform execution itself to CI.\n'
             if [ "${{ needs.resume_human_decision.outputs.resumed }}" = "true" ]; then
               printf '\n\n# Product Owner decision\nThe prior human gate has been resolved. Re-read the current canonical Issue contract and PR comments, implement the approved decision, and do not ask the already-resolved question again.\n'
             fi
           } > fixer-prompt.md
 
-      - name: Detect platform-only validation blocker
-        id: platform_blocker
-        run: |
-          if jq -e '[.findings[]? | ((.title // "") + " " + (.detail // ""))] | join(" ") | test("macOS|xcodebuild|iOS Simulator|XCTest"; "i")' reports/review-result.json >/dev/null; then
-            echo "platform_only=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "platform_only=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run Fixer
-        if: steps.platform_blocker.outputs.platform_only != 'true'
         id: fixer
         uses: openai/codex-action@v1
         with:
@@ -257,7 +249,6 @@ jobs:
           allow-bots: true
 
       - name: Commit and push fixes
-        if: steps.platform_blocker.outputs.platform_only != 'true'
         working-directory: target
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
@@ -274,24 +265,7 @@ jobs:
           git commit -m "fix: address independent review findings"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "HEAD:${BRANCH_NAME}"
 
-      - name: Report platform validation blocker
-        if: steps.platform_blocker.outputs.platform_only == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
-          TARGET_REPO: ${{ needs.select.outputs.repo }}
-          PR_NUMBER: ${{ needs.select.outputs.pr }}
-        run: |
-          BODY_FILE=$(mktemp)
-          {
-            printf '### 🖥️ Platform validation required\n\n'
-            printf '%s\n' 'Reviewer findings require macOS/Xcode execution that the Linux Fixer cannot perform.'
-            printf '%s\n' 'The Fixer cycle is intentionally paused instead of retrying the same impossible action.'
-            printf '%s\n' 'Route this requirement to repository platform CI and rerun review after CI evidence exists.'
-          } > "$BODY_FILE"
-          gh pr comment "$PR_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
-
       - name: Report Fixer cycle
-        if: steps.platform_blocker.outputs.platform_only != 'true'
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
           TARGET_REPO: ${{ needs.select.outputs.repo }}
