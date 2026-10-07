@@ -2,8 +2,6 @@ name: Agent Review Cycle
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "23,53 * * * *"
   push:
     branches: [main]
     paths:
