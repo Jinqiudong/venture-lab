@@ -124,7 +124,11 @@ def resolve_dependencies(items: list[dict]) -> list[dict]:
     by_issue = {item.get("issue"): item for item in items if item.get("issue")}
     for item in items:
         blockers = item.get("blocked_by") or []
-        if not blockers or item.get("workflow_stage") in DONE_STAGES | AI_STAGES | HUMAN_STAGES:
+        # Dependency-backed items must always be re-evaluated from live blocker state.
+        # Preserve terminal/active/human stages, but do not let a stale configured
+        # "ready" or "blocked" value bypass dependency resolution.
+        stage = item.get("workflow_stage")
+        if not blockers or stage in DONE_STAGES | HUMAN_STAGES or stage in (AI_STAGES - {"ready"}):
             continue
         unresolved = []
         for number in blockers:
