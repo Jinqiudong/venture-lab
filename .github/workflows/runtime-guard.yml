@@ -3,7 +3,7 @@ name: Agent Runtime Guard
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [portfolio-refresh, orchestrator-tick]
+    types: [orchestrator-tick]
   schedule:
     - cron: "18,48 * * * *"
   push:
@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: agent-review-cycle
+  group: agent-runtime-guard
   cancel-in-progress: false
 
 jobs:
