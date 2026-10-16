@@ -35,6 +35,15 @@
 - **Aha moment — Hypothesis:** see real-life care history visibly change the personalized digital cat.
 - **Repeat-use / retention loop — Decision/Hypothesis:** appropriate recurring real-world care → simple check-in → gentle digital-cat progression → useful care history and configurable reminders. Avoid pressure/streak penalties or rewards for excessive grooming.
 
+### Gentle Care Companion — reminder experience (Owner proposal, 2026-10-15)
+- **Product direction — Proposed for validation:** friendly, opt-in reminders in the voice of the personalized digital cat, supporting care continuity without guilt or pressure.
+- **Care reminder:** when a user-configured care plan suggests checking an appropriate task, ask whether care is needed or already completed; never presume it must be performed.
+- **Re-engagement reminder:** after a user-configured period of app inactivity, invite them to catch up on records; inactivity does **not** imply the real cat was neglected.
+- **Post-check-in response:** affectionate acknowledgement when real care is logged, without rewarding unnecessary grooming.
+- **Controls / safeguards:** explicit opt-in, configurable per-task schedule and quiet hours, snooze/disable, frequency cap, no shame or streak penalties, no universal medical/grooming intervals; guidance should account for the individual cat and veterinary advice.
+- **Validation question:** do busy, experienced cat owners prefer task-based reminders, a gentle digital-cat check-in, both, or neither? Test perceived helpfulness versus notification fatigue.
+- **Scope gate:** candidate core experience; notification delivery is not automatically committed to MVP before validation.
+
 ## MVP
 ### Capabilities
 **TBD.** Do not freeze features until the problem/frequency assumption is better understood.
