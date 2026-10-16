@@ -44,6 +44,15 @@
 - **Validation question:** do busy, experienced cat owners prefer task-based reminders, a gentle digital-cat check-in, both, or neither? Test perceived helpfulness versus notification fatigue.
 - **Scope gate:** candidate core experience; notification delivery is not automatically committed to MVP before validation.
 
+### Pocket Kitty — ambient virtual-cat companion (Owner direction, 2026-10-15)
+- **Decision:** the product should feel like caring for an adorable electronic pet, not a high-pressure streak app. Inspiration: a memorable mascot and small home-screen widget, explicitly *not* guilt-driven Duolingo-style nudges.
+- **Small home-screen widget — Experience hypothesis:** personalized cat rests, stretches, peeks, grooms itself, or waves; tapping opens the cat or relevant care log. Widget is ambient companionship, not a persistent task alarm.
+- **Affection / progression — Experience hypothesis:** logging appropriate real-world care unlocks gentle animations, expressions, keepsakes, and optional accessories. No neglect simulation, deterioration, sadness, lost streak, or punishment for inactivity.
+- **Gentle messaging:** playful invitations rather than urgency or guilt; silence is an acceptable state. The companion is happy when the owner returns, not distressed when absent.
+- **Notifications:** optional, quiet-hours-aware, rate-limited, independently configurable for care reminders vs. friendly check-ins. Widget behavior must not imply that an inactive app means an uncared-for real cat.
+- **Validation:** compare static tracker, tracker + mascot, and widget mockups with busy experienced cat owners. Measure delight *and* willingness to keep logging; distinguish novelty from durable value.
+- **Scope gate:** concept approved for Core Experience; native iOS widget, animation system, and personalization depth remain candidate MVP features pending validation and feasibility review.
+
 ## MVP
 ### Capabilities
 **TBD.** Do not freeze features until the problem/frequency assumption is better understood.
