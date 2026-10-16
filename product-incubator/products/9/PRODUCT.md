@@ -63,6 +63,15 @@
 - **Validation:** test the two-path onboarding with busy experienced owners, including multi-cat owners; measure setup completion, time to first companion, photo-upload opt-in, and confusion between real and virtual care.
 - **Scope gate:** this is approved product direction, not approval to build image-generation, multiple cat accounts, or an entire virtual-pet game before MVP validation.
 
+### Kitty Personality, Relationships & Memories — Owner direction (2026-10-16)
+- **Decision — Personality onboarding:** optional playful prompts about each cat's temperament (affectionate/independent, shy/social, playful/calm, food motivated, etc.); owners may skip, edit, or use their own descriptions. Traits guide avatar expressions, idle animations and interaction style; avoid pretending a quiz can clinically diagnose animal personality.
+- **Decision — Multi-cat interactions:** owners can describe real relationships (bonded, friendly, cautious, prefers distance, still adjusting). Virtual cats can cuddle, nap nearby, share toys or have playful fictional moments; never interpret an animation as evidence of real-life compatibility.
+- **Decision — Kitty Memories:** a lightweight diary with dated owner-authored notes, optional photos, care milestones, and shareable virtual-cat portraits or multi-cat group pictures.
+- **Trust boundary:** preserve factual grooming records exactly as recorded. Clearly distinguish owner-authored memories from AI-generated fictional cat-perspective diary entries and composite/illustrated group portraits.
+- **Privacy and controls:** photo use, AI-generated sharing, and diary visibility should be opt-in; private by default. Owners can edit/delete entries and replace inaccurate character traits.
+- **Core experience hypothesis:** personalized appearance + recognizable personality + multi-cat dynamics + sentimental memories may create emotional attachment and repeat visits beyond care reminders.
+- **Validation / scope gate:** prototype personality setup, a two-cat interaction, and one diary/photo moment; test desirability separately from core care logging. Rich procedural animation, generative diary, and portrait creation are later-scope candidates, not automatically MVP commitments.
+
 ## MVP
 ### Capabilities
 **TBD.** Do not freeze features until the problem/frequency assumption is better understood.
