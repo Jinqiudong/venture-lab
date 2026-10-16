@@ -72,6 +72,12 @@
 - **Core experience hypothesis:** personalized appearance + recognizable personality + multi-cat dynamics + sentimental memories may create emotional attachment and repeat visits beyond care reminders.
 - **Validation / scope gate:** prototype personality setup, a two-cat interaction, and one diary/photo moment; test desirability separately from core care logging. Rich procedural animation, generative diary, and portrait creation are later-scope candidates, not automatically MVP commitments.
 
+### Visual direction — semi-realistic digital cats (Owner decision, 2026-10-16)
+- **Approved prototype art direction:** semi-realistic, soft and appealing cats; prioritize recognizability of the owner's actual cat (coat pattern, colors, eye color, face shape) over exaggerated cartoon features.
+- **Behavior:** natural feline movements (stretching, grooming, rolling, napping, gentle multi-cat interactions) and expressive but not heavily anthropomorphized reactions.
+- **No-photo entry:** offer preset semi-realistic cats, with optional later photo-based personalization.
+- **Prototype scope:** visual direction only; fidelity of image-to-avatar generation and animation implementation are feasibility questions, not promised MVP capabilities.
+
 ## MVP
 ### Capabilities
 **TBD.** Do not freeze features until the problem/frequency assumption is better understood.
