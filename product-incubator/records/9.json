@@ -3,7 +3,7 @@
   "stage": "EXPLORE",
   "thesis": {
     "problem": "Cat owners need a playful way to remember and record recurring grooming and hygiene care.",
-    "target_user": "Cat owners who actively care for and bond with their cats.",
+    "target_user": "Experienced cat owners (operational screener: 2+ years) with busy schedules who personally manage recurring cat care; selected by Product Owner on 2026-10-15.",
     "product_hypothesis": "A whimsical grooming companion with a personalized digital cat can turn routine care into an engaging ritual while keeping a cloud record of grooming.",
     "differentiation": "Combines practical grooming tracking with playful virtual-pet progression instead of behaving like a conventional pet-health tracker.",
     "product_direction": "C: real-world grooming check-ins drive growth of a personalized digital cat",
@@ -42,14 +42,28 @@
     "positive_signal": "Target users report recurring missed grooming or tracking friction and express intent to use the concept repeatedly.",
     "negative_signal": "Most target users already manage grooming easily and see the experience as novelty-only.",
     "proposed_positive_threshold": "At least 4/8 report concrete recent tracking friction and 4/8 opt into prototype trial (proposed)",
-    "proposed_negative_threshold": "Fewer than 2/8 report friction or fewer than 2/8 opt into trial (proposed)"
+    "proposed_negative_threshold": "Fewer than 2/8 report friction or fewer than 2/8 opt into trial (proposed)",
+    "recruitment_screener": [
+      "Owns a cat for 2+ years (initial screening proxy)",
+      "Has a busy work or family schedule",
+      "Personally manages at least one recurring grooming/care task"
+    ],
+    "interview_questions": [
+      "What grooming tasks did you actually perform in the last 30 days?",
+      "What did you postpone or forget, if anything?",
+      "How do you remember or log care now?",
+      "What is frustrating about that approach?",
+      "Would a plain care log solve anything?",
+      "Would digital-cat progression tied to appropriate real care make you return?",
+      "Would you try a two-week prototype, and why?"
+    ]
   },
   "decision": {
     "recommendation": "STAY",
     "confidence": "medium",
     "strongest_reason": "The problem, audience, and differentiated playful product concept are coherent enough to explore.",
     "biggest_uncertainty": "Whether recurring grooming creates enough real user need and frequency for retention.",
-    "next_action": "Conduct 5–8 problem interviews and prototype preference test; preserve EXPLORE and owner BUILD gate."
+    "next_action": "Recruit and interview 5–8 experienced busy cat owners, record observed friction and trial opt-in, then review evidence before stage promotion."
   },
   "title": "猫猫美容中心",
   "guidance": {
@@ -60,9 +74,10 @@
       "Idea understood",
       "Initial product hypothesis",
       "Product direction C confirmed",
-      "Competitor desk research completed"
+      "Competitor desk research completed",
+      "First validation cohort selected: experienced busy cat owners"
     ],
-    "current": "Validate recent grooming friction and whether virtual-cat progression changes repeat-use intent",
+    "current": "Recruit 5–8 experienced busy cat owners and conduct behavior-first problem interviews",
     "up_next": [
       "Core experience",
       "MVP definition",
