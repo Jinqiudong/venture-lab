@@ -8,7 +8,7 @@
 **Hypothesis:** A playful cat-grooming companion can make recurring care easier to remember and more emotionally engaging, while preserving a useful grooming history.
 
 ## Problem
-- **Target user — Hypothesis:** cat owners who actively care for and bond with their cats.
+- **Target user — Owner decision (2026-10-15):** experienced cat owners (several years of ownership) with busy daily schedules. **Hypothesis:** they know the basics but may struggle to consistently remember or record routine care.
 - **Problem — Hypothesis:** recurring grooming/hygiene tasks are easy to forget or inconsistently track.
 - **Job to be done — Hypothesis:** “Help me know what care my cat needs, remember when to do it, and feel good about keeping up.”
 - **Frequency/context — TBD:** we do not yet know whether grooming events occur often enough to support a dedicated product.
@@ -49,7 +49,7 @@ TBD during MVP phase.
 ## Validation
 - **Riskiest assumption:** cat owners have enough recurring grooming pain or forgetfulness to return to a dedicated grooming app.
 - **Existing evidence:** desk research confirms competitor functionality, but there is **no direct user-interview or retention evidence** for our concept.
-- **Cheapest next validation:** 5–8 short interviews with cat owners; ask about the last 30 days of actual grooming, missed care, current workarounds, and reaction to two simple prototype screens (plain tracker vs tracker + digital-cat feedback).
+- **Cheapest next validation:** 5–8 short interviews with experienced, busy cat owners; ask about the last 30 days of actual grooming, missed care, current workarounds, and reaction to two simple prototype screens (plain tracker vs tracker + digital-cat feedback).
 - **Positive threshold — Proposed, not yet approved:** at least 4 of 8 interviewees describe a concrete recent care-tracking problem; at least 4 of 8 opt into a 2-week prototype trial after seeing both concepts.
 - **Negative threshold — Proposed:** fewer than 2 of 8 have concrete tracking friction, or fewer than 2 of 8 opt into a trial; revisit problem or park.
 
@@ -63,9 +63,17 @@ TBD after the core experience and validation method are defined.
 
 ## Open Product Owner decisions
 - **Resolved:** C — real care check-ins drive digital-cat progression.
-- **Next decision (after research):** prioritize one initial cat-care cohort (new owners vs busy experienced owners) based on observed problems, not assumption.
+- **Resolved (2026-10-15):** first validation cohort = experienced, busy cat owners; new owners are not the initial focus.
 - **Pending:** MVP scope and BUILD approval; no engineering issues before owner gate.
 
 ## Build readiness
 - **Status:** NOT READY
 - **Missing before BUILD:** problem-frequency evidence, alternatives/competitor evidence, core journey, MVP/non-goals, validation result or explicit waiver, success metrics, and Product Owner BUILD approval.
+
+## First-cohort research plan (2026-10-15)
+- **Owner decision:** recruit experienced cat owners with demanding work or family schedules; do not assume they have a problem simply because they are busy.
+- **Recruitment screener:** cat ownership for 2+ years (operational proxy, not a validated segment boundary); self-described busy schedule; personally responsible for at least one care routine.
+- **Interview (10–15 min):** (1) What grooming did you actually do in the last 30 days? (2) What did you postpone or forget, if anything? (3) How do you remember and record it today? (4) What is inconvenient about that approach? (5) Would a care log alone be useful? (6) Does seeing a personalized digital cat respond to completed *appropriate* care change your willingness to return? (7) Would you try a two-week prototype? Why/why not?
+- **Analysis:** separate concrete past behavior from hypothetical enthusiasm; record task frequency, current workaround, pain intensity, prototype preference, and trial opt-in per participant. Avoid leading questions before eliciting recent behavior.
+- **Guardrail:** rewards must never encourage unnecessary grooming, over-cleaning, or animal distress.
+- **Next gate:** review findings and decide STAY / VALIDATE / PARK; no BUILD without owner approval.
