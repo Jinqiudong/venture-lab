@@ -10,7 +10,10 @@
     "core_loop": "Appropriate real care -> check-in -> gentle digital-cat progression -> care history/reminders",
     "companion_direction": "Pocket Kitty: ambient cute electronic cat with optional small home-screen widget, gentle affection and no streak pressure",
     "onboarding_direction": "Two paths: real cat with optional photo-derived digital likeness, or adopt a virtual kitty; photo upload skippable.",
-    "multi_cat": "Separate profiles, avatars, grooming records and reminders for each real cat; add/switch cats."
+    "multi_cat": "Separate profiles, avatars, grooming records and reminders for each real cat; add/switch cats.",
+    "personality_direction": "Optional per-cat personality traits shape digital-cat behaviors and dialogue; user-editable.",
+    "relationship_direction": "Owner-described real-cat relationships guide playful multi-cat digital interactions.",
+    "memories_direction": "Private-by-default owner diary, milestones and optional AI fictional cat-perspective entries and group portraits, clearly labeled."
   },
   "evidence": [
     {
@@ -39,7 +42,8 @@
     "The playful digital-cat layer may delight users without improving recurring care behavior.",
     "Commerce/toolkit demand is unvalidated.",
     "Widget and mascot delight may not translate into recurring grooming logging; test novelty versus durable value.",
-    "Photo avatar processing adds privacy, quality, cost and complexity risks; validate demand before committing to image-generation MVP."
+    "Photo avatar processing adds privacy, quality, cost and complexity risks; validate demand before committing to image-generation MVP.",
+    "Generative cat diaries and portraits must be labeled fictional; distinguish them from real care logs and protect uploaded photos."
   ],
   "validation": {
     "riskiest_assumption": "Cat owners have enough recurring grooming pain or forgetfulness to return to a dedicated grooming app.",
@@ -82,7 +86,8 @@
       "Competitor desk research completed",
       "First validation cohort selected: experienced busy cat owners",
       "Pocket Kitty low-pressure companion and widget direction confirmed",
-      "Two-path onboarding, optional photo avatar, multi-cat and virtual adoption direction confirmed"
+      "Two-path onboarding, optional photo avatar, multi-cat and virtual adoption direction confirmed",
+      "Personality onboarding, multi-cat interactions, diary and portraits captured as product direction"
     ],
     "current": "Recruit 5–8 experienced busy cat owners and conduct behavior-first problem interviews",
     "up_next": [
