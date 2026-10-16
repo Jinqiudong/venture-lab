@@ -53,6 +53,16 @@
 - **Validation:** compare static tracker, tracker + mascot, and widget mockups with busy experienced cat owners. Measure delight *and* willingness to keep logging; distinguish novelty from durable value.
 - **Scope gate:** concept approved for Core Experience; native iOS widget, animation system, and personalization depth remain candidate MVP features pending validation and feasibility review.
 
+### My Kitty, My Companion — onboarding and multi-cat (Owner direction, 2026-10-16)
+- **Decision:** offer two entry paths: (1) "I have a cat" with optional photo upload to create a stylized digital likeness; (2) "Adopt a virtual kitty" without owning a real cat. Photo upload is skippable; a preset avatar is always available.
+- **Decision:** support multi-cat households with separate profiles, avatars, schedules, and care histories; allow adding or switching cats later.
+- **Real Kitty:** associate a real cat profile with an optional photo-derived digital companion. Keep care check-ins tied to the correct real cat; allow correcting or replacing generated appearance.
+- **Virtual Kitty:** playful companionship, expressions and customization without pretending virtual actions are real grooming or generating fake care history.
+- **Onboarding hypothesis:** choose path → name cat → optionally upload photo / select preset → see companion immediately → optionally set up a care routine. Keep first session short and avoid mandatory account/photo upload before showing value where feasible.
+- **Safety/privacy constraints:** photo upload must be consensual, explain image processing/storage and deletion; minimize photo retention, avoid implying generated avatars are exact matches; keep each cat's records separate.
+- **Validation:** test the two-path onboarding with busy experienced owners, including multi-cat owners; measure setup completion, time to first companion, photo-upload opt-in, and confusion between real and virtual care.
+- **Scope gate:** this is approved product direction, not approval to build image-generation, multiple cat accounts, or an entire virtual-pet game before MVP validation.
+
 ## MVP
 ### Capabilities
 **TBD.** Do not freeze features until the problem/frequency assumption is better understood.
