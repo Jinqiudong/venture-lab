@@ -13,7 +13,8 @@
     "multi_cat": "Separate profiles, avatars, grooming records and reminders for each real cat; add/switch cats.",
     "personality_direction": "Optional per-cat personality traits shape digital-cat behaviors and dialogue; user-editable.",
     "relationship_direction": "Owner-described real-cat relationships guide playful multi-cat digital interactions.",
-    "memories_direction": "Private-by-default owner diary, milestones and optional AI fictional cat-perspective entries and group portraits, clearly labeled."
+    "memories_direction": "Private-by-default owner diary, milestones and optional AI fictional cat-perspective entries and group portraits, clearly labeled.",
+    "visual_direction": "Semi-realistic soft digital cats; recognizable coat/eyes/face from user photo, natural behavior, preset options without photo."
   },
   "evidence": [
     {
@@ -87,7 +88,8 @@
       "First validation cohort selected: experienced busy cat owners",
       "Pocket Kitty low-pressure companion and widget direction confirmed",
       "Two-path onboarding, optional photo avatar, multi-cat and virtual adoption direction confirmed",
-      "Personality onboarding, multi-cat interactions, diary and portraits captured as product direction"
+      "Personality onboarding, multi-cat interactions, diary and portraits captured as product direction",
+      "Owner selected semi-realistic visual style for clickable prototype"
     ],
     "current": "Recruit 5–8 experienced busy cat owners and conduct behavior-first problem interviews",
     "up_next": [
