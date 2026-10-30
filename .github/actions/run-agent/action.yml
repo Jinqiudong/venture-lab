@@ -1,0 +1,74 @@
+name: Run agent
+description: >-
+  Runs one Venture Lab agent role (Builder, Reviewer, Fixer, QA, Handoff) on the
+  configured provider. Claude Code is the default; Codex remains available as a
+  fallback by setting the repository variable AGENT_PROVIDER=codex.
+
+inputs:
+  provider:
+    description: "claude or codex. Empty means claude."
+    default: ""
+  claude-oauth-token:
+    description: "CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`, billed to a Claude subscription)."
+    default: ""
+  anthropic-api-key:
+    description: "ANTHROPIC_API_KEY, used when no OAuth token is supplied."
+    default: ""
+  openai-api-key:
+    description: "OPENAI_API_KEY, used only by the codex provider."
+    default: ""
+  permission-profile:
+    description: '":read-only" (inspect only) or ":workspace" (may edit files in working-directory).'
+    required: true
+  working-directory:
+    description: "Directory the agent works in."
+    required: true
+  prompt-file:
+    description: "Prompt file, relative to the workflow workspace."
+    required: true
+  output-schema-file:
+    description: "Optional JSON Schema the final answer must satisfy."
+    default: ""
+  output-file:
+    description: "Where to write the structured JSON answer (requires output-schema-file)."
+    default: ""
+  effort:
+    description: "Optional reasoning effort (low, medium, high)."
+    default: ""
+
+outputs:
+  final-message:
+    description: "The agent's final message."
+    value: ${{ steps.claude.outputs.final-message || steps.codex.outputs.final-message }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run Claude Code
+      id: claude
+      if: inputs.provider == '' || inputs.provider == 'claude'
+      shell: bash
+      env:
+        CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude-oauth-token }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        PERMISSION_PROFILE: ${{ inputs.permission-profile }}
+        AGENT_DIR: ${{ inputs.working-directory }}
+        PROMPT_FILE: ${{ inputs.prompt-file }}
+        SCHEMA_FILE: ${{ inputs.output-schema-file }}
+        OUTPUT_FILE: ${{ inputs.output-file }}
+        EFFORT: ${{ inputs.effort }}
+      run: python3 "$GITHUB_ACTION_PATH/run_claude.py"
+
+    - name: Run Codex
+      id: codex
+      if: inputs.provider == 'codex'
+      uses: openai/codex-action@v1
+      with:
+        openai-api-key: ${{ inputs.openai-api-key }}
+        permission-profile: ${{ inputs.permission-profile }}
+        working-directory: ${{ inputs.working-directory }}
+        prompt-file: ${{ inputs.prompt-file }}
+        output-schema-file: ${{ inputs.output-schema-file }}
+        output-file: ${{ inputs.output-file }}
+        effort: ${{ inputs.effort }}
+        allow-bots: true
