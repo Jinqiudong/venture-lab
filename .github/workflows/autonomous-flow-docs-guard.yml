@@ -14,7 +14,6 @@ on:
       - "agents/qa.md"
       - "agents/handoff.md"
       - "docs/AUTONOMOUS_FLOW.md"
-      - "docs/AUTONOMOUS_FLOW.zh-CN.md"
       - ".github/workflows/autonomous-flow-docs-guard.yml"
   workflow_dispatch:
 
@@ -30,15 +29,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Require both architecture docs when process changes
+      - name: Require the architecture doc when the process changes
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if [ "${{ github.event_name }}" != "pull_request" ]; then
-            echo "Manual validation: both docs exist."
+            echo "Manual validation: the architecture doc exists."
             test -f docs/AUTONOMOUS_FLOW.md
-            test -f docs/AUTONOMOUS_FLOW.zh-CN.md
             exit 0
           fi
 
@@ -46,7 +44,7 @@ jobs:
           printf '%s\n' "$changed"
 
           process_changed=false
-          if printf '%s\n' "$changed" | grep -Eq '^(\.github/workflows/(orchestrator|review-cycle|runtime-guard)\.yml|scripts/orchestrate\.py|orchestrator/|agents/(builder|reviewer|fixer|qa|handoff)\.md)$'; then
+          if printf '%s\n' "$changed" | grep -Eq '^(\.github/workflows/(orchestrator|review-cycle|runtime-guard)\.yml|scripts/orchestrate\.py|orchestrator/.*|agents/(builder|reviewer|fixer|qa|handoff)\.md)$'; then
             process_changed=true
           fi
 
@@ -59,9 +57,5 @@ jobs:
             echo "::error::Core process changed without updating docs/AUTONOMOUS_FLOW.md"
             exit 1
           }
-          printf '%s\n' "$changed" | grep -Fxq 'docs/AUTONOMOUS_FLOW.zh-CN.md' || {
-            echo "::error::Core process changed without updating docs/AUTONOMOUS_FLOW.zh-CN.md"
-            exit 1
-          }
 
-          echo "English and Chinese autonomous-flow docs were updated with the process change."
+          echo "The autonomous-flow doc was updated with the process change."
