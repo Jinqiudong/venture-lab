@@ -14,7 +14,8 @@ OUTPUT_PATH = ROOT / "dashboard" / "data.json"
 API = "https://api.github.com"
 TOKEN = os.getenv("PORTFOLIO_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
 
-HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human"}
+# "draft": a linked PR exists but its author has not marked it ready; the owner must act.
+HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "draft"}
 AI_STAGES = {"ready", "coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"}
 DONE_STAGES = {"done", "merged"}
 AUTO_STOP_MARKER = "venture-auto-stop"
@@ -77,6 +78,15 @@ def linked_pr(repo: str, issue_number: int) -> dict | None:
     return candidates[0]
 
 
+def pr_is_draft(repo: str, pr: dict) -> bool:
+    if "draft" in pr:
+        return bool(pr["draft"])
+    try:
+        return bool(request_json(f"/repos/{repo}/pulls/{pr.get('number')}").get("draft"))
+    except Exception:
+        return False
+
+
 def has_auto_stop(repo: str, issue_number: int) -> bool:
     try:
         comments = request_json(f"/repos/{repo}/issues/{issue_number}/comments?per_page=100")
@@ -108,7 +118,14 @@ def workflow_item(repo: str, item: dict) -> dict:
         if pr:
             enriched["pr"] = pr.get("number")
             enriched["pr_url"] = pr.get("html_url")
-            enriched["workflow_stage"] = "review" if pr.get("state") == "open" else "merged"
+            if pr.get("state") != "open":
+                enriched["workflow_stage"] = "merged"
+            elif pr_is_draft(repo, pr):
+                enriched["workflow_stage"] = "draft"
+                enriched["needs_human"] = True
+                enriched["next_action"] = f"Draft PR #{pr.get('number')}: mark it ready for review to let the AI team pick it up"
+            else:
+                enriched["workflow_stage"] = "review"
         elif issue.get("state") == "closed":
             enriched["workflow_stage"] = "done"
         elif has_auto_stop(repo, int(issue_number)):

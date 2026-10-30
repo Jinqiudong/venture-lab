@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human"}
+HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "draft"}
 AI_STAGES = {"ready", "building", "reviewing", "qa", "changes_requested", "coding", "ci", "review"}
 DONE_STAGES = {"done", "merged"}
 QUEUE_STAGES = {"blocked"}
@@ -17,6 +17,7 @@ ALLOWED_TRANSITIONS = {
     "changes_requested": {"building", "blocked_on_human"},
     "human_handoff": {"done", "changes_requested"},
     "blocked_on_human": {"ready", "building", "done"},
+    "draft": {"reviewing", "done"},
 }
 
 
