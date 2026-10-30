@@ -57,13 +57,21 @@ def build_command(prompt: str, profile: str, schema: str, effort: str) -> list[s
     return cmd
 
 
+def normalize_secret(name: str) -> None:
+    # Long tokens copied from a wrapped terminal often pick up line breaks or spaces.
+    value = "".join(os.environ.get(name, "").split())
+    if value:
+        os.environ[name] = value
+    else:
+        os.environ.pop(name, None)
+
+
 def main() -> None:
+    normalize_secret("CLAUDE_CODE_OAUTH_TOKEN")
+    normalize_secret("ANTHROPIC_API_KEY")
     if not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
-        os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
         if not os.environ.get("ANTHROPIC_API_KEY"):
             fail("Neither CLAUDE_CODE_OAUTH_TOKEN nor ANTHROPIC_API_KEY is configured.")
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        os.environ.pop("ANTHROPIC_API_KEY", None)
 
     workspace = Path(os.environ["GITHUB_WORKSPACE"])
     prompt = (workspace / os.environ["PROMPT_FILE"]).read_text(encoding="utf-8")
@@ -86,7 +94,7 @@ def main() -> None:
     final_message = result.get("result") or ""
     print(final_message)
     if result.get("is_error") or proc.returncode != 0:
-        fail(f"Claude Code failed: {result.get('subtype', 'unknown error')}")
+        fail(f"Claude Code failed (exit {proc.returncode}): {final_message or result.get('subtype', 'unknown error')}")
 
     if output_file:
         structured = result.get("structured_output")
