@@ -6,7 +6,7 @@ from typing import Iterable
 
 MAX_AUTO_FIX_CYCLES = 1
 
-FIX_MARKER_RE = re.compile(r"<!--\s*venture-fix-cycle:(\d+)(?:\s+sha:([0-9a-f]{7,40}))?\s*-->", re.I)
+FIX_MARKER_RE = re.compile(r"<!--\s*venture-fixer-attempt:([0-9a-f]{7,40})\s*-->", re.I)
 REVIEW_MARKER_RE = re.compile(r"<!--\s*venture-review:([0-9a-f]{7,40})\s*-->", re.I)
 QA_MARKER_RE = re.compile(r"<!--\s*venture-qa:([0-9a-f]{7,40})\s*-->", re.I)
 HUMAN_MARKER_RE = re.compile(r"<!--\s*venture-human-ready:([0-9a-f]{7,40})\s*-->", re.I)

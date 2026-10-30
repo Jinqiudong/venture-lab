@@ -65,7 +65,7 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 
 ## 4. Supporting Actions
 
-- **Agent Runtime Guard** caps unhealthy automatic-fix behavior and protects against runaway loops.
+- **Agent Runtime Guard** caps unhealthy automatic-fix behavior and protects against runaway loops. It counts Fixer attempts from the `<!-- venture-fixer-attempt:<HEAD SHA> -->` marker that Review Cycle posts, so the guard and the workflow must share that exact marker format.
 - **Scope Gate Shadow** analyzes whether ready Issues are sufficiently bounded; currently observational.
 - **Portfolio Dashboard / Checkpoint Dashboard Refresh** expose state/checkpoints; dashboards are observability, not canonical truth.
 
