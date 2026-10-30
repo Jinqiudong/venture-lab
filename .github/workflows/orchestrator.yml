@@ -107,11 +107,11 @@ jobs:
     steps:
       - name: Validate agent runtime configuration
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AGENT_CREDENTIAL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_API_KEY || secrets.OPENAI_API_KEY }}
           AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
         run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "OPENAI_API_KEY is not configured in venture-lab Actions secrets." >&2
+          if [ -z "$AGENT_CREDENTIAL" ]; then
+            echo "No agent credential (CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY or OPENAI_API_KEY) is configured in venture-lab Actions secrets." >&2
             exit 1
           fi
           if [ -z "$AGENT_GITHUB_TOKEN" ]; then
@@ -202,14 +202,16 @@ jobs:
 
       - name: Run Builder agent
         id: codex
-        uses: openai/codex-action@v1
+        uses: ./control-plane/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":workspace"
           working-directory: target
           prompt-file: builder-prompt.md
           effort: medium
-          allow-bots: true
 
       - name: Stop workspace checkpoint watcher
         if: always()

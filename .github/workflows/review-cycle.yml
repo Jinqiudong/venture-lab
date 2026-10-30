@@ -42,14 +42,14 @@ jobs:
         id: pick
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AGENT_CREDENTIAL: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_API_KEY || secrets.OPENAI_API_KEY }}
         run: |
           echo "configured=false" >> "$GITHUB_OUTPUT"
           echo "found=false" >> "$GITHUB_OUTPUT"
           echo "fixer_used=false" >> "$GITHUB_OUTPUT"
           echo "ci_pending=false" >> "$GITHUB_OUTPUT"
           echo "reuse_evidence=false" >> "$GITHUB_OUTPUT"
-          if [ -z "$GH_TOKEN" ] || [ -z "$OPENAI_API_KEY" ]; then
+          if [ -z "$GH_TOKEN" ] || [ -z "$AGENT_CREDENTIAL" ]; then
             echo "Agent runtime not configured; review cycle is idle."
             exit 0
           fi
@@ -209,15 +209,17 @@ jobs:
 
       - name: Run independent Reviewer
         id: reviewer
-        uses: openai/codex-action@v1
+        uses: ./control/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":read-only"
           working-directory: target
           prompt-file: reviewer-prompt.md
           output-schema-file: ${{ github.workspace }}/control/agents/review-schema.json
           output-file: ${{ github.workspace }}/review-result.json
-          allow-bots: true
 
       - name: Parse Reviewer result
         id: parse
@@ -298,13 +300,15 @@ jobs:
 
       - name: Run Fixer
         id: fixer
-        uses: openai/codex-action@v1
+        uses: ./control/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":workspace"
           working-directory: target
           prompt-file: fixer-prompt.md
-          allow-bots: true
 
       - name: Commit and push fixes
         working-directory: target
@@ -376,15 +380,17 @@ jobs:
 
       - name: Run independent QA
         id: qa_agent
-        uses: openai/codex-action@v1
+        uses: ./control/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":workspace"
           working-directory: target
           prompt-file: qa-prompt.md
           output-schema-file: ${{ github.workspace }}/control/agents/qa-schema.json
           output-file: ${{ github.workspace }}/qa-result.json
-          allow-bots: true
 
       - name: Parse QA result
         id: parse
@@ -477,13 +483,15 @@ jobs:
 
       - name: Run QA Fixer
         id: fixer
-        uses: openai/codex-action@v1
+        uses: ./control/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":workspace"
           working-directory: target
           prompt-file: fixer-prompt.md
-          allow-bots: true
 
       - name: Commit and push QA fixes
         working-directory: target
@@ -564,15 +572,17 @@ jobs:
 
       - name: Generate Product Owner handoff
         id: handoff_agent
-        uses: openai/codex-action@v1
+        uses: ./control/.github/actions/run-agent
         with:
+          provider: ${{ vars.AGENT_PROVIDER }}
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           permission-profile: ":read-only"
           working-directory: target
           prompt-file: handoff-prompt.md
           output-schema-file: ${{ github.workspace }}/control/agents/handoff-schema.json
           output-file: ${{ github.workspace }}/handoff-result.json
-          allow-bots: true
 
       - name: Publish Human Handoff
         env:

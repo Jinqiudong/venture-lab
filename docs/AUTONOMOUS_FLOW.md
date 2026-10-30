@@ -63,6 +63,12 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 
 **Auto-merge** re-checks the exact HEAD before squash-merging and deleting the branch.
 
+### Agent runtime — `.github/actions/run-agent`
+Every role (Builder, Reviewer, Fixer, QA, Handoff) runs through one composite action, so the model provider is a configuration choice rather than a workflow rewrite.
+
+- **Claude Code (default).** Uses the `CLAUDE_CODE_OAUTH_TOKEN` secret (created with `claude setup-token`, billed to the owner's Claude subscription) or, failing that, `ANTHROPIC_API_KEY`. Read-only roles may only read files and run read-only git commands; editing roles may change the working tree but cannot `git push` or call `gh`, because publishing stays with the workflow. Schema-bound roles return validated JSON through `--json-schema`.
+- **Codex (fallback).** Set the repository variable `AGENT_PROVIDER=codex` to route every role through `openai/codex-action` with `OPENAI_API_KEY`.
+
 ## 4. Supporting Actions
 
 - **Agent Runtime Guard** caps unhealthy automatic-fix behavior and protects against runaway loops. It counts Fixer attempts from the `<!-- venture-fixer-attempt:<HEAD SHA> -->` marker that Review Cycle posts, so the guard and the workflow must share that exact marker format.
