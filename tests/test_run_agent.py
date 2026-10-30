@@ -1,5 +1,6 @@
 import importlib.util
 import unittest
+from unittest import mock
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / ".github/actions/run-agent/run_claude.py"
@@ -29,6 +30,18 @@ class RunClaudeCommandTests(unittest.TestCase):
     def test_unknown_profile_is_rejected(self):
         with self.assertRaises(SystemExit):
             run_claude.build_command("p", ":danger", "", "")
+
+
+class NormalizeSecretTests(unittest.TestCase):
+    def test_line_breaks_and_spaces_are_removed(self):
+        with mock.patch.dict(run_claude.os.environ, {"TOKEN": "sk-ant-oat01-abc\n def \r\n"}):
+            run_claude.normalize_secret("TOKEN")
+            self.assertEqual(run_claude.os.environ["TOKEN"], "sk-ant-oat01-abcdef")
+
+    def test_blank_secret_is_unset(self):
+        with mock.patch.dict(run_claude.os.environ, {"TOKEN": " \n"}):
+            run_claude.normalize_secret("TOKEN")
+            self.assertNotIn("TOKEN", run_claude.os.environ)
 
 
 if __name__ == "__main__":
