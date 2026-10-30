@@ -57,11 +57,14 @@ jobs:
 
           while IFS= read -r repo; do
             [ -z "$repo" ] && continue
-            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt,labels)
+            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,baseRefName,title,body,updatedAt,labels)
+            default_branch=$(gh repo view "$repo" --json defaultBranchRef --jq '.defaultBranchRef.name')
             count=$(printf '%s' "$prs" | jq 'length')
             [ "$count" -eq 0 ] && continue
             for idx in $(seq 0 $((count - 1))); do
               pr=$(printf '%s' "$prs" | jq -r ".[$idx].number")
+              # Stacked PRs wait until their base lands; GitHub then retargets them to the default branch.
+              [ "$(printf '%s' "$prs" | jq -r ".[$idx].baseRefName")" = "$default_branch" ] || continue
               # Drafts are reviewed like any PR. Only an explicit `hold` label keeps the AI team away.
               [ "$(printf '%s' "$prs" | jq -r "[.[$idx].labels[].name] | index(\"hold\") != null")" = "true" ] && continue
               head=$(printf '%s' "$prs" | jq -r ".[$idx].headRefOid")

@@ -46,7 +46,7 @@ The Orchestrator refreshes portfolio state and asks `scripts/orchestrate.py` for
 
 For a build it checks out the target repo, creates `agent/issue-<n>`, runs Builder, checkpoints work, commits, opens a PR, then dispatches Review Cycle and Dashboard refresh.
 
-**Only a `hold` label stops the AI team.** Draft PRs are reviewed like any other PR, and an approved draft is marked ready automatically right before merge. To keep the AI team away from a PR, add the `hold` label; its Issue then gets the `hold` stage, which neither blocks new Builder dispatches nor gets reset to `ready` by dependency resolution. Removing the label resumes automation.
+**Only a `hold` label stops the AI team.** Draft PRs are reviewed like any other PR, and an approved draft is marked ready automatically right before merge. To keep the AI team away from a PR, add the `hold` label; its Issue then gets the `hold` stage, which neither blocks new Builder dispatches nor gets reset to `ready` by dependency resolution. Removing the label resumes automation. Stacked PRs (based on another feature branch) are skipped until their base merges and GitHub retargets them to the default branch.
 
 ### Product repository CI
 Opening/updating the PR triggers the product repository's own workflows. Results are attached to the exact commit SHA and become evidence for Reviewer/QA.
