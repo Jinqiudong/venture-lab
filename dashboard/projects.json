@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Deliver iOS auth through scoped tasks #23–#27; #8 remains the live acceptance gate",
+      "current_focus": "Land #9 (PR #34) and the Dream Atlas iOS design slices (#40); keep docs/agent context English-only (#45, #47)",
       "work_items": [
         {
           "issue": 3,
@@ -140,6 +140,55 @@
             11
           ],
           "ready_action": "Prepare staging and TestFlight beta"
+        },
+        {
+          "issue": 38,
+          "status": "ready",
+          "next_action": "Review PR #37 (auth failures return 401 instead of 500)"
+        },
+        {
+          "issue": 39,
+          "status": "ready",
+          "next_action": "Review PR #36 (tests ignore local .env)"
+        },
+        {
+          "issue": 45,
+          "status": "ready",
+          "next_action": "Review PR #46 (AGENTS.md)"
+        },
+        {
+          "issue": 47,
+          "status": "blocked",
+          "blocked_by": [
+            45
+          ],
+          "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)"
+        },
+        {
+          "issue": 40,
+          "status": "human_handoff",
+          "blocked_by": [
+            41,
+            43
+          ],
+          "needs_human": true,
+          "next_action": "Tracking parent only: product owner approves each Dream Atlas slice from simulator screenshots"
+        },
+        {
+          "issue": 41,
+          "status": "blocked",
+          "blocked_by": [
+            9
+          ],
+          "ready_action": "Review PR #42 (Dream Atlas 1/5: tokens, Home, tab tint)"
+        },
+        {
+          "issue": 43,
+          "status": "blocked",
+          "blocked_by": [
+            41
+          ],
+          "ready_action": "Review PR #44 (English / Simplified Chinese language switch)"
         }
       ]
     },
