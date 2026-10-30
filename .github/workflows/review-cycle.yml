@@ -57,11 +57,13 @@ jobs:
 
           while IFS= read -r repo; do
             [ -z "$repo" ] && continue
-            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt)
+            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt,isDraft)
             count=$(printf '%s' "$prs" | jq 'length')
             [ "$count" -eq 0 ] && continue
             for idx in $(seq 0 $((count - 1))); do
               pr=$(printf '%s' "$prs" | jq -r ".[$idx].number")
+              # Drafts are held by their author; reviewing them wastes runs and they cannot be merged.
+              [ "$(printf '%s' "$prs" | jq -r ".[$idx].isDraft")" = "true" ] && continue
               head=$(printf '%s' "$prs" | jq -r ".[$idx].headRefOid")
               branch=$(printf '%s' "$prs" | jq -r ".[$idx].headRefName")
               title=$(printf '%s' "$prs" | jq -r ".[$idx].title")

@@ -44,6 +44,8 @@ The Orchestrator refreshes portfolio state and asks `scripts/orchestrate.py` for
 
 For a build it checks out the target repo, creates `agent/issue-<n>`, runs Builder, checkpoints work, commits, opens a PR, then dispatches Review Cycle and Dashboard refresh.
 
+**Draft PRs are owner-held.** An Issue whose linked PR (`Closes #<n>`) is a draft gets the `draft` stage. It counts as *needs you*, not active AI work, so it neither blocks new Builder dispatches nor gets reset to `ready` by dependency resolution. Review Cycle skips drafts. Marking the PR *Ready for review* hands it back to the AI team.
+
 ### Product repository CI
 Opening/updating the PR triggers the product repository's own workflows. Results are attached to the exact commit SHA and become evidence for Reviewer/QA.
 
