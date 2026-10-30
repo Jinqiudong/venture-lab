@@ -1,7 +1,5 @@
 # Venture Lab Autonomous Delivery Flow
 
-[中文](AUTONOMOUS_FLOW.zh-CN.md) | **English**
-
 > Current autonomous engineering control plane. GitHub Issues are the work contract; product repositories own product code and platform CI; Venture Lab owns orchestration, independent review, QA, risk gates, and human escalation.
 
 ## 1. Mental model
@@ -95,11 +93,9 @@ Issue ready → Orchestrator → Builder → PR → product CI → Reviewer
 
 ## 7. Keeping this document synchronized
 
-These files are a synchronized pair:
-- `docs/AUTONOMOUS_FLOW.md` — English
-- `docs/AUTONOMOUS_FLOW.zh-CN.md` — Simplified Chinese
+This document is English-only, like all code and documentation in Venture Lab and its product repositories.
 
-A **Documentation Guard** requires changes to core orchestration workflows or agent contracts to update **both** documents in the same change. CI fails rather than allowing architecture docs to silently become stale.
+A **Documentation Guard** requires every change to a core orchestration workflow, `orchestrator/` module, or agent contract to update this document in the same change. CI fails rather than allowing architecture docs to silently become stale.
 
 The guard does not ask AI to guess documentation after the fact. The engineer/agent changing the process updates the relevant section in the same change, so intended behavior and documentation are reviewed together.
 
@@ -114,4 +110,4 @@ The guard does not ask AI to guess documentation after the fact. The engineer/ag
 | Review/Fix/QA/merge state machine | `.github/workflows/review-cycle.yml` |
 | Agent behavior | `agents/*.md` |
 | Portfolio visibility | Generated dashboard |
-| Architecture explanation | `docs/AUTONOMOUS_FLOW*.md` |
+| Architecture explanation | `docs/AUTONOMOUS_FLOW.md` |
