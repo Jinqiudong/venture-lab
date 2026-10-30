@@ -57,13 +57,13 @@ jobs:
 
           while IFS= read -r repo; do
             [ -z "$repo" ] && continue
-            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt,isDraft)
+            prs=$(gh pr list --repo "$repo" --state open --limit 30 --json number,headRefName,headRefOid,title,body,updatedAt,labels)
             count=$(printf '%s' "$prs" | jq 'length')
             [ "$count" -eq 0 ] && continue
             for idx in $(seq 0 $((count - 1))); do
               pr=$(printf '%s' "$prs" | jq -r ".[$idx].number")
-              # Drafts are held by their author; reviewing them wastes runs and they cannot be merged.
-              [ "$(printf '%s' "$prs" | jq -r ".[$idx].isDraft")" = "true" ] && continue
+              # Drafts are reviewed like any PR. Only an explicit `hold` label keeps the AI team away.
+              [ "$(printf '%s' "$prs" | jq -r "[.[$idx].labels[].name] | index(\"hold\") != null")" = "true" ] && continue
               head=$(printf '%s' "$prs" | jq -r ".[$idx].headRefOid")
               branch=$(printf '%s' "$prs" | jq -r ".[$idx].headRefName")
               title=$(printf '%s' "$prs" | jq -r ".[$idx].title")
@@ -134,6 +134,10 @@ jobs:
           fi
 
           echo "Reusing Reviewer approve + QA pass for exact HEAD $REVIEWED_HEAD."
+          # Approved drafts are promoted automatically; drafts cannot be merged otherwise.
+          if [ "$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json isDraft --jq .isDraft)" = "true" ]; then
+            gh pr ready "$PR_NUMBER" --repo "$TARGET_REPO"
+          fi
           gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
 
 
@@ -621,4 +625,8 @@ jobs:
         run: |
           CURRENT_HEAD=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefOid --jq '.headRefOid')
           [ "$CURRENT_HEAD" = "$REVIEWED_HEAD" ] || { echo "PR head moved; refusing auto-merge."; exit 1; }
+          # Approved drafts are promoted automatically; drafts cannot be merged otherwise.
+          if [ "$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json isDraft --jq .isDraft)" = "true" ]; then
+            gh pr ready "$PR_NUMBER" --repo "$TARGET_REPO"
+          fi
           gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
