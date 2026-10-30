@@ -65,7 +65,7 @@ PR 创建/更新后，产品 repo 自己的 Actions 开始跑。结果绑定精�
 
 ## 4. 辅助 Actions
 
-- **Agent Runtime Guard**：限制不健康的自动修复循环，防止 runaway automation。它根据 Review Cycle 发布的 `<!-- venture-fixer-attempt:<HEAD SHA> -->` 标记统计 Fixer 次数，因此 Guard 与 workflow 必须使用完全一致的标记格式。
+- **Agent Runtime Guard**：限制不健康的自动修复循环，防止 runaway automation。
 - **Scope Gate Shadow**：分析 ready Issue 是否足够小、清晰；目前只观察，不 block。
 - **Portfolio Dashboard / Checkpoint Dashboard Refresh**：展示状态和 Builder checkpoint；Dashboard 是 observability，不是真相源。
 
