@@ -1,0 +1,56 @@
+name: AI Team Heartbeat
+
+# One long-running loop keeps the AI team moving: every 10 minutes it wakes the Orchestrator when
+# nothing is running, waits out Claude usage limits until their reset time, moves finished
+# milestones to the owner, and refreshes the dashboard. GitHub cron alone is unreliable (most
+# scheduled runs were dropped on 2026-10-31), so the loop re-arms itself before the job time limit;
+# the cron below only restarts it if a run was ever lost.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 */2 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/heartbeat.py"
+      - "scripts/milestones.py"
+      - ".github/workflows/heartbeat.yml"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: ai-team-heartbeat
+  cancel-in-progress: false
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - name: Checkout control plane
+        uses: actions/checkout@v4
+
+      - name: Skip if another loop is already running
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          running=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/heartbeat.yml/runs?status=in_progress" \
+            --jq "[.workflow_runs[] | select(.id != ${GITHUB_RUN_ID})] | length")
+          echo "skip=$([ "$running" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Run the heartbeat loop
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          # Reads and dispatches in venture-lab use the workflow token; milestone work in product repos needs the agent token.
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: python3 scripts/heartbeat.py --minutes 340 --every 600
+
+      - name: Re-arm the loop
+        if: always() && steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run heartbeat.yml --repo "$GITHUB_REPOSITORY" --ref main
