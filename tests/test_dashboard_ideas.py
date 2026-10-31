@@ -28,6 +28,16 @@ class IncubationIdeaTests(unittest.TestCase):
             with mock.patch.object(dashboard, "INCUBATION_RECORDS", folder):
                 self.assertEqual(dashboard.incubation_projects(), [])
 
+    def test_repo_project_keeps_idea_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            self.write_record(folder, 9, guidance={"completed": ["Idea understood"], "up_next": ["Prototype"]})
+            with mock.patch.object(dashboard, "INCUBATION_RECORDS", folder):
+                idea = dashboard.idea_summary(9)
+        self.assertEqual(idea["issue_url"], "https://github.com/Jinqiudong/venture-lab/issues/9")
+        self.assertEqual(idea["done_steps"], ["Idea understood"])
+        self.assertEqual(idea["next_steps"], ["Prototype"])
+
 
 if __name__ == "__main__":
     unittest.main()

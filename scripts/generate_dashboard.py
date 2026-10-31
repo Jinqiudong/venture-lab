@@ -285,6 +285,22 @@ def resolve_dependencies(items: list[dict]) -> list[dict]:
     return items
 
 
+def idea_summary(issue: int) -> dict | None:
+    """Incubation context for a repo project that grew out of an idea."""
+    path = INCUBATION_RECORDS / f"{issue}.json"
+    if not path.exists():
+        return None
+    record = json.loads(path.read_text())
+    guidance = record.get("guidance") or {}
+    return {
+        "issue": issue,
+        "issue_url": f"https://github.com/Jinqiudong/venture-lab/issues/{issue}",
+        "title": record.get("title"),
+        "done_steps": guidance.get("completed", []),
+        "next_steps": guidance.get("up_next", []),
+    }
+
+
 def main() -> None:
     config = json.loads(CONFIG_PATH.read_text())
     now = datetime.now(timezone.utc)
@@ -302,6 +318,7 @@ def main() -> None:
                 "work_items": project_items,
                 "progress": project_progress(project_items),
                 "recent_merged": recent_merged(repo, now, index),
+                "idea": idea_summary(project["idea_issue"]) if project.get("idea_issue") else None,
             }
         )
         work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
