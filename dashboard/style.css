@@ -72,6 +72,15 @@ h1 { font-size: clamp(42px, 8vw, 84px); line-height: 1.02; letter-spacing: -.035
 .stat strong { display: block; font-size: 40px; font-weight: 900; line-height: 1; }
 .stat span { color: var(--muted); font-size: 14px; font-weight: 700; }
 
+.new-idea {
+  display: inline-flex; align-items: center; margin-top: 26px; padding: 12px 22px;
+  border-radius: 999px; background: var(--grad); color: #1b1230; font-weight: 900;
+  box-shadow: 0 10px 30px rgba(255, 154, 213, .25); transition: transform .2s;
+}
+.new-idea:hover { transform: translateY(-2px); }
+.new-idea.small { margin: 0; padding: 6px 14px; font-size: 13px; box-shadow: none; }
+.hint { margin: 10px auto 0; color: var(--muted); font-size: 13px; font-weight: 700; }
+
 /* Sections */
 .section { padding: 64px 0 8px; }
 .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
@@ -128,7 +137,7 @@ footer img { width: 64px; }
 @media (max-width: 640px) {
   .topbar { margin: 10px 16px 0; padding-left: 14px; gap: 8px; }
   .topbar nav { display: none; }
-  .lang { margin-left: auto; }
+  .new-idea.small { margin-left: auto; }
   .hero { padding-top: 56px; }
   .stats { grid-template-columns: 1fr; }
   .project-grid { grid-template-columns: 1fr; }

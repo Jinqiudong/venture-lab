@@ -67,10 +67,14 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 
 **Auto-merge** re-checks the exact HEAD before squash-merging and deleting the branch.
 
+### Idea intake — `.github/workflows/idea-brain.yml`
+The dashboard's "new idea" button opens the `idea.yml` issue form, which labels the issue `idea`. When the repository owner opens such an issue, or comments on it, the Product Brain (`agents/product-incubator.md` plus `product-incubator/PLAYBOOK.md`) runs one turn: desk research, an updated incubation record, and a reply with at most three questions. The record is embedded in that reply as an `idea-cauldron-record` HTML comment, so the issue alone holds the state; `scripts/generate_dashboard.py` reads the latest one to draw the idea card, and a file in `product-incubator/records/` still wins when both exist. Comments from anyone other than the owner never start a turn and are left out of the prompt. The Product Brain cannot move an idea to BUILD; that happens only when the owner's latest comment contains `/approve-build` (or `批准开发`).
+
 ### Agent runtime — `.github/actions/run-agent`
 Every role (Builder, Reviewer, Fixer, QA, Handoff) runs through one composite action, so the model provider is a configuration choice rather than a workflow rewrite.
 
 - **Claude Code (default).** Uses the `CLAUDE_CODE_OAUTH_TOKEN` secret (created with `claude setup-token`, billed to the owner's Claude subscription) or, failing that, `ANTHROPIC_API_KEY`. Read-only roles may only read files and run read-only git commands; editing roles may change the working tree but cannot `git push` or call `gh`, because publishing stays with the workflow. Schema-bound roles return validated JSON through `--json-schema`.
+- **Research profile.** `:research` is the read-only profile plus `WebSearch` and `WebFetch`. Only the Product Brain uses it, and it always runs on Claude.
 - **Codex (fallback).** Set the repository variable `AGENT_PROVIDER=codex` to route every role through `openai/codex-action` with `OPENAI_API_KEY`.
 
 ## 4. Supporting Actions

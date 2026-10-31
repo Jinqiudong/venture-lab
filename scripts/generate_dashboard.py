@@ -8,6 +8,11 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+try:
+    from scripts import idea_brain
+except ImportError:  # run as `python3 scripts/generate_dashboard.py`
+    import idea_brain
+
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "dashboard" / "projects.json"
 OUTPUT_PATH = ROOT / "dashboard" / "data.json"
@@ -32,6 +37,8 @@ INCUBATION_TO_LIFECYCLE = {
     "PARK": "idea",
     "REJECT": "idea",
 }
+IDEA_REPO = os.getenv("GITHUB_REPOSITORY") or "Jinqiudong/venture-lab"
+IDEA_LABEL = "idea"
 CONTROL_WORKFLOWS = {"orchestrator": "orchestrator.yml", "review": "review-cycle.yml"}
 
 
@@ -143,34 +150,76 @@ def pipeline_health() -> dict:
     return health
 
 
-def incubation_projects(represented: set[int] | None = None) -> list[dict]:
+def idea_card(record: dict) -> dict:
+    guidance = record.get("guidance") or {}
+    return {
+        "name": record.get("title") or f"Idea #{record.get('idea_issue')}",
+        "name_zh": record.get("title_zh"),
+        "kind": "idea",
+        "repo": None,
+        "issue_url": f"https://github.com/{IDEA_REPO}/issues/{record.get('idea_issue')}",
+        "lifecycle": INCUBATION_TO_LIFECYCLE.get(record.get("stage"), "idea"),
+        "current_focus": guidance.get("current") or (record.get("decision") or {}).get("next_action"),
+        "current_focus_zh": guidance.get("current_zh"),
+        "progress": {"done": max(0, int(guidance.get("step") or 1) - 1), "total": int(guidance.get("total_steps") or 6), "active": 0},
+        "done_steps": guidance.get("completed", []),
+        "next_steps": guidance.get("up_next", []),
+    }
+
+
+def issue_idea_records() -> list[dict]:
+    """Ideas captured through the issue form; the Product Brain keeps each record in its latest reply."""
+    try:
+        issues = request_json(f"/repos/{IDEA_REPO}/issues?labels={IDEA_LABEL}&state=open&per_page=100")
+    except Exception:
+        return []
+    records = []
+    for issue in issues if isinstance(issues, list) else []:
+        if "pull_request" in issue:
+            continue
+        record = None
+        try:
+            comments = request_json(f"/repos/{IDEA_REPO}/issues/{issue['number']}/comments?per_page=100")
+        except Exception:
+            comments = []
+        for comment in reversed(comments if isinstance(comments, list) else []):
+            if (comment.get("user") or {}).get("login") == "github-actions[bot]":
+                record = idea_brain.record_from(comment.get("body"))
+                if record:
+                    break
+        if record is None:
+            # Captured but not yet researched.
+            title = re.sub(r"^\[Idea\]\s*", "", issue.get("title") or "").strip()
+            record = {
+                "stage": "SPARK",
+                "title": title or None,
+                "guidance": {"current": "Product Brain is researching this idea", "current_zh": "AI 产品经理正在调研这个想法", "step": 1},
+            }
+        records.append({**record, "idea_issue": issue["number"]})
+    return records
+
+
+def incubation_projects(represented: set[int] | None = None, issue_records: list[dict] | None = None) -> list[dict]:
     """Ideas still in incubation appear as projects without a repository.
 
-    An idea that already has a product repo is shown once, by its repo card.
+    An idea that already has a product repo is shown once, by its repo card. A record file
+    in product-incubator/records wins over the copy kept on the issue.
     """
     represented = represented or set()
-    projects = []
+    records: dict[int, dict] = {}
+    for record in issue_records or []:
+        records[record.get("idea_issue")] = record
     for path in sorted(INCUBATION_RECORDS.glob("*.json")) if INCUBATION_RECORDS.exists() else []:
         record = json.loads(path.read_text())
+        records[record.get("idea_issue")] = record
+    projects = []
+    for number in sorted(records, key=lambda n: n or 0):
+        record = records[number]
         if record.get("stage") in {"BUILD", "REJECT"}:
             continue
-        if record.get("product_repo") or record.get("idea_issue") in represented:
+        if record.get("product_repo") or number in represented:
             continue
-        guidance = record.get("guidance") or {}
-        projects.append(
-            {
-                "name": record.get("title") or f"Idea #{record.get('idea_issue')}",
-                "kind": "idea",
-                "repo": None,
-                "issue_url": f"https://github.com/Jinqiudong/venture-lab/issues/{record.get('idea_issue')}",
-                "lifecycle": INCUBATION_TO_LIFECYCLE.get(record.get("stage"), "idea"),
-                "current_focus": guidance.get("current") or (record.get("decision") or {}).get("next_action"),
-                "current_focus_zh": guidance.get("current_zh"),
-                "progress": {"done": max(0, int(guidance.get("step") or 1) - 1), "total": int(guidance.get("total_steps") or 6), "active": 0},
-                "done_steps": guidance.get("completed", []),
-                "next_steps": guidance.get("up_next", []),
-            }
-        )
+        projects.append(idea_card(record))
     return projects
 
 
@@ -336,7 +385,8 @@ def main() -> None:
         "generated_at": now.isoformat(),
         "lifecycle": LIFECYCLE,
         "pipeline": pipeline_health(),
-        "ideas": incubation_projects({p["idea_issue"] for p in config["projects"] if p.get("idea_issue")}),
+        "ideas": incubation_projects({p["idea_issue"] for p in config["projects"] if p.get("idea_issue")}, issue_idea_records()),
+        "new_idea_url": f"https://github.com/{IDEA_REPO}/issues/new?template=idea.yml",
         "needs_you": needs_you,
         "ai_team": ai_team,
         "queue": queue,

@@ -18,7 +18,7 @@ inputs:
     description: "OPENAI_API_KEY, used only by the codex provider."
     default: ""
   permission-profile:
-    description: '":read-only" (inspect only) or ":workspace" (may edit files in working-directory).'
+    description: '":read-only" (inspect only), ":research" (inspect plus web search), or ":workspace" (may edit files in working-directory).'
     required: true
   working-directory:
     description: "Directory the agent works in."

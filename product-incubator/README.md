@@ -22,6 +22,10 @@ Repo bootstrap → Epic → Scope Gate → Builder
 
 Ideas may also move to `PARK` or `REJECT` with rationale preserved.
 
+## Capturing an idea
+
+Use the "new idea" button on the dashboard (or the `New idea` issue form). The Product Brain workflow (`.github/workflows/idea-brain.yml`) replies on the issue with desk research, a recommendation, and at most three questions; answer in a comment and it runs again. Each reply carries the updated incubation record, and the dashboard shows the idea from it. Type `/approve-build` to approve the move to BUILD. An idea can still be worked in a chat session; that chat should write its decisions back to the issue.
+
 ## Separation of responsibilities
 
 - Product Incubator: what should be built and why.

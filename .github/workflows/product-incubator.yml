@@ -6,6 +6,9 @@ on:
       - "agents/product-incubator.md"
       - "product-incubator/**"
       - "scripts/validate_incubation.py"
+      - "scripts/idea_brain.py"
+      - ".github/workflows/idea-brain.yml"
+      - "tests/test_idea_brain.py"
       - ".github/workflows/product-incubator.yml"
   workflow_dispatch:
 
@@ -24,7 +27,11 @@ jobs:
       - name: Install validator dependency
         run: python3 -m pip install --disable-pip-version-check jsonschema
       - name: Validate schema JSON
-        run: python3 -m json.tool product-incubator/idea.schema.json > /dev/null
+        run: |
+          python3 -m json.tool product-incubator/idea.schema.json > /dev/null
+          python3 -m json.tool product-incubator/brain-output.schema.json > /dev/null
+      - name: Product Brain tests
+        run: python3 -m unittest -q tests.test_idea_brain tests.test_run_agent
       - name: Validate sample incubation record
         run: |
           cat > /tmp/sample-incubation.json <<'JSON'

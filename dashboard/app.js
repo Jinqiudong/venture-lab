@@ -15,6 +15,9 @@ const STRINGS = {
     "range.3": "3 days",
     "range.7": "7 days",
     "kind.idea": "Incubating",
+    "idea.new": "+ Drop in a new idea",
+    "idea.new.short": "+ Idea",
+    "idea.hint": "The Product Brain researches it and replies on GitHub with findings and a few questions.",
     "progress": "{done} of {total} done",
     "chip.active": "{n} in progress",
     "chip.shipped": "{n} shipped this week",
@@ -48,6 +51,9 @@ const STRINGS = {
     "range.3": "3 天",
     "range.7": "7 天",
     "kind.idea": "孵化中",
+    "idea.new": "+ 记录一个新想法",
+    "idea.new.short": "+ 想法",
+    "idea.hint": "AI 产品经理会去做市场调研，然后在 GitHub 上回复你调研结果和几个问题。",
     "progress": "已完成 {done} / {total}",
     "chip.active": "{n} 项进行中",
     "chip.shipped": "本周完成 {n} 项",
@@ -189,6 +195,7 @@ function renderShipped() {
 function render() {
   renderStatic();
   if (!data) return;
+  if (data.new_idea_url) document.querySelectorAll("[data-new-idea]").forEach((el) => { el.href = data.new_idea_url; });
   renderPipeline();
   renderStats();
   renderProjects();

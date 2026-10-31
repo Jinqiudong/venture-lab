@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product Brain turn",
+  "type": "object",
+  "required": [
+    "record",
+    "comment_markdown"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "record": {
+      "type": "object",
+      "required": [
+        "title",
+        "stage",
+        "thesis",
+        "decision",
+        "guidance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short product name in English."
+        },
+        "title_zh": {
+          "type": "string",
+          "description": "Short product name in Chinese."
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "SPARK",
+            "EXPLORE",
+            "VALIDATE",
+            "INCUBATE",
+            "BUILD",
+            "PARK",
+            "REJECT"
+          ]
+        },
+        "thesis": {
+          "type": "object",
+          "properties": {
+            "problem": {
+              "type": "string"
+            },
+            "target_user": {
+              "type": "string"
+            },
+            "job_to_be_done": {
+              "type": "string"
+            },
+            "current_alternatives": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "product_hypothesis": {
+              "type": "string"
+            },
+            "why_now": {
+              "type": "string"
+            },
+            "differentiation": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "claim",
+              "strength"
+            ],
+            "properties": {
+              "claim": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "weak",
+                  "medium",
+                  "strong"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "riskiest_assumption": {
+              "type": "string"
+            },
+            "cheapest_next_validation": {
+              "type": "string"
+            },
+            "positive_signal": {
+              "type": "string"
+            },
+            "negative_signal": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mvp": {
+          "type": "object",
+          "properties": {
+            "core_user_journey": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "non_goals": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "retention_hypothesis": {
+              "type": "string"
+            },
+            "success_metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "acceptance_criteria": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "owner_decisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decision": {
+          "type": "object",
+          "required": [
+            "recommendation",
+            "confidence",
+            "strongest_reason",
+            "biggest_uncertainty",
+            "next_action"
+          ],
+          "properties": {
+            "recommendation": {
+              "type": "string",
+              "enum": [
+                "PROMOTE",
+                "STAY",
+                "PARK",
+                "REJECT"
+              ]
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "strongest_reason": {
+              "type": "string"
+            },
+            "biggest_uncertainty": {
+              "type": "string"
+            },
+            "next_action": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "guidance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "current",
+            "current_zh",
+            "step",
+            "total_steps"
+          ],
+          "properties": {
+            "phase": {
+              "type": "string"
+            },
+            "step": {
+              "type": "integer"
+            },
+            "total_steps": {
+              "type": "integer"
+            },
+            "completed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "current": {
+              "type": "string"
+            },
+            "current_zh": {
+              "type": "string"
+            },
+            "up_next": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "comment_markdown": {
+      "type": "string",
+      "description": "The reply posted on the idea issue, written for the Product Owner."
+    }
+  }
+}

@@ -1,0 +1,78 @@
+name: Product Brain
+
+# One Product Brain turn per owner message on an idea issue: research, update the
+# incubation record, reply with findings and at most three questions.
+on:
+  issues:
+    # Not `labeled`: an issue created with labels fires both events, which would run two turns.
+    types: [opened]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Idea issue number"
+        required: true
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+concurrency:
+  group: product-brain-${{ github.event.issue.number || inputs.issue }}
+  cancel-in-progress: false
+
+jobs:
+  turn:
+    # Only the owner can start a turn, so strangers cannot spend agent time or steer the record.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+        github.event.issue.user.login == github.repository_owner &&
+        contains(github.event.issue.labels.*.name, 'idea')) ||
+      (github.event_name == 'issue_comment' &&
+        !github.event.issue.pull_request &&
+        github.event.comment.user.login == github.repository_owner &&
+        contains(github.event.issue.labels.*.name, 'idea'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number || inputs.issue }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Acknowledge
+        if: github.event_name == 'issue_comment'
+        run: gh api "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" -f content=eyes > /dev/null
+
+      - name: Build prompt
+        run: python3 scripts/idea_brain.py prompt --repo "${{ github.repository }}" --issue "$ISSUE" --owner "${{ github.repository_owner }}" brain-prompt.md
+
+      - name: Run Product Brain
+        uses: ./.github/actions/run-agent
+        with:
+          # Web research needs the Claude runtime; the Codex fallback has no :research profile.
+          provider: claude
+          claude-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          permission-profile: ":research"
+          working-directory: .
+          prompt-file: brain-prompt.md
+          output-schema-file: ${{ github.workspace }}/product-incubator/brain-output.schema.json
+          output-file: ${{ github.workspace }}/brain-result.json
+          effort: high
+
+      - name: Post reply
+        run: python3 scripts/idea_brain.py post --repo "${{ github.repository }}" --issue "$ISSUE" --owner "${{ github.repository_owner }}" brain-result.json
+
+      - name: Refresh dashboard
+        run: gh workflow run dashboard.yml --repo "${{ github.repository }}"
+
+      - name: Report failure on the issue
+        if: failure()
+        run: |
+          gh issue comment "$ISSUE" --repo "${{ github.repository }}" --body "Product Brain could not finish this turn. Run log: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          这一轮 AI 产品经理没有跑完，可以稍后再回复一次重试。"
