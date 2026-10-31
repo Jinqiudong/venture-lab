@@ -98,7 +98,7 @@ Every role (Builder, Reviewer, Fixer, QA, Handoff) runs through one composite ac
 
 ## 4. Supporting Actions
 
-- **Agent Guardrails** cancels stalled agent runs and records a failure checkpoint on the Issue/PR. A failure caused by a Claude usage limit is not recorded, because two of them would auto-stop a healthy Issue; the heartbeat retries after the reset instead.
+- **Agent Guardrails** cancels stalled agent runs and records a failure checkpoint on the Issue/PR. A failure caused by a usage limit (a Claude limit, `Quota exceeded`, or a GitHub API rate limit) is not recorded, because two of them would auto-stop a healthy Issue; the heartbeat retries after the reset instead.
 - **Agent Runtime Guard** caps unhealthy automatic-fix behavior and protects against runaway loops. It counts Fixer attempts from the `<!-- venture-fixer-attempt:<HEAD SHA> -->` marker that Review Cycle posts, so the guard and the workflow must share that exact marker format.
 - **Scope Gate Shadow** analyzes whether ready Issues are sufficiently bounded; currently observational.
 - **Portfolio Dashboard** exposes state. The heartbeat refreshes it every ten minutes, plus a 6-hourly schedule and pushes to its own files. It no longer refreshes on every agent run or product-repo event, which was most of the GitHub API spend. Dashboards are observability, not canonical truth.
