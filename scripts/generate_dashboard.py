@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -553,6 +554,104 @@ def idea_summary(issue: int) -> dict | None:
     }
 
 
+OPS_STATES = ["working", "idle_with_work", "idle", "paused", "api_guard", "error"]
+API_WARN = 0.8
+
+
+def load_samples() -> list[dict]:
+    """Heartbeat samples from the metrics branch (see scripts/heartbeat.py)."""
+    try:
+        current = request_json(f"/repos/{IDEA_REPO}/contents/metrics/heartbeat.jsonl?ref=metrics")
+        text = base64.b64decode(current["content"]).decode()
+    except Exception:
+        return []
+    return [json.loads(line) for line in text.splitlines() if line.strip()]
+
+
+def ops_metrics(samples: list[dict], runs: list[dict], merged_24h: int, now: datetime) -> dict:
+    """Pipeline efficiency for the Operations tab: where the last 24 hours went, API budget, Claude limits, Actions cost."""
+    day = [s for s in samples if parse_time(s["t"]) >= now - timedelta(hours=24)]
+    week = [s for s in samples if parse_time(s["t"]) >= now - timedelta(days=7)]
+    shares = {state: 0 for state in OPS_STATES}
+    for sample in day:
+        shares[sample.get("state", "error") if sample.get("state") in shares else "error"] += 1
+
+    def limit_hits(window: list[dict]) -> int:
+        hits, before = 0, None
+        for sample in window:
+            if sample.get("state") == "paused" and before != "paused":
+                hits += 1
+            before = sample.get("state")
+        return hits
+
+    # Peak usage per hourly API window, keyed by the window's reset time.
+    windows: dict[str, dict] = {}
+    for sample in day:
+        api = sample.get("api") or {}
+        if not api.get("reset"):
+            continue
+        current = windows.get(api["reset"])
+        if current is None or api["used"] > current["used"]:
+            windows[api["reset"]] = {"reset": api["reset"], "used": api["used"], "limit": api["limit"]}
+    hourly = sorted(windows.values(), key=lambda w: w["reset"])
+    latest = samples[-1] if samples else None
+    api_now = (latest or {}).get("api")
+    warnings = []
+    if api_now and api_now["used"] >= API_WARN * api_now["limit"]:
+        warnings.append("api_now")
+    if any(w["used"] >= API_WARN * w["limit"] for w in hourly):
+        warnings.append("api_day")
+    if shares["idle_with_work"]:
+        warnings.append("idle_with_work")
+    if limit_hits(day):
+        warnings.append("claude_limit")
+
+    day_runs = [r for r in runs if r.get("created_at") and parse_time(r["created_at"]) >= now - timedelta(hours=24)]
+    by_workflow: dict[str, int] = {}
+    minutes = 0.0
+    for run in day_runs:
+        by_workflow[run.get("name") or "?"] = by_workflow.get(run.get("name") or "?", 0) + 1
+        if run.get("run_started_at") and run.get("updated_at"):
+            minutes += max(0.0, (parse_time(run["updated_at"]) - parse_time(run["run_started_at"])).total_seconds() / 60)
+    return {
+        "now": latest,
+        "timeline": [{"t": s["t"], "state": s.get("state"), "waiting": s.get("waiting")} for s in day],
+        "tick_minutes": 10,
+        "shares": shares,
+        "samples_24h": len(day),
+        "api_hourly": hourly,
+        "claude": {
+            "limit_hits_24h": limit_hits(day),
+            "limit_hits_7d": limit_hits(week),
+            "paused_minutes_24h": shares["paused"] * 10,
+        },
+        "actions": {
+            "runs_24h": len(day_runs),
+            "runs_capped": len(runs) >= 300,
+            "minutes_24h": round(minutes),
+            "by_workflow": dict(sorted(by_workflow.items(), key=lambda kv: -kv[1])),
+            "merged_24h": merged_24h,
+            "runs_per_merge": round(len(day_runs) / merged_24h, 1) if merged_24h else None,
+        },
+        "warnings": warnings,
+    }
+
+
+def control_runs(now: datetime) -> list[dict]:
+    """Venture Lab workflow runs in the last 24 hours (at most three pages)."""
+    since = (now - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    runs = []
+    for page in (1, 2, 3):
+        try:
+            batch = request_json(f"/repos/{IDEA_REPO}/actions/runs?created=%3E%3D{since}&per_page=100&page={page}").get("workflow_runs", [])
+        except Exception:
+            break
+        runs.extend(batch)
+        if len(batch) < 100:
+            break
+    return runs
+
+
 def project_slug(project: dict) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (project.get("repo") or project.get("name") or "").split("/")[-1].lower()).strip("-")
 
@@ -605,6 +704,12 @@ def main() -> None:
         "ideas": incubation_projects({p["idea_issue"] for p in config["projects"] if p.get("idea_issue")}, issue_idea_records()),
         "new_idea_url": f"https://github.com/{IDEA_REPO}/issues/new?template=idea.yml",
         "needs_you": needs_you,
+        "ops": ops_metrics(
+            load_samples(),
+            control_runs(now),
+            sum(1 for p in projects for pr in p.get("recent_merged", []) if parse_time(pr["merged_at"]) >= now - timedelta(hours=24)),
+            now,
+        ),
         "paused": [item for item in work_items if item.get("workflow_stage") == "hold"],
         "ai_team": ai_team,
         "queue": queue,

@@ -80,6 +80,42 @@ const STRINGS = {
     "tile.days": "{n} d",
     "detail.shipped": "Recently shipped",
     "detail.idea": "How it started",
+    "nav.ops": "Operations",
+    "ops.title": "How the AI team runs",
+    "ops.lede": "Where the last 24 hours went, and how close we are to GitHub and Claude limits.",
+    "ops.empty": "The heartbeat started recently. Samples arrive every 10 minutes, so this fills in over the next few hours.",
+    "ops.now": "Right now",
+    "ops.state.working": "Working",
+    "ops.state.idle_with_work": "Idle with work waiting",
+    "ops.state.idle": "Nothing to do",
+    "ops.state.paused": "Waiting for Claude limit reset",
+    "ops.state.api_guard": "Saving GitHub API budget",
+    "ops.state.error": "Heartbeat error",
+    "ops.resume": "resumes {when}",
+    "ops.waiting": "{n} tasks ready",
+    "ops.day": "The last 24 hours",
+    "ops.day.note": "One cell per 10-minute heartbeat check. Red cells are time lost: work was ready but nothing ran.",
+    "ops.share": "{p}%",
+    "ops.api": "GitHub API budget",
+    "ops.api.note": "All automation and your own tools share one token: {limit} calls per hour. Above 80% this turns red. Below 500 left, the heartbeat stops starting agent work until the hourly reset.",
+    "ops.api.now": "This hour: {used} of {limit} used, resets {when}",
+    "ops.api.chart": "Peak use per hourly window, last 24 hours",
+    "ops.api.tooltip": "Window ending {when}: {used} of {limit}",
+    "ops.api.threshold": "80%",
+    "ops.claude": "Claude usage",
+    "ops.claude.note": "Claude subscriptions don't report a usage percentage that automation can read. When a 5-hour or weekly limit is hit, the heartbeat pauses until the reset time Claude reports and then continues by itself.",
+    "ops.claude.hits24": "limit hits, 24 hours",
+    "ops.claude.hits7": "limit hits, 7 days",
+    "ops.claude.paused": "minutes paused, 24 hours",
+    "ops.actions": "GitHub Actions",
+    "ops.actions.runs": "workflow runs, 24 hours",
+    "ops.actions.perMerge": "runs per merged PR",
+    "ops.actions.merged": "PRs merged, 24 hours",
+    "ops.actions.minutes": "runner minutes, 24 hours",
+    "ops.warn.api_now": "GitHub API use is above 80% this hour.",
+    "ops.warn.api_day": "At least one hour in the last day went above 80% of the GitHub API budget.",
+    "ops.warn.idle_with_work": "The team sat idle while work was ready. See the red cells.",
+    "ops.warn.claude_limit": "A Claude usage limit was hit in the last 24 hours.",
   },
   zh: {
     "nav.needs": "等你处理",
@@ -162,6 +198,42 @@ const STRINGS = {
     "tile.days": "{n} 天",
     "detail.shipped": "最近完成",
     "detail.idea": "这个项目的由来",
+    "nav.ops": "流程监控",
+    "ops.title": "AI 团队运转得怎么样",
+    "ops.lede": "过去 24 小时时间花在了哪里，以及离 GitHub 和 Claude 的用量上限还有多远。",
+    "ops.empty": "心跳刚上线，每 10 分钟记录一次，接下来几个小时数据会慢慢填满。",
+    "ops.now": "现在",
+    "ops.state.working": "工作中",
+    "ops.state.idle_with_work": "有活但没人干",
+    "ops.state.idle": "没有可做的",
+    "ops.state.paused": "等 Claude 额度恢复",
+    "ops.state.api_guard": "节省 GitHub API 额度",
+    "ops.state.error": "心跳出错",
+    "ops.resume": "{when}恢复",
+    "ops.waiting": "{n} 个任务待做",
+    "ops.day": "过去 24 小时",
+    "ops.day.note": "每格代表一次 10 分钟的心跳检查。红色格子是浪费的时间：有活可干，却没有在跑。",
+    "ops.share": "{p}%",
+    "ops.api": "GitHub API 额度",
+    "ops.api.note": "所有自动化和你自己的工具共用一个 token，每小时 {limit} 次。超过 80% 会变红；剩余不到 500 次时，心跳会暂停启动新的 AI 工作，等到整点额度重置。",
+    "ops.api.now": "本小时已用 {used} / {limit}，{when}重置",
+    "ops.api.chart": "近 24 小时，每个小时窗口的用量峰值",
+    "ops.api.tooltip": "{when}结束的窗口：{used} / {limit}",
+    "ops.api.threshold": "80%",
+    "ops.claude": "Claude 用量",
+    "ops.claude.note": "Claude 订阅没有提供自动化可以读取的用量百分比。触发 5 小时或每周上限时，心跳会暂停到 Claude 报告的恢复时间，然后自动继续。",
+    "ops.claude.hits24": "24 小时内触发上限次数",
+    "ops.claude.hits7": "7 天内触发上限次数",
+    "ops.claude.paused": "24 小时内暂停的分钟数",
+    "ops.actions": "GitHub Actions",
+    "ops.actions.runs": "24 小时内的工作流运行次数",
+    "ops.actions.perMerge": "每合并一个 PR 的运行次数",
+    "ops.actions.merged": "24 小时内合并的 PR",
+    "ops.actions.minutes": "24 小时内的运行分钟数",
+    "ops.warn.api_now": "本小时 GitHub API 用量超过了 80%。",
+    "ops.warn.api_day": "过去一天里至少有一个小时，GitHub API 用量超过了 80%。",
+    "ops.warn.idle_with_work": "有活可干时团队却闲着，见红色格子。",
+    "ops.warn.claude_limit": "过去 24 小时触发过 Claude 用量上限。",
   },
 };
 
@@ -175,7 +247,7 @@ const store = {
   set(key, value) { try { localStorage.setItem(key, value); } catch { /* storage unavailable */ } },
 };
 
-let lang = store.get("lang") || ((navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en");
+let lang = new URLSearchParams(location.search).get("lang") || store.get("lang") || ((navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en");
 let range = Number(store.get("range")) || 7;
 let projectFilter = "all";
 let data = null;
@@ -478,6 +550,91 @@ function renderDetail() {
   bindTooltips(root);
 }
 
+/* Operations page */
+
+const OPS_ORDER = ["working", "idle_with_work", "idle", "paused", "api_guard", "error"];
+const clock = (iso) => new Date(iso).toLocaleTimeString(lang === "zh" ? "zh-CN" : "en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+
+function opsTimeline(ops) {
+  const cells = ops.timeline.map((s) => {
+    const tip = `${clock(s.t)} · ${t(`ops.state.${s.state}`)}${s.waiting ? ` · ${t("ops.waiting", { n: s.waiting })}` : ""}`;
+    return `<i class="cell ${escapeHtml(s.state)}" tabindex="0" data-tip="${escapeHtml(tip)}"></i>`;
+  }).join("");
+  const total = Math.max(1, ops.samples_24h);
+  const legend = OPS_ORDER.filter((state) => ops.shares[state]).map((state) =>
+    `<span class="legend-item"><i class="cell ${state}"></i>${t(`ops.state.${state}`)} <strong>${t("ops.share", { p: Math.round((ops.shares[state] / total) * 100) })}</strong></span>`).join("");
+  return `<figure class="chart strip-chart">
+    <div class="strip" style="grid-template-columns:repeat(${ops.timeline.length},1fr)">${cells}</div>
+    <div class="legend">${legend}</div>
+    <div class="tooltip" role="status" hidden></div>
+  </figure>`;
+}
+
+function apiChart(ops) {
+  const hours = ops.api_hourly || [];
+  if (!hours.length) return "";
+  const limit = Math.max(...hours.map((h) => h.limit));
+  const every = Math.ceil(hours.length / 8);
+  const bars = hours.map((h, i) => {
+    const tip = t("ops.api.tooltip", { when: clock(h.reset), used: h.used, limit: h.limit });
+    const hot = h.used >= 0.8 * h.limit;
+    return `<div class="col-bar${hot ? " hot" : ""}" tabindex="0" data-tip="${escapeHtml(tip)}"><b style="height:${(h.used / limit) * 100}%"></b>${i % every === 0 ? `<small>${clock(h.reset)}</small>` : ""}</div>`;
+  }).join("");
+  return `<figure class="chart">
+    <figcaption>${t("ops.api.chart")}</figcaption>
+    <div class="plot">
+      <div class="grid"><span style="bottom:0"><em>0</em></span><span class="threshold" style="bottom:80%"><em>${t("ops.api.threshold")}</em></span><span style="bottom:100%"><em>${limit}</em></span></div>
+      <div class="bars" style="grid-template-columns:repeat(${hours.length},1fr)">${bars}</div>
+    </div>
+    <div class="tooltip" role="status" hidden></div>
+  </figure>`;
+}
+
+function renderOps() {
+  const root = document.getElementById("ops");
+  const ops = data.ops;
+  document.title = `${t("nav.ops")} · Idea Cauldron`;
+  if (!ops) { root.innerHTML = `<p class="note">${t("ops.empty")}</p>`; return; }
+  const now = ops.now;
+  const api = now?.api;
+  const state = now?.state;
+  const resume = now?.resume ? ` · ${t("ops.resume", { when: clock(now.resume) })}` : "";
+  const warnings = (ops.warnings || []).map((w) => `<li>${t(`ops.warn.${w}`)}</li>`).join("");
+  const a = ops.actions || {};
+  const c = ops.claude || {};
+  root.innerHTML = `
+    <section class="detail-head">
+      <div class="card-top"><h1 class="detail-title">${t("ops.title")}</h1>${state ? `<span class="status ops-${escapeHtml(state)}"><i></i>${t(`ops.state.${state}`)}${resume}</span>` : ""}</div>
+      <p class="focus">${t("ops.lede")}</p>
+      ${warnings ? `<ul class="warnings">${warnings}</ul>` : ""}
+    </section>
+    <section class="panel"><h3>${t("ops.day")}</h3>
+      ${ops.samples_24h ? `<p class="note">${t("ops.day.note")}</p>${opsTimeline(ops)}` : `<p class="note">${t("ops.empty")}</p>`}
+    </section>
+    <section class="panel"><h3>${t("ops.api")}</h3>
+      <p class="note">${t("ops.api.note", { limit: api?.limit ?? 5000 })}</p>
+      ${api ? `<div class="api-now${api.used >= 0.8 * api.limit ? " hot" : ""}">${meter(api.used, api.limit, t("ops.api.now", { used: api.used, limit: api.limit, when: clock(api.reset) }))}</div>` : ""}
+      ${apiChart(ops)}
+    </section>
+    <section class="panel"><h3>${t("ops.claude")}</h3>
+      <div class="tiles">
+        <div class="stat"><strong>${c.limit_hits_24h ?? "–"}</strong><span>${t("ops.claude.hits24")}</span></div>
+        <div class="stat"><strong>${c.limit_hits_7d ?? "–"}</strong><span>${t("ops.claude.hits7")}</span></div>
+        <div class="stat"><strong>${c.paused_minutes_24h ?? "–"}</strong><span>${t("ops.claude.paused")}</span></div>
+      </div>
+      <p class="note">${t("ops.claude.note")}</p>
+    </section>
+    <section class="panel"><h3>${t("ops.actions")}</h3>
+      <div class="tiles">
+        <div class="stat"><strong>${a.runs_24h ?? "–"}${a.runs_capped ? "+" : ""}</strong><span>${t("ops.actions.runs")}</span></div>
+        <div class="stat"><strong>${a.merged_24h ?? "–"}</strong><span>${t("ops.actions.merged")}</span></div>
+        <div class="stat"><strong>${a.runs_per_merge ?? "–"}</strong><span>${t("ops.actions.perMerge")}</span></div>
+      </div>
+      <ul class="workflow-list">${Object.entries(a.by_workflow || {}).map(([name, n]) => `<li><span>${escapeHtml(name)}</span><strong>${n}</strong></li>`).join("")}</ul>
+    </section>`;
+  bindTooltips(root);
+}
+
 function bindTooltips(root) {
   root.querySelectorAll(".chart").forEach((chart) => {
     const tip = chart.querySelector(".tooltip");
@@ -488,7 +645,7 @@ function bindTooltips(root) {
       const host = chart.getBoundingClientRect();
       tip.style.left = `${box.left - host.left + box.width / 2}px`;
     };
-    chart.querySelectorAll(".col-bar").forEach((bar) => {
+    chart.querySelectorAll(".col-bar, .strip .cell").forEach((bar) => {
       bar.addEventListener("mouseenter", () => show(bar));
       bar.addEventListener("focus", () => show(bar));
       bar.addEventListener("mouseleave", () => { tip.hidden = true; });
@@ -512,6 +669,8 @@ function render() {
   renderPipeline();
   if (PAGE === "project") {
     renderDetail();
+  } else if (PAGE === "ops") {
+    renderOps();
   } else {
     renderStats();
     renderNeeds();
