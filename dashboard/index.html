@@ -3,295 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Idea Cauldron — ideas, builds, and next moves." />
+  <meta name="description" content="Idea Cauldron: every project, its stage, and what the AI team shipped." />
   <title>Idea Cauldron</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="workflow.css" />
-  <link rel="stylesheet" href="cats.css" />
-  <link rel="stylesheet" href="cats-tuning.css" />
 </head>
 <body>
-  <div class="noise"></div>
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="Idea Cauldron home"><span class="sigil">◌</span><span>Idea Cauldron</span></a>
+    <a class="brand" href="#top"><span class="paw" aria-hidden="true">🐾</span><span>Idea Cauldron</span></a>
     <nav>
-      <a href="#attention">Needs You</a>
-      <a href="#ai-team">AI Team</a>
-      <a href="#queue">Queue</a>
-      <a href="#projects">Projects</a>
-      <a href="#vault">Idea Vault</a>
+      <a href="#projects" data-i18n="nav.projects">Projects</a>
+      <a href="#shipped" data-i18n="nav.shipped">Shipped</a>
     </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
   </header>
 
-  <main class="shell" id="top">
-    <section class="hero cat-stage hero-cat-stage" id="hero-stage">
-      <div class="hero-copy">
-        <div class="hero-badge">VENTURE LAB / PERSONAL R&D</div>
-        <h1><span class="hero-idea-word" id="hero-idea-word">Idea</span><br />Cauldron</h1>
-        <p class="subtitle">Collect sparks. Brew projects. Ship the good ones.</p>
-        <div class="hero-actions">
-          <a class="hero-action primary" href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">＋ New Idea</a>
-          <a class="hero-action" href="#projects">Browse Projects →</a>
-        </div>
-      </div>
-      <div class="hero-orbit" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="orbit-core">✦</span></div>
-      <div class="hero-doodle" aria-hidden="true">feed me<br />an idea ✦</div>
-      <button class="mascot mascot-hero" type="button" aria-label="Idea Cauldron cat mascot">
-        <img src="assets/cat-hero-gpt.webp" alt="Your cat reaching across the Idea Cauldron title" />
-        <span class="cat-mouth-target" id="cat-mouth-target" aria-hidden="true"></span>
-        <span class="cat-whisper">Got another idea?</span>
-        <span class="cat-spark" aria-hidden="true">✦</span>
-      </button>
-      <span class="idea-token" id="hero-idea-token" aria-hidden="true">Idea</span>
-    </section>
-
-    <section class="command-zone" aria-label="Dashboard search">
-      <div class="command-bar"><span class="prompt">⌘</span><input id="command-search" type="search" placeholder="Search project, issue, PR, blocker…" autocomplete="off" /><kbd>/</kbd></div>
-      <div class="quick-links">
-        <button type="button" data-filter="AniDream">AniDream</button>
-        <button type="button" data-filter="Digital You">Digital You</button>
-        <button type="button" data-filter="Blocked">Blocked</button>
-        <button type="button" data-filter="Review">Review</button>
+  <main id="top">
+    <section class="hero">
+      <span class="pill" id="pipeline-pill"><span class="dot"></span><span id="pipeline-text">…</span></span>
+      <h1><span data-i18n="hero.line1">Ideas in,</span><br /><span class="gradient" data-i18n="hero.line2">products out.</span></h1>
+      <p class="lede" data-i18n="hero.lede">Your AI team builds, reviews, and ships on its own. Here is where every project stands.</p>
+      <div class="hero-cat"><img src="assets/cat-hero-main.webp" alt="" /></div>
+      <div class="stats">
+        <div class="stat"><strong id="stat-projects">–</strong><span data-i18n="stat.projects">projects</span></div>
+        <div class="stat"><strong id="stat-shipped">–</strong><span data-i18n="stat.shipped">shipped in 7 days</span></div>
+        <div class="stat"><strong id="stat-active">–</strong><span data-i18n="stat.active">being worked on now</span></div>
       </div>
     </section>
 
-    <div class="status-board" aria-label="Work status board">
-      <section id="attention" class="panel-section cat-stage human-cat-stage status-panel status-panel-human">
-        <div class="section-heading">
-          <div><span class="section-index">01</span><h2>Needs You</h2><span class="section-count" id="attention-count">0</span></div>
+    <section id="projects" class="section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow" data-i18n="projects.eyebrow">Portfolio</span>
+          <h2 data-i18n="projects.title">Every project at a glance</h2>
         </div>
-        <p class="section-description">Human decisions, experience review, credentials, and approvals.</p>
-        <button class="mascot mascot-boss" type="button" aria-label="Boss cat">
-          <img src="assets/cat-boss.webp" data-remove-edge-white="true" alt="Your cat in a tie at the laptop" />
-          <span class="cat-whisper">Boss, your call.</span>
-          <span class="cat-spark" aria-hidden="true">✦</span>
-        </button>
-        <div id="attention-list" class="attention-grid"></div>
-      </section>
-
-      <section id="ai-team" class="panel-section cat-stage work-cat-stage status-panel status-panel-ai">
-        <div class="section-heading">
-          <div><span class="section-index">02</span><h2>AI Team</h2><span class="section-count" id="ai-team-count">0</span></div>
-        </div>
-        <p class="section-description">Agents are working, coding, reviewing, and testing.</p>
-        <button class="mascot mascot-working" type="button" aria-label="Working cat">
-          <img src="assets/cat-working.webp" alt="Your cat walking through the active work area" />
-          <span class="cat-whisper">Tiny paws. Big commits.</span>
-          <span class="cat-spark" aria-hidden="true">✦</span>
-        </button>
-        <div id="ai-team-list" class="workflow-stack"></div>
-      </section>
-
-      <section id="queue" class="panel-section cat-stage queue-cat-stage status-panel status-panel-queue">
-        <div class="section-heading">
-          <div><span class="section-index">03</span><h2>Queue</h2><span class="section-count" id="queue-count">0</span></div>
-        </div>
-        <p class="section-description">Blocked work waiting for its turn.</p>
-        <button class="mascot mascot-queue" type="button" aria-label="Queue cat">
-          <img src="assets/cat-queue.webp" data-remove-edge-white="true" alt="Your cat lounging in the queue" />
-          <span class="cat-whisper">Wake me when it’s unblocked.</span>
-          <span class="cat-spark" aria-hidden="true">✦</span>
-        </button>
-        <div id="queue-list" class="workflow-stack"></div>
-      </section>
-    </div>
-
-    <section id="projects" class="panel-section projects-section">
-      <div class="section-heading"><div><span class="section-index">04</span><h2>Projects</h2></div><span class="section-note">Where each experiment stands</span></div>
-      <div id="projects-grid" class="portfolio-grid"></div>
+        <img class="section-cat" src="assets/cat-boss.webp" alt="" />
+      </div>
+      <div id="project-grid" class="project-grid"></div>
     </section>
 
-    <section id="vault" class="panel-section vault-section">
-      <div class="section-heading"><div><span class="section-index">05</span><h2>Idea Vault</h2></div><span class="section-note">Sparks waiting for a reason to exist</span></div>
-      <div class="vault-grid">
-        <article class="vault-card"><span>INBOX</span><strong>Capture the spark</strong><p>New ideas start here before they earn a repository.</p><a href="https://github.com/Jinqiudong/venture-lab/issues/new/choose" target="_blank" rel="noreferrer">Open idea intake ↗</a></article>
-        <article class="vault-card incubation-card">
-          <div class="incubation-head"><span>INCUBATION</span><a href="https://github.com/Jinqiudong/venture-lab/pull/13" target="_blank" rel="noreferrer">Framework ↗</a></div>
-          <strong>Product Incubation Board</strong>
-          <p>Canonical idea records move through product discovery before engineering begins.</p>
-          <div id="incubation-board" class="incubation-board"><div class="incubation-loading">Loading incubation records…</div></div>
-        </article>
+    <section id="shipped" class="section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow" data-i18n="shipped.eyebrow">Shipped</span>
+          <h2 data-i18n="shipped.title">What the team finished</h2>
+        </div>
+        <div class="range" role="group" aria-label="Range">
+          <button type="button" data-range="3" data-i18n="range.3">3 days</button>
+          <button type="button" data-range="7" data-i18n="range.7">7 days</button>
+        </div>
+      </div>
+      <div class="shipped-wrap">
+        <ol id="shipped-list" class="shipped-list"></ol>
+        <img class="shipped-cat" src="assets/cat-queue.webp" alt="" />
       </div>
     </section>
-
-    <footer><span>Idea Cauldron</span><span id="updated">Syncing…</span></footer>
   </main>
+
+  <footer>
+    <img src="assets/cat-working.webp" alt="" />
+    <span id="updated"></span>
+  </footer>
+
   <script src="app.js"></script>
-  <script>
-    const CAT_LINES = {
-      hero: ["mrrp. brewed ✦", "tasty idea.", "one more?"],
-      boss: ["Boss, your call.", "I need one decision.", "Approve? I brought a tie."],
-      work: ["Tiny paws. Big commits.", "On it.", "Reviewing the humans’ code… kidding."],
-      queue: ["Wake me when it’s unblocked.", "Still waiting…", "Queue life. Very demanding."]
-    };
-
-    function removeEdgeWhite(image) {
-      if (!image.dataset.removeEdgeWhite) return;
-      const run = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = image.naturalWidth;
-          canvas.height = image.naturalHeight;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true });
-          ctx.drawImage(image, 0, 0);
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = frame.data;
-          const w = canvas.width;
-          const h = canvas.height;
-          const seen = new Uint8Array(w * h);
-          const queue = [];
-          const whiteish = (i) => data[i] > 224 && data[i + 1] > 224 && data[i + 2] > 224 && Math.max(data[i], data[i + 1], data[i + 2]) - Math.min(data[i], data[i + 1], data[i + 2]) < 20;
-          const push = (x, y) => {
-            const p = y * w + x;
-            if (seen[p]) return;
-            const i = p * 4;
-            if (!whiteish(i)) return;
-            seen[p] = 1;
-            queue.push(p);
-          };
-          for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
-          for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
-          for (let q = 0; q < queue.length; q++) {
-            const p = queue[q];
-            const x = p % w;
-            const y = Math.floor(p / w);
-            const i = p * 4;
-            data[i + 3] = 0;
-            if (x > 0) push(x - 1, y);
-            if (x < w - 1) push(x + 1, y);
-            if (y > 0) push(x, y - 1);
-            if (y < h - 1) push(x, y + 1);
-          }
-          ctx.putImageData(frame, 0, 0);
-          image.src = canvas.toDataURL('image/png');
-          delete image.dataset.removeEdgeWhite;
-        } catch (_) {}
-      };
-      if (image.complete) run(); else image.addEventListener('load', run, { once: true });
-    }
-
-    document.querySelectorAll('.mascot img').forEach(removeEdgeWhite);
-
-    document.querySelectorAll('.cat-stage').forEach((stage) => {
-      const cat = stage.querySelector('.mascot');
-      if (!cat) return;
-      const key = cat.classList.contains('mascot-hero') ? 'hero' : cat.classList.contains('mascot-boss') ? 'boss' : cat.classList.contains('mascot-working') ? 'work' : 'queue';
-      const whisper = cat.querySelector('.cat-whisper');
-      let leaveTimer;
-
-      stage.addEventListener('pointermove', (event) => {
-        const rect = stage.getBoundingClientRect();
-        const x = (event.clientX - (rect.left + rect.width / 2)) / rect.width;
-        const y = (event.clientY - (rect.top + rect.height / 2)) / rect.height;
-        cat.style.setProperty('--cat-x', `${Math.max(-1, Math.min(1, x * 2)) * 7}px`);
-        cat.style.setProperty('--cat-y', `${Math.max(-1, Math.min(1, y * 2)) * 5}px`);
-        cat.style.setProperty('--cat-tilt', `${x * 2.4}deg`);
-        stage.classList.add('is-noticing');
-        clearTimeout(leaveTimer);
-      });
-
-      stage.addEventListener('pointerleave', () => {
-        cat.style.removeProperty('--cat-x');
-        cat.style.removeProperty('--cat-y');
-        cat.style.removeProperty('--cat-tilt');
-        leaveTimer = setTimeout(() => stage.classList.remove('is-noticing'), 220);
-      });
-
-      cat.addEventListener('click', () => {
-        const lines = CAT_LINES[key];
-        whisper.textContent = lines[Math.floor(Math.random() * lines.length)];
-        cat.classList.remove('is-booped');
-        void cat.offsetWidth;
-        cat.classList.add('is-booped');
-      });
-    });
-
-    const heroStage = document.getElementById('hero-stage');
-    const heroWord = document.getElementById('hero-idea-word');
-    const heroToken = document.getElementById('hero-idea-token');
-    const mouthTarget = document.getElementById('cat-mouth-target');
-    const heroCat = heroStage?.querySelector('.mascot-hero');
-    const heroWhisper = heroCat?.querySelector('.cat-whisper');
-    let ideaFlying = false;
-    let lastIdeaLaunch = 0;
-
-    function feedIdeaToCat() {
-      if (!heroStage || !heroWord || !heroToken || !mouthTarget || !heroCat || ideaFlying) return;
-      const now = performance.now();
-      if (now - lastIdeaLaunch < 1100) return;
-      lastIdeaLaunch = now;
-      ideaFlying = true;
-
-      const stageRect = heroStage.getBoundingClientRect();
-      const wordRect = heroWord.getBoundingClientRect();
-      const mouthRect = mouthTarget.getBoundingClientRect();
-      const startX = wordRect.left - stageRect.left + wordRect.width * .63;
-      const startY = wordRect.top - stageRect.top + wordRect.height * .52;
-      const endX = mouthRect.left - stageRect.left + mouthRect.width / 2;
-      const endY = mouthRect.top - stageRect.top + mouthRect.height / 2;
-      const dx = endX - startX;
-      const dy = endY - startY;
-
-      heroToken.style.left = `${startX}px`;
-      heroToken.style.top = `${startY}px`;
-      heroToken.style.opacity = '1';
-      heroStage.classList.add('is-feeding');
-
-      const animation = heroToken.animate([
-        { transform: 'translate(-50%, -50%) scale(.55) rotate(-5deg)', opacity: 0 },
-        { transform: 'translate(-50%, -50%) scale(1) rotate(2deg)', opacity: 1, offset: .13 },
-        { transform: `translate(calc(-50% + ${dx * .52}px), calc(-50% + ${dy * .30 - 26}px)) scale(1.05) rotate(-8deg)`, opacity: 1, offset: .55 },
-        { transform: `translate(calc(-50% + ${dx * .84}px), calc(-50% + ${dy * .76 - 10}px)) scale(.72) rotate(8deg)`, opacity: 1, offset: .82 },
-        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.08) rotate(18deg)`, opacity: 0 }
-      ], { duration: 980, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
-
-      setTimeout(() => {
-        heroCat.classList.add('is-eating');
-        heroCat.classList.add('is-booped');
-        if (heroWhisper) heroWhisper.textContent = 'mrrp. brewed ✦';
-      }, 720);
-
-      animation.finished.finally(() => {
-        heroToken.style.opacity = '0';
-        heroToken.getAnimations().forEach((item) => item.cancel());
-        setTimeout(() => {
-          heroCat.classList.remove('is-eating', 'is-booped');
-          heroStage.classList.remove('is-feeding');
-          ideaFlying = false;
-        }, 460);
-      });
-    }
-
-    heroStage?.addEventListener('pointerenter', feedIdeaToCat);
-    heroWord?.addEventListener('pointerenter', feedIdeaToCat);
-    heroCat?.addEventListener('pointerenter', feedIdeaToCat);
-
-    function wireContextualCatReactions() {
-      document.querySelectorAll('#attention .attention-card, #ai-team .workflow-card, #queue .workflow-card').forEach((card) => {
-        if (card.dataset.catWired) return;
-        card.dataset.catWired = 'true';
-        const stage = card.closest('.cat-stage');
-        const cat = stage?.querySelector('.mascot');
-        if (!stage || !cat) return;
-        card.addEventListener('pointerenter', () => {
-          stage.classList.add('is-reacting');
-          cat.style.setProperty('--react-x', '-10px');
-          cat.style.setProperty('--react-y', '8px');
-        });
-        card.addEventListener('pointerleave', () => {
-          stage.classList.remove('is-reacting');
-          cat.style.removeProperty('--react-x');
-          cat.style.removeProperty('--react-y');
-        });
-      });
-    }
-
-    const reactionObserver = new MutationObserver(wireContextualCatReactions);
-    ['attention-list', 'ai-team-list', 'queue-list'].forEach((id) => {
-      const node = document.getElementById(id);
-      if (node) reactionObserver.observe(node, { childList: true, subtree: true });
-    });
-    wireContextualCatReactions();
-  </script>
 </body>
 </html>

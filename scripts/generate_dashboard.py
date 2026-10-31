@@ -5,7 +5,7 @@ import os
 import re
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,6 +19,20 @@ HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "hold"}
 AI_STAGES = {"ready", "coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"}
 DONE_STAGES = {"done", "merged"}
 AUTO_STOP_MARKER = "venture-auto-stop"
+INCUBATION_RECORDS = ROOT / "product-incubator" / "records"
+RECENT_DAYS = 7
+# Product lifecycle shown on the dashboard timeline, in order.
+LIFECYCLE = ["idea", "explore", "validate", "build", "beta", "launch"]
+INCUBATION_TO_LIFECYCLE = {
+    "SPARK": "idea",
+    "EXPLORE": "explore",
+    "VALIDATE": "validate",
+    "INCUBATE": "validate",
+    "BUILD": "build",
+    "PARK": "idea",
+    "REJECT": "idea",
+}
+CONTROL_WORKFLOWS = {"orchestrator": "orchestrator.yml", "review": "review-cycle.yml"}
 
 
 def request_json(path: str):
@@ -52,6 +66,74 @@ def repo_metrics(repo: str) -> dict:
     except Exception as exc:
         result["error"] = f"Unable to refresh: {exc.__class__.__name__}"
     return result
+
+
+def recent_merged(repo: str, now: datetime) -> list[dict]:
+    """Merged PRs in the last RECENT_DAYS days, newest first."""
+    since = now - timedelta(days=RECENT_DAYS)
+    try:
+        pulls = request_json(f"/repos/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=50")
+    except Exception:
+        return []
+    merged = []
+    for pr in pulls if isinstance(pulls, list) else []:
+        merged_at = pr.get("merged_at")
+        if not merged_at or datetime.fromisoformat(merged_at.replace("Z", "+00:00")) < since:
+            continue
+        merged.append({"number": pr.get("number"), "title": pr.get("title"), "url": pr.get("html_url"), "merged_at": merged_at})
+    merged.sort(key=lambda pr: pr["merged_at"], reverse=True)
+    return merged
+
+
+def pipeline_health() -> dict:
+    """Latest conclusions of the control-plane workflows; a repeat failure means the AI team is stalled."""
+    repo = os.getenv("GITHUB_REPOSITORY") or "Jinqiudong/venture-lab"
+    health = {"status": "unknown", "workflows": {}}
+    failing = False
+    for key, workflow in CONTROL_WORKFLOWS.items():
+        try:
+            runs = request_json(f"/repos/{repo}/actions/workflows/{workflow}/runs?per_page=5&status=completed")
+        except Exception:
+            continue
+        conclusions = [run.get("conclusion") for run in runs.get("workflow_runs", []) if run.get("conclusion") != "skipped"]
+        latest = (runs.get("workflow_runs") or [{}])[0]
+        health["workflows"][key] = {"conclusion": conclusions[0] if conclusions else None, "url": latest.get("html_url"), "at": latest.get("updated_at")}
+        failing = failing or conclusions[:2] == ["failure", "failure"]
+    if health["workflows"]:
+        health["status"] = "failing" if failing else "ok"
+    return health
+
+
+def incubation_projects() -> list[dict]:
+    """Ideas still in incubation appear as projects without a repository."""
+    projects = []
+    for path in sorted(INCUBATION_RECORDS.glob("*.json")) if INCUBATION_RECORDS.exists() else []:
+        record = json.loads(path.read_text())
+        if record.get("stage") in {"BUILD", "REJECT"}:
+            continue
+        guidance = record.get("guidance") or {}
+        projects.append(
+            {
+                "name": record.get("title") or f"Idea #{record.get('idea_issue')}",
+                "kind": "idea",
+                "repo": None,
+                "issue_url": f"https://github.com/Jinqiudong/venture-lab/issues/{record.get('idea_issue')}",
+                "lifecycle": INCUBATION_TO_LIFECYCLE.get(record.get("stage"), "idea"),
+                "current_focus": guidance.get("current") or (record.get("decision") or {}).get("next_action"),
+                "current_focus_zh": guidance.get("current_zh"),
+                "progress": {"done": max(0, int(guidance.get("step") or 1) - 1), "total": int(guidance.get("total_steps") or 6), "active": 0},
+                "done_steps": guidance.get("completed", []),
+                "next_steps": guidance.get("up_next", []),
+            }
+        )
+    return projects
+
+
+def project_progress(items: list[dict]) -> dict:
+    total = [item for item in items if item.get("issue")]
+    done = [item for item in total if item.get("workflow_stage") in DONE_STAGES or item.get("issue_state") == "closed"]
+    active = [item for item in total if item.get("workflow_stage") in AI_STAGES - {"ready"}]
+    return {"done": len(done), "total": len(total), "active": len(active)}
 
 
 def closes_issue(body: str | None, issue_number: int, repo: str) -> bool:
@@ -160,12 +242,22 @@ def resolve_dependencies(items: list[dict]) -> list[dict]:
 
 def main() -> None:
     config = json.loads(CONFIG_PATH.read_text())
+    now = datetime.now(timezone.utc)
     projects = []
     work_items = []
     for project in config["projects"]:
         repo = project["repo"]
         project_items = resolve_dependencies([workflow_item(repo, item) for item in project.get("work_items", [])])
-        projects.append({**project, **repo_metrics(repo), "work_items": project_items})
+        projects.append(
+            {
+                **project,
+                **repo_metrics(repo),
+                "kind": "repo",
+                "work_items": project_items,
+                "progress": project_progress(project_items),
+                "recent_merged": recent_merged(repo, now),
+            }
+        )
         work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
 
     needs_you = [
@@ -178,7 +270,10 @@ def main() -> None:
     queue = [item for item in work_items if item.get("workflow_stage") == "blocked"]
 
     output = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": now.isoformat(),
+        "lifecycle": LIFECYCLE,
+        "pipeline": pipeline_health(),
+        "ideas": incubation_projects(),
         "needs_you": needs_you,
         "ai_team": ai_team,
         "queue": queue,
