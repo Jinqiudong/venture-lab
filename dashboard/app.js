@@ -95,7 +95,7 @@ const relative = (iso) => {
   return "";
 };
 
-const allProjects = () => [...(data?.projects || []), ...(data?.ideas || [])];
+const allProjects = () => [...(data?.projects || []).filter((p) => p.dashboard !== false), ...(data?.ideas || [])];
 
 const shippedWithin = (days) => {
   const since = Date.now() - days * 86400 * 1000;

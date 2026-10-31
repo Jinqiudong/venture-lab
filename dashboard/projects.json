@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Land the iOS dream flow (#34), Dream Atlas design and the language switch",
+      "current_focus": "Morning Dream Capture: design reference, staged backend generation, then the iOS slices (#40)",
       "work_items": [
         {
           "issue": 3,
@@ -165,16 +165,6 @@
           "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)"
         },
         {
-          "issue": 40,
-          "status": "human_handoff",
-          "blocked_by": [
-            41,
-            43
-          ],
-          "needs_human": true,
-          "next_action": "Tracking parent only: product owner approves each Dream Atlas slice from simulator screenshots"
-        },
-        {
           "issue": 41,
           "status": "blocked",
           "blocked_by": [
@@ -189,10 +179,106 @@
             41
           ],
           "ready_action": "Review PR #44 (English / Simplified Chinese language switch)"
+        },
+        {
+          "issue": 57,
+          "status": "ready"
+        },
+        {
+          "issue": 59,
+          "status": "ready"
+        },
+        {
+          "issue": 60,
+          "status": "blocked",
+          "blocked_by": [
+            59
+          ]
+        },
+        {
+          "issue": 51,
+          "status": "blocked",
+          "blocked_by": [
+            57
+          ]
+        },
+        {
+          "issue": 52,
+          "status": "blocked",
+          "blocked_by": [
+            51,
+            59
+          ]
+        },
+        {
+          "issue": 53,
+          "status": "blocked",
+          "blocked_by": [
+            52,
+            60
+          ]
+        },
+        {
+          "issue": 54,
+          "status": "blocked",
+          "blocked_by": [
+            53
+          ]
+        },
+        {
+          "issue": 55,
+          "status": "blocked",
+          "blocked_by": [
+            54
+          ]
+        },
+        {
+          "issue": 56,
+          "status": "blocked",
+          "blocked_by": [
+            55
+          ]
+        },
+        {
+          "issue": 62,
+          "status": "blocked",
+          "blocked_by": [
+            56
+          ]
+        },
+        {
+          "issue": 61,
+          "status": "blocked",
+          "blocked_by": [
+            62
+          ]
+        },
+        {
+          "issue": 63,
+          "status": "blocked",
+          "blocked_by": [
+            61
+          ]
+        },
+        {
+          "issue": 40,
+          "status": "blocked",
+          "blocked_by": [
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            61,
+            62,
+            63
+          ],
+          "ready_action": "Confirm the Morning Capture epic is complete and close #40"
         }
       ],
       "lifecycle": "build",
-      "current_focus_zh": "合并 iOS 记梦流程（#34）、Dream Atlas 设计和中英切换"
+      "current_focus_zh": "清晨捕梦：设计稿进仓库、后端分阶段生成，然后依次做 iOS 各步（#40）"
     },
     {
       "name": "Digital You",
@@ -210,6 +296,15 @@
       ],
       "lifecycle": "explore",
       "current_focus_zh": "定义第一个可衡量的舞蹈提升闭环"
+    },
+    {
+      "name": "Venture Lab",
+      "repo": "Jinqiudong/venture-lab",
+      "stage": "Control plane",
+      "lifecycle": "build",
+      "dashboard": false,
+      "current_focus": "Self-developing workflow",
+      "work_items": []
     }
   ]
 }
