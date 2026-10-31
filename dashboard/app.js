@@ -140,6 +140,7 @@ function projectCard(project) {
   const progress = project.progress || { done: 0, total: 0 };
   const percent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
   const focus = (lang === "zh" && project.current_focus_zh) || project.current_focus || "";
+  const name = (lang === "zh" && project.name_zh) || project.name;
   const active = activeItems(project).length;
   const shipped = (project.recent_merged || []).length;
   const held = (project.work_items || []).filter((item) => item.workflow_stage === "hold").length;
@@ -151,9 +152,9 @@ function projectCard(project) {
   ].join("");
   return `
     <article class="card">
-      <a class="card-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="${escapeHtml(project.name)}"></a>
+      <a class="card-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="${escapeHtml(name)}"></a>
       <div class="card-top">
-        <h3>${escapeHtml(project.name)}</h3>
+        <h3>${escapeHtml(name)}</h3>
         ${project.kind === "idea" ? `<span class="tag idea">${t("kind.idea")}</span>` : ""}
       </div>
       <p class="focus">${escapeHtml(focus)}</p>
