@@ -141,7 +141,13 @@ jobs:
           if [ "$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json isDraft --jq .isDraft)" = "true" ]; then
             gh pr ready "$PR_NUMBER" --repo "$TARGET_REPO"
           fi
+          # Deleting the head branch would close PRs stacked on it, so move them to the default branch first.
+          HEAD_BRANCH=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefName --jq .headRefName)
+          DEFAULT_BRANCH=$(gh repo view "$TARGET_REPO" --json defaultBranchRef --jq .defaultBranchRef.name)
           gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
+          for child in $(gh pr list --repo "$TARGET_REPO" --base "$HEAD_BRANCH" --state open --json number --jq '.[].number'); do
+            gh pr edit "$child" --repo "$TARGET_REPO" --base "$DEFAULT_BRANCH" || true
+          done
 
 
   resume_human_decision:
@@ -632,4 +638,10 @@ jobs:
           if [ "$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json isDraft --jq .isDraft)" = "true" ]; then
             gh pr ready "$PR_NUMBER" --repo "$TARGET_REPO"
           fi
+          # Deleting the head branch would close PRs stacked on it, so move them to the default branch first.
+          HEAD_BRANCH=$(gh pr view "$PR_NUMBER" --repo "$TARGET_REPO" --json headRefName --jq .headRefName)
+          DEFAULT_BRANCH=$(gh repo view "$TARGET_REPO" --json defaultBranchRef --jq .defaultBranchRef.name)
           gh pr merge "$PR_NUMBER" --repo "$TARGET_REPO" --squash --delete-branch
+          for child in $(gh pr list --repo "$TARGET_REPO" --base "$HEAD_BRANCH" --state open --json number --jq '.[].number'); do
+            gh pr edit "$child" --repo "$TARGET_REPO" --base "$DEFAULT_BRANCH" || true
+          done
