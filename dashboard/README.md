@@ -15,6 +15,8 @@ Each repo card opens `project.html?p=<slug>`, which shows:
 - delivery: PRs merged per week over eight weeks, the four-week pace, and the median time from PR to merge
 - recently shipped work and, for projects that grew out of an idea, how it started
 
+The Operations page (`ops.html`, "流程监控") shows how efficiently the AI team runs. It covers 24 hours of heartbeat states, where red marks time lost while work was ready, plus GitHub API use per hour against an 80% warning line, Claude usage-limit hits and paused time, and Actions runs per merged PR. Data comes from the heartbeat's samples on the `metrics` branch.
+
 Planned timelines come from GitHub milestones in the product repository. Give a milestone a due date and assign its issues to it; the dashboard does the rest.
 
 ## Add or edit a project

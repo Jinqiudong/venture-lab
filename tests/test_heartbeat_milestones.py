@@ -26,22 +26,41 @@ class QuotaResetTests(unittest.TestCase):
         self.assertEqual(heartbeat.quota_reset_at("You've hit your weekly limit", failed), failed + heartbeat.QUOTA_FALLBACK)
         self.assertIsNone(heartbeat.quota_reset_at("Process completed with exit code 1.", failed))
 
+    def setUp(self):
+        budget = {"remaining": 4000, "limit": 5000, "used": 1000, "reset": "2026-10-31T10:00:00+00:00"}
+        for name, value in (("work_waiting", 2), ("api_budget", budget)):
+            patcher = mock.patch.object(heartbeat, name, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_tick_waits_out_the_limit_without_dispatching(self):
         now = heartbeat.datetime(2026, 10, 31, 6, 0, tzinfo=UTC)
         with mock.patch.object(heartbeat, "paused_until", return_value=now.replace(hour=8)), \
                 mock.patch.object(heartbeat, "dispatch") as dispatch:
-            self.assertIn("paused", heartbeat.tick(now))
+            sample = heartbeat.tick(now)
+        self.assertEqual(sample["state"], "paused")
+        self.assertEqual(sample["resume"], "2026-10-31T08:00:00+00:00")
         dispatch.assert_not_called()
 
-    def test_tick_dispatches_only_when_idle(self):
+    def test_tick_protects_a_nearly_spent_api_budget(self):
+        now = heartbeat.datetime(2026, 10, 31, 9, 0, tzinfo=UTC)
+        low = {"remaining": 120, "limit": 5000, "used": 4880, "reset": "2026-10-31T09:40:00+00:00"}
+        with mock.patch.object(heartbeat, "paused_until", return_value=None), \
+                mock.patch.object(heartbeat, "api_budget", return_value=low), \
+                mock.patch.object(heartbeat, "dispatch") as dispatch:
+            sample = heartbeat.tick(now)
+        self.assertEqual(sample["state"], "api_guard")
+        dispatch.assert_not_called()
+
+    def test_tick_dispatches_only_when_idle_and_labels_the_state(self):
         now = heartbeat.datetime(2026, 10, 31, 9, 0, tzinfo=UTC)
         with mock.patch.object(heartbeat, "paused_until", return_value=None), \
                 mock.patch.object(heartbeat.milestones, "advance", return_value=[]), \
                 mock.patch.object(heartbeat, "agent_busy", side_effect=[True, False]), \
                 mock.patch.object(heartbeat, "dispatch") as dispatch:
-            heartbeat.tick(now)
+            self.assertEqual(heartbeat.tick(now)["state"], "working")
             dispatch.assert_not_called()
-            heartbeat.tick(now)
+            self.assertEqual(heartbeat.tick(now)["state"], "idle_with_work")
             dispatch.assert_called_once_with("orchestrator.yml")
 
 

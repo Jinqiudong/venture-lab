@@ -92,5 +92,33 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(dashboard.project_status([{"workflow_stage": "merged"}], [], old, NOW), "quiet")
 
 
+class OpsMetricsTests(unittest.TestCase):
+    def test_shares_limit_hits_api_windows_and_warnings(self):
+        def sample(minutes_ago, state, used=100, reset="2026-10-31T12:00:00+00:00"):
+            t = (NOW - dashboard.timedelta(minutes=minutes_ago)).isoformat()
+            return {"t": t, "state": state, "api": {"used": used, "limit": 5000, "remaining": 5000 - used, "reset": reset}}
+
+        samples = [
+            sample(60 * 30, "paused"),  # older than 24 hours: only in the 7-day count
+            sample(60 * 29, "working"),
+            sample(50, "paused"), sample(40, "paused"), sample(30, "working", used=4200),
+            sample(20, "idle_with_work"), sample(10, "idle", used=300, reset="2026-10-31T13:00:00+00:00"),
+        ]
+        runs = [
+            {"name": "Agent Orchestrator", "created_at": "2026-10-31T11:00:00Z", "run_started_at": "2026-10-31T11:00:00Z", "updated_at": "2026-10-31T11:03:00Z"},
+            {"name": "Agent Orchestrator", "created_at": "2026-10-29T11:00:00Z"},
+        ]
+        ops = dashboard.ops_metrics(samples, runs, 2, NOW)
+        self.assertEqual(ops["samples_24h"], 5)
+        self.assertEqual(ops["shares"]["paused"], 2)
+        self.assertEqual(ops["claude"], {"limit_hits_24h": 1, "limit_hits_7d": 2, "paused_minutes_24h": 20})
+        self.assertEqual([w["used"] for w in ops["api_hourly"]], [4200, 300])
+        self.assertEqual(ops["actions"]["runs_24h"], 1)
+        self.assertEqual(ops["actions"]["runs_per_merge"], 0.5)
+        self.assertEqual(ops["actions"]["minutes_24h"], 3)
+        self.assertEqual(set(ops["warnings"]), {"api_day", "idle_with_work", "claude_limit"})
+        self.assertEqual(ops["now"]["state"], "idle")
+
+
 if __name__ == "__main__":
     unittest.main()

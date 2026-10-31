@@ -6,18 +6,25 @@ This loop runs inside one long Actions job. Every tick it:
 1. pauses while a Claude usage window is exhausted, until the reset time the agent reported;
 2. otherwise dispatches the Orchestrator when no Orchestrator or Review Cycle run is queued or running;
 3. moves milestones forward (see scripts/milestones.py);
-4. refreshes the dashboard at most once per tick.
+4. refreshes the dashboard at most once per tick;
+5. appends one sample to `metrics/heartbeat.jsonl` on the `metrics` branch for the dashboard's
+   Operations tab: pipeline state, work waiting, and the shared GitHub API budget.
+
+When the GitHub API budget is nearly spent it stops dispatching agent work until the hourly reset,
+so the owner's own tools keep working.
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
 import subprocess
 import sys
 import time
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -32,6 +39,13 @@ AGENT_WORKFLOWS = ("orchestrator.yml", "review-cycle.yml")
 # Claude Code prints e.g. "You've hit your 5-hour limit · resets 8am (UTC)" or "resets 8:30pm (UTC)".
 QUOTA_PATTERN = re.compile(r"hit your .*?limit.*?resets\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*\(UTC\)", re.I)
 QUOTA_FALLBACK = timedelta(minutes=30)
+# Below this many remaining core API calls, agent work waits for the hourly reset.
+API_FLOOR = 500
+METRICS_BRANCH = "metrics"
+METRICS_PATH = "metrics/heartbeat.jsonl"
+METRICS_KEEP = timedelta(days=7)
+DASHBOARD_DATA = os.getenv("DASHBOARD_DATA_URL") or "https://jinqiudong.github.io/venture-lab/data.json"
+WAITING_STAGES = {"ready", "review", "reviewing", "qa", "changes_requested", "ci"}
 
 
 def gh_json(*args: str):
@@ -98,15 +112,66 @@ def dispatch(workflow: str) -> None:
     subprocess.run(["gh", "workflow", "run", workflow, "--repo", REPO, "--ref", "main"], check=False)
 
 
-def tick(now: datetime) -> str:
+def api_budget() -> dict:
+    """The shared token's core budget; reading it does not count against the limit."""
+    core = gh_json("rate_limit")["resources"]["core"]
+    return {"remaining": core["remaining"], "limit": core["limit"], "used": core["used"],
+            "reset": datetime.fromtimestamp(core["reset"], timezone.utc).isoformat()}
+
+
+def work_waiting() -> int | None:
+    """Agent work that could run now, from the published dashboard data (not an API call)."""
+    try:
+        with urllib.request.urlopen(DASHBOARD_DATA, timeout=20) as response:
+            items = json.load(response).get("work_items", [])
+    except Exception:
+        return None
+    return sum(1 for item in items if item.get("workflow_stage") in WAITING_STAGES and not item.get("needs_human"))
+
+
+def tick(now: datetime) -> dict:
+    """One heartbeat decision, returned as the metrics sample."""
+    sample = {"t": now.isoformat(timespec="seconds"), "waiting": work_waiting()}
+    try:
+        sample["api"] = api_budget()
+    except Exception:
+        sample["api"] = None
     resume = paused_until(now)
     if resume:
-        return f"paused: Claude usage limit, resumes {resume.isoformat()}"
+        return {**sample, "state": "paused", "resume": resume.isoformat()}
+    if sample["api"] and sample["api"]["remaining"] < API_FLOOR:
+        return {**sample, "state": "api_guard", "resume": sample["api"]["reset"]}
     milestones.advance(now)
     if agent_busy():
-        return "busy: an agent run is already queued or running"
+        return {**sample, "state": "working"}
+    if sample["waiting"]:
+        dispatch("orchestrator.yml")
+        return {**sample, "state": "idle_with_work"}
+    # Nothing known to be waiting; still wake the Orchestrator so new Issues and CI results are picked up.
     dispatch("orchestrator.yml")
-    return "dispatched orchestrator"
+    return {**sample, "state": "idle"}
+
+
+def record(sample: dict, now: datetime) -> None:
+    """Append the sample to the metrics branch, keeping a week of history."""
+    path = f"repos/{REPO}/contents/{METRICS_PATH}"
+    sha, lines = None, []
+    try:
+        current = gh_json(f"{path}?ref={METRICS_BRANCH}")
+        sha = current["sha"]
+        lines = base64.b64decode(current["content"]).decode().splitlines()
+    except RuntimeError:
+        if subprocess.run(["gh", "api", f"repos/{REPO}/branches/{METRICS_BRANCH}"], capture_output=True).returncode:
+            main_sha = gh_json(f"repos/{REPO}/git/ref/heads/main")["object"]["sha"]
+            gh_json(f"repos/{REPO}/git/refs", "-f", f"ref=refs/heads/{METRICS_BRANCH}", "-f", f"sha={main_sha}")
+    cutoff = now - METRICS_KEEP
+    kept = [line for line in lines if line.strip() and datetime.fromisoformat(json.loads(line)["t"]) >= cutoff]
+    kept.append(json.dumps(sample, separators=(",", ":")))
+    content = base64.b64encode(("\n".join(kept) + "\n").encode()).decode()
+    args = [f"{path}", "-X", "PUT", "-f", "message=metrics: heartbeat sample", "-f", f"content={content}", "-f", f"branch={METRICS_BRANCH}"]
+    if sha:
+        args += ["-f", f"sha={sha}"]
+    gh_json(*args)
 
 
 def main() -> None:
@@ -118,9 +183,14 @@ def main() -> None:
     while True:
         now = datetime.now(timezone.utc)
         try:
-            print(f"{now:%H:%M} {tick(now)}", flush=True)
+            sample = tick(now)
         except Exception as exc:  # one bad tick must not end the loop
-            print(f"{now:%H:%M} tick failed: {exc}", flush=True)
+            sample = {"t": now.isoformat(timespec="seconds"), "state": "error", "error": str(exc)[:200]}
+        print(f"{now:%H:%M} {json.dumps(sample)}", flush=True)
+        try:
+            record(sample, now)
+        except Exception as exc:
+            print(f"{now:%H:%M} could not record metrics: {exc}", flush=True)
         dispatch("dashboard.yml")
         if time.monotonic() + args.every > deadline:
             break

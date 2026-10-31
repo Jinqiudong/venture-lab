@@ -79,8 +79,10 @@ A milestone is the Product Owner's unit of review. Its task PRs merge into `mile
 GitHub cron is not reliable enough to drive the team. On 2026-10-31 the hourly Orchestrator schedule ran twice in twelve hours, and the pipeline sat idle for hours after each PR. The heartbeat is one long job (`scripts/heartbeat.py`) that re-arms itself before the Actions time limit. A sparse cron only restarts it if a run is ever lost. Every ten minutes it:
 1. pauses while the newest finished agent run failed on a Claude usage limit, until the reset time in that message (30 minutes when no time is given);
 2. advances milestones (acceptance checklist, `/accept` merges);
-3. dispatches the Orchestrator when no Orchestrator or Review Cycle run is queued or running;
-4. refreshes the dashboard.
+3. stops starting agent work while fewer than 500 core GitHub API calls remain in the shared token's hour, so the owner's own tools keep working;
+4. dispatches the Orchestrator when no Orchestrator or Review Cycle run is queued or running;
+5. refreshes the dashboard;
+6. appends a sample to `metrics/heartbeat.jsonl` on the `metrics` branch, keeping 7 days: the state (`working`, `idle_with_work`, `idle`, `paused`, `api_guard`), work waiting, and the API budget. The dashboard's Operations page (`ops.html`) reads it to show where the last 24 hours went, hourly API peaks against an 80% warning line, Claude limit hits and paused time, and Actions runs per merged PR. Claude subscriptions expose no usage percentage that automation can read, so Claude usage is shown as limit hits and pauses.
 
 ### Idea intake — `.github/workflows/idea-brain.yml`
 The dashboard's "new idea" button opens the `idea.yml` issue form, which labels the issue `idea`. When the repository owner opens such an issue, or comments on it, the Product Brain (`agents/product-incubator.md` plus `product-incubator/PLAYBOOK.md`) runs one turn: desk research, an updated incubation record, and a reply with at most three questions. The record is embedded in that reply as an `idea-cauldron-record` HTML comment, so the issue alone holds the state; `scripts/generate_dashboard.py` reads the latest one to draw the idea card, and a file in `product-incubator/records/` still wins when both exist. Comments from anyone other than the owner never start a turn and are left out of the prompt. The Product Brain cannot move an idea to BUILD; that happens only when the owner's latest comment contains `/approve-build` (or `批准开发`).
