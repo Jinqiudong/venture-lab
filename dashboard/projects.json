@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Dream Atlas iOS design, slices 2-5 (#51-#54), then the shared AI flow (#10)",
+      "current_focus": "Dream Atlas iOS design, slices 2-7 (#51-#56, incl. the Dream Calendar tab), then the shared AI flow (#10)",
       "work_items": [
         {
           "issue": 3,
@@ -171,7 +171,9 @@
             51,
             52,
             53,
-            54
+            54,
+            55,
+            56
           ],
           "next_action": "Tracking parent only: product owner approves each Dream Atlas slice from simulator screenshots",
           "ready_action": "Record the finished Dream Atlas design and close #40"
@@ -216,10 +218,24 @@
           "blocked_by": [
             53
           ]
+        },
+        {
+          "issue": 55,
+          "status": "blocked",
+          "blocked_by": [
+            54
+          ]
+        },
+        {
+          "issue": 56,
+          "status": "blocked",
+          "blocked_by": [
+            55
+          ]
         }
       ],
       "lifecycle": "build",
-      "current_focus_zh": "Dream Atlas iOS 设计第 2–5 步（#51–#54），之后是共享 AI 流程（#10）"
+      "current_focus_zh": "Dream Atlas iOS 设计第 2–7 步（#51–#56，含梦境日历），之后是共享 AI 流程（#10）"
     },
     {
       "name": "Digital You",
