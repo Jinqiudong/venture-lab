@@ -24,8 +24,13 @@ HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "hold"}
 AI_STAGES = {"ready", "coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"}
 DONE_STAGES = {"done", "merged"}
 AUTO_STOP_MARKER = "venture-auto-stop"
+HANDOFF_MARKER = re.compile(r"<!-- venture-human-ready:([0-9a-f]+) -->")
+DECISION_MARKER = "<!-- venture-human-decision -->"
 INCUBATION_RECORDS = ROOT / "product-incubator" / "records"
-RECENT_DAYS = 7
+RECENT_DAYS = 30
+TREND_WEEKS = 8
+# A project with open work and no push for this long is shown as stalled.
+STALL_DAYS = 3
 # Product lifecycle shown on the dashboard timeline, in order.
 LIFECYCLE = ["idea", "explore", "validate", "build", "beta", "launch"]
 INCUBATION_TO_LIFECYCLE = {
@@ -75,6 +80,20 @@ def repo_metrics(repo: str) -> dict:
     return result
 
 
+def fetch_pulls(repo: str, max_pages: int = 5) -> list[dict]:
+    """Pull requests newest-updated first, paged until the trend window is covered."""
+    cutoff = datetime.now(timezone.utc) - timedelta(weeks=TREND_WEEKS + 1)
+    pulls: list[dict] = []
+    for page in range(1, max_pages + 1):
+        batch = request_json(f"/repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=100&page={page}")
+        if not isinstance(batch, list):
+            break
+        pulls.extend(batch)
+        if len(batch) < 100 or parse_time(batch[-1].get("updated_at") or "1970-01-01T00:00:00Z") < cutoff:
+            break
+    return pulls
+
+
 def repo_index(repo: str) -> dict | None:
     """Fetch a repository's issues, pull requests and auto-stop markers in a few bulk calls.
 
@@ -89,10 +108,34 @@ def repo_index(repo: str) -> dict | None:
                 issues[issue["number"]] = issue
             if not isinstance(batch, list) or len(batch) < 100:
                 break
-        pulls = request_json(f"/repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=100")
+        pulls = fetch_pulls(repo)
         comments = request_json(f"/repos/{repo}/issues/comments?sort=created&direction=desc&per_page=100")
+        comments = comments if isinstance(comments, list) else []
+        # The repo-wide feed holds only the newest 100 comments, so an open PR's own thread is
+        # fetched too; otherwise a pending handoff silently drops out once the repo gets busy.
+        seen = {c.get("id") for c in comments}
+        for pr in pulls:
+            if pr.get("state") == "open":
+                thread = request_json(f"/repos/{repo}/issues/{pr['number']}/comments?per_page=100")
+                for c in thread if isinstance(thread, list) else []:
+                    if c.get("id") not in seen:
+                        seen.add(c.get("id"))
+                        comments.append(c)
     except Exception:
         return None
+    milestones: list[dict] = []
+    milestones_ok = True
+    try:
+        for page in (1, 2, 3):
+            batch = request_json(f"/repos/{repo}/milestones?state=all&per_page=100&page={page}")
+            if not isinstance(batch, list):
+                milestones_ok = False
+                break
+            milestones.extend(batch)
+            if len(batch) < 100:
+                break
+    except Exception:
+        milestones_ok = False
     stops = set()
     for comment in comments if isinstance(comments, list) else []:
         if AUTO_STOP_MARKER in (comment.get("body") or ""):
@@ -100,7 +143,127 @@ def repo_index(repo: str) -> dict | None:
                 stops.add(int((comment.get("issue_url") or "").rstrip("/").split("/")[-1]))
             except ValueError:
                 pass
-    return {"issues": issues, "pulls": pulls if isinstance(pulls, list) else [], "stops": stops}
+    return {
+        "issues": issues,
+        "pulls": pulls if isinstance(pulls, list) else [],
+        "stops": stops,
+        "comments": comments if isinstance(comments, list) else [],
+        "milestones": milestones,
+        "milestones_ok": milestones_ok,
+    }
+
+
+def comment_target(comment: dict) -> int | None:
+    try:
+        return int((comment.get("issue_url") or "").rstrip("/").split("/")[-1])
+    except ValueError:
+        return None
+
+
+def handoff_section(body: str, heading: str) -> str:
+    match = re.search(rf"### {heading}\n(.*?)(?:\n###|\Z)", body, re.S)
+    return match.group(1).strip() if match else ""
+
+
+def pending_handoffs(repo: str, index: dict) -> list[dict]:
+    """Open PRs where Review Cycle handed the current HEAD to the Product Owner and no decision followed."""
+    heads = {pr["number"]: pr for pr in index["pulls"] if pr.get("state") == "open"}
+    latest: dict[int, dict] = {}
+    decided: dict[int, str] = {}
+    for comment in index["comments"]:
+        number = comment_target(comment)
+        if number not in heads:
+            continue
+        body = comment.get("body") or ""
+        created = comment.get("created_at") or ""
+        if DECISION_MARKER in body:
+            decided[number] = max(decided.get(number, ""), created)
+        match = HANDOFF_MARKER.search(body)
+        if match and created > (latest.get(number) or {}).get("created_at", ""):
+            latest[number] = {**comment, "sha": match.group(1)}
+    handoffs = []
+    for number, comment in latest.items():
+        pr = heads[number]
+        if comment["sha"] != (pr.get("head") or {}).get("sha") or decided.get(number, "") > comment["created_at"]:
+            continue
+        handoffs.append(
+            {
+                "repo": repo,
+                "pr": number,
+                "pr_url": pr.get("html_url"),
+                "title": pr.get("title"),
+                "ask": handoff_section(comment.get("body") or "", "Your job"),
+                "since": comment["created_at"],
+                "url": comment.get("html_url") or pr.get("html_url"),
+            }
+        )
+    return handoffs
+
+
+def parse_time(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def delivery_stats(pulls: list[dict], now: datetime) -> dict:
+    """Weekly merged counts for the trend chart and the median hours from PR open to merge."""
+    merged = [pr for pr in pulls if pr.get("merged_at")]
+    week_start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    weeks = []
+    for back in range(TREND_WEEKS - 1, -1, -1):
+        start = week_start - timedelta(weeks=back)
+        end = start + timedelta(weeks=1)
+        weeks.append({"week": start.date().isoformat(), "merged": sum(1 for pr in merged if start <= parse_time(pr["merged_at"]) < end)})
+    recent = [pr for pr in merged if parse_time(pr["merged_at"]) >= now - timedelta(days=RECENT_DAYS) and pr.get("created_at")]
+    durations = sorted((parse_time(pr["merged_at"]) - parse_time(pr["created_at"])).total_seconds() / 3600 for pr in recent)
+    median = durations[len(durations) // 2] if durations else None
+    # Throughput over the last four full-or-current weeks drives the milestone projection.
+    per_week = sum(week["merged"] for week in weeks[-4:]) / 4
+    return {"weekly": weeks, "median_hours_to_merge": round(median, 1) if median is not None else None, "per_week": round(per_week, 2)}
+
+
+def milestone_plan(milestones: list[dict], per_week: float, now: datetime) -> list[dict]:
+    """GitHub milestones with a projected finish date from recent throughput."""
+    plan = []
+    for milestone in sorted(milestones, key=lambda m: (m.get("due_on") or "9999", m.get("number") or 0)):
+        open_count = milestone.get("open_issues") or 0
+        projected = None
+        if open_count and per_week > 0:
+            projected = (now + timedelta(weeks=open_count / per_week)).date().isoformat()
+        plan.append(
+            {
+                "title": milestone.get("title"),
+                "url": milestone.get("html_url"),
+                "state": milestone.get("state"),
+                "due_on": (milestone.get("due_on") or "")[:10] or None,
+                "open": open_count,
+                "closed": milestone.get("closed_issues") or 0,
+                "projected_on": projected,
+            }
+        )
+    return plan
+
+
+def owner_decision(item: dict) -> bool:
+    """Only product judgment waits on the owner; a hold is the owner's own pause and an auto-stop is an engineering failure."""
+    stage = item.get("workflow_stage")
+    if stage in DONE_STAGES or stage in {"hold", "blocked_on_human"}:
+        return False
+    return stage in {"decision", "human_handoff"} or bool(item.get("needs_human"))
+
+
+def project_status(items: list[dict], handoffs: list[dict], metrics: dict, now: datetime) -> str:
+    """One traffic light per project: needs_you, stuck, moving, or quiet."""
+    if handoffs or any(owner_decision(item) for item in items):
+        return "needs_you"
+    open_work = [item for item in items if item.get("workflow_stage") not in DONE_STAGES | {"hold"}]
+    if any(item.get("workflow_stage") == "blocked_on_human" for item in items):
+        return "stuck"
+    if not open_work:
+        return "quiet"
+    pushed = metrics.get("latest_activity")
+    if pushed and now - parse_time(pushed) > timedelta(days=STALL_DAYS):
+        return "stalled"
+    return "moving"
 
 
 def indexed_linked_pr(index: dict, repo: str, issue_number: int) -> dict | None:
@@ -350,33 +513,47 @@ def idea_summary(issue: int) -> dict | None:
     }
 
 
+def project_slug(project: dict) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", (project.get("repo") or project.get("name") or "").split("/")[-1].lower()).strip("-")
+
+
 def main() -> None:
     config = json.loads(CONFIG_PATH.read_text())
     now = datetime.now(timezone.utc)
     projects = []
     work_items = []
+    handoffs = []
     for project in config["projects"]:
         repo = project["repo"]
         index = repo_index(repo)
         project_items = resolve_dependencies([workflow_item(repo, item, index) for item in project.get("work_items", [])])
+        metrics = repo_metrics(repo)
+        project_handoffs = pending_handoffs(repo, index) if index else []
+        stats = delivery_stats(index["pulls"], now) if index else {"weekly": [], "median_hours_to_merge": None, "per_week": 0}
         projects.append(
             {
                 **project,
-                **repo_metrics(repo),
+                **metrics,
+                "slug": project_slug(project),
                 "kind": "repo",
                 "work_items": project_items,
                 "progress": project_progress(project_items),
                 "recent_merged": recent_merged(repo, now, index),
+                "delivery": stats,
+                "milestones": milestone_plan(index["milestones"], stats["per_week"], now) if index else [],
+                "milestones_error": bool(index) and not index.get("milestones_ok", True),
+                "handoffs": project_handoffs,
+                "status": project_status(project_items, project_handoffs, metrics, now),
                 "idea": idea_summary(project["idea_issue"]) if project.get("idea_issue") else None,
             }
         )
-        work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
+        handoffs.extend({**handoff, "project_name": project["name"], "project_slug": project_slug(project)} for handoff in project_handoffs)
+        work_items.extend({**item, "project_name": project["name"], "project_slug": project_slug(project), "project_stage": project["stage"]} for item in project_items)
 
     needs_you = [
-        item
-        for item in work_items
-        if item.get("workflow_stage") not in DONE_STAGES
-        and (item.get("needs_human") or item.get("workflow_stage") in HUMAN_STAGES)
+        {"kind": "handoff", **handoff} for handoff in handoffs
+    ] + [
+        {"kind": "decision", **item} for item in work_items if owner_decision(item)
     ]
     ai_team = [item for item in work_items if item.get("workflow_stage") in AI_STAGES and not item.get("needs_human")]
     queue = [item for item in work_items if item.get("workflow_stage") == "blocked"]
@@ -388,6 +565,7 @@ def main() -> None:
         "ideas": incubation_projects({p["idea_issue"] for p in config["projects"] if p.get("idea_issue")}, issue_idea_records()),
         "new_idea_url": f"https://github.com/{IDEA_REPO}/issues/new?template=idea.yml",
         "needs_you": needs_you,
+        "paused": [item for item in work_items if item.get("workflow_stage") == "hold"],
         "ai_team": ai_team,
         "queue": queue,
         "work_items": work_items,
