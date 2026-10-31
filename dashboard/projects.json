@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Dream Atlas iOS design, slices 2-7 (#51-#56, incl. the Dream Calendar tab), then the shared AI flow (#10)",
+      "current_focus": "Morning Dream Capture: design reference, staged backend generation, then the iOS slices (#40)",
       "work_items": [
         {
           "issue": 3,
@@ -165,20 +165,6 @@
           "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)"
         },
         {
-          "issue": 40,
-          "status": "blocked",
-          "blocked_by": [
-            51,
-            52,
-            53,
-            54,
-            55,
-            56
-          ],
-          "next_action": "Tracking parent only: product owner approves each Dream Atlas slice from simulator screenshots",
-          "ready_action": "Record the finished Dream Atlas design and close #40"
-        },
-        {
           "issue": 41,
           "status": "blocked",
           "blocked_by": [
@@ -195,21 +181,41 @@
           "ready_action": "Review PR #44 (English / Simplified Chinese language switch)"
         },
         {
-          "issue": 51,
+          "issue": 57,
           "status": "ready"
+        },
+        {
+          "issue": 59,
+          "status": "ready"
+        },
+        {
+          "issue": 60,
+          "status": "blocked",
+          "blocked_by": [
+            59
+          ]
+        },
+        {
+          "issue": 51,
+          "status": "blocked",
+          "blocked_by": [
+            57
+          ]
         },
         {
           "issue": 52,
           "status": "blocked",
           "blocked_by": [
-            51
+            51,
+            59
           ]
         },
         {
           "issue": 53,
           "status": "blocked",
           "blocked_by": [
-            52
+            52,
+            60
           ]
         },
         {
@@ -232,10 +238,47 @@
           "blocked_by": [
             55
           ]
+        },
+        {
+          "issue": 62,
+          "status": "blocked",
+          "blocked_by": [
+            56
+          ]
+        },
+        {
+          "issue": 61,
+          "status": "blocked",
+          "blocked_by": [
+            62
+          ]
+        },
+        {
+          "issue": 63,
+          "status": "blocked",
+          "blocked_by": [
+            61
+          ]
+        },
+        {
+          "issue": 40,
+          "status": "blocked",
+          "blocked_by": [
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            61,
+            62,
+            63
+          ],
+          "ready_action": "Confirm the Morning Capture epic is complete and close #40"
         }
       ],
       "lifecycle": "build",
-      "current_focus_zh": "Dream Atlas iOS 设计第 2–7 步（#51–#56，含梦境日历），之后是共享 AI 流程（#10）"
+      "current_focus_zh": "清晨捕梦：设计稿进仓库、后端分阶段生成，然后依次做 iOS 各步（#40）"
     },
     {
       "name": "Digital You",
