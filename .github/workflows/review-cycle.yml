@@ -135,6 +135,11 @@ jobs:
             echo "Changed paths match a high-risk category; Product Owner handoff required."
             exit 0
           fi
+          # In Venture Lab itself, anything that changes how the agents behave is control-plane work.
+          if [ "$TARGET_REPO" = "$GITHUB_REPOSITORY" ] && printf '%s\n' "$FILES" | grep -Eq '^(\.github/|agents/|orchestrator/|scripts/(orchestrate|enforce_runtime_guard|checkpoint_watcher|analyze_scope)\.py)'; then
+            echo "Venture Lab control-plane change; Product Owner handoff required."
+            exit 0
+          fi
 
           echo "Reusing Reviewer approve + QA pass for exact HEAD $REVIEWED_HEAD."
           # Approved drafts are promoted automatically; drafts cannot be merged otherwise.
@@ -436,6 +441,11 @@ jobs:
           # Path-based high-risk changes require a human regardless of prose.
           if printf '%s\n' "$FILES" | grep -Eiq '(^|/)\.github/workflows/|(^|/)(secrets?|entitlements?|privacy|legal)(/|$)|(^|/)(migrations?|schema)(/|$)|(^|/)(billing|payments?)(/|$)'; then
             echo "Changed paths match a high-risk category; Product Owner handoff required."
+            exit 0
+          fi
+          # In Venture Lab itself, anything that changes how the agents behave is control-plane work.
+          if [ "$TARGET_REPO" = "$GITHUB_REPOSITORY" ] && printf '%s\n' "$FILES" | grep -Eq '^(\.github/|agents/|orchestrator/|scripts/(orchestrate|enforce_runtime_guard|checkpoint_watcher|analyze_scope)\.py)'; then
+            echo "Venture Lab control-plane change; Product Owner handoff required."
             exit 0
           fi
 

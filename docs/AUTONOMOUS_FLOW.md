@@ -63,6 +63,8 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 
 **Product Owner handoff** is the exception path. It asks for product/UX/risk judgment, not routine code approval. A decision resolves the gate and allows automation to resume.
 
+**Venture Lab reviews itself.** Venture Lab is registered in `dashboard/projects.json` (hidden from the page with `"dashboard": false`), so its own PRs that contain `Closes #<n>` go through the same Reviewer → QA → risk gate. Any change under `.github/`, `agents/`, `orchestrator/`, or the scheduling/guard scripts is control-plane work and always goes to the Product Owner; dashboard, docs and incubation records may auto-merge.
+
 **Auto-merge** re-checks the exact HEAD before squash-merging and deleting the branch.
 
 ### Agent runtime — `.github/actions/run-agent`
