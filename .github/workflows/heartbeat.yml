@@ -19,7 +19,8 @@ on:
 
 permissions:
   actions: write
-  contents: read
+  # The heartbeat appends samples to the metrics branch with this token.
+  contents: write
 
 concurrency:
   group: ai-team-heartbeat
@@ -47,6 +48,7 @@ jobs:
         env:
           # Reads and dispatches in venture-lab use the workflow token; milestone work in product repos needs the agent token.
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          WORKFLOW_TOKEN: ${{ github.token }}
         run: python3 scripts/heartbeat.py --minutes 340 --every 600
 
       - name: Re-arm the loop

@@ -147,7 +147,8 @@ jobs:
           # Issues in an open GitHub milestone build on that milestone's branch; others on the default branch.
           BASE_BRANCH=$(python3 control-plane/scripts/milestones.py base --repo "$TARGET_REPO" --issue "$ISSUE_NUMBER")
           echo "branch=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
-          git -C target fetch origin "$BASE_BRANCH"
+          # The checkout keeps no credentials, and the milestone branch may have been created after it.
+          git -C target fetch "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           git -C target checkout -B "$BRANCH_NAME" "origin/$BASE_BRANCH"
 
       - name: Build agent prompt
