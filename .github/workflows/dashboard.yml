@@ -45,16 +45,10 @@ jobs:
       - name: Generate incubation data
         run: python3 scripts/generate_incubation_dashboard.py
 
-      - name: Generate checkpoint notes
-        env:
-          PORTFOLIO_GITHUB_TOKEN: ${{ secrets.PORTFOLIO_GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python3 scripts/generate_checkpoints.py
 
       - name: Validate generated JSON
         run: |
           python3 -m json.tool dashboard/data.json > /dev/null
-          python3 -m json.tool dashboard/checkpoints.json > /dev/null
           python3 -m json.tool dashboard/incubation.json > /dev/null
 
       - name: Configure Pages
