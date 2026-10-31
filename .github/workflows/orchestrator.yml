@@ -2,6 +2,9 @@ name: Agent Orchestrator
 
 on:
   workflow_dispatch:
+  # Heartbeat: retry after transient failures (quota, outages) without a human re-trigger.
+  schedule:
+    - cron: "5 * * * *"
   repository_dispatch:
     types: [portfolio-refresh, orchestrator-tick]
   push:
@@ -34,6 +37,7 @@ jobs:
       project: ${{ steps.decide.outputs.project }}
       title: ${{ steps.decide.outputs.title }}
       failure_count: ${{ steps.decide.outputs.failure_count }}
+      dispatch_items: ${{ steps.decide.outputs.dispatch_items }}
     steps:
       - name: Checkout control plane
         uses: actions/checkout@v4
@@ -95,15 +99,19 @@ jobs:
   build:
     needs: decide
     if: needs.decide.outputs.should_dispatch == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        item: ${{ fromJSON(needs.decide.outputs.dispatch_items) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TARGET_REPO: ${{ needs.decide.outputs.repo }}
-      ISSUE_NUMBER: ${{ needs.decide.outputs.issue }}
-      PROJECT_NAME: ${{ needs.decide.outputs.project }}
-      ISSUE_TITLE: ${{ needs.decide.outputs.title }}
-      BRANCH_NAME: agent/issue-${{ needs.decide.outputs.issue }}
-      CHECKPOINT_BRANCH: checkpoint/issue-${{ needs.decide.outputs.issue }}/run-${{ github.run_id }}
+      TARGET_REPO: ${{ matrix.item.repo }}
+      ISSUE_NUMBER: ${{ matrix.item.issue }}
+      PROJECT_NAME: ${{ matrix.item.project }}
+      ISSUE_TITLE: ${{ matrix.item.title }}
+      BRANCH_NAME: agent/issue-${{ matrix.item.issue }}
+      CHECKPOINT_BRANCH: checkpoint/issue-${{ matrix.item.issue }}/run-${{ github.run_id }}
     steps:
       - name: Validate agent runtime configuration
         env:
@@ -127,7 +135,7 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ needs.decide.outputs.repo }}
+          repository: ${{ matrix.item.repo }}
           token: ${{ secrets.AGENT_GITHUB_TOKEN }}
           fetch-depth: 0
           persist-credentials: false

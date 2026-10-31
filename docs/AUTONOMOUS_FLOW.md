@@ -42,9 +42,11 @@ Builds, tests, linting, simulator/device checks, and other platform-specific val
 ### Agent Orchestrator — `.github/workflows/orchestrator.yml`
 The Orchestrator refreshes portfolio state and asks `scripts/orchestrate.py` for the next action. It can build a dependency-ready Issue, wake Review Cycle for an existing managed PR, auto-stop repeated Builder failures, or remain idle.
 
+**Scheduling.** The Orchestrator also runs hourly as a heartbeat, so a run that failed for a transient reason (provider quota, GitHub outage) is retried without a human re-trigger. Up to `MAX_PARALLEL_BUILDERS` (default 2) ready Issues are built at once as a job matrix; Issues already in review do not use Builder capacity.
+
 For a build it checks out the target repo, creates `agent/issue-<n>`, runs Builder, checkpoints work, commits, opens a PR, then dispatches Review Cycle and Dashboard refresh.
 
-**Draft PRs are owner-held.** An Issue whose linked PR (`Closes #<n>`) is a draft gets the `draft` stage. It counts as *needs you*, not active AI work, so it neither blocks new Builder dispatches nor gets reset to `ready` by dependency resolution. Review Cycle skips drafts. Marking the PR *Ready for review* hands it back to the AI team.
+**Only a `hold` label stops the AI team.** Draft PRs are reviewed like any other PR, and an approved draft is marked ready automatically right before merge. To keep the AI team away from a PR, add the `hold` label; its Issue then gets the `hold` stage, which neither blocks new Builder dispatches nor gets reset to `ready` by dependency resolution. Removing the label resumes automation. Stacked PRs (based on another feature branch) are skipped until their base merges and GitHub retargets them to the default branch.
 
 ### Product repository CI
 Opening/updating the PR triggers the product repository's own workflows. Results are attached to the exact commit SHA and become evidence for Reviewer/QA.

@@ -17,6 +17,9 @@ API = "https://api.github.com"
 TOKEN = os.getenv("PORTFOLIO_GITHUB_TOKEN") or os.getenv("AGENT_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
 FAILURE_MARKER = "venture-checkpoint:agent-failed"
 AUTO_STOP_MARKER = "venture-auto-stop"
+# Builders that may run at once. Review stages do not use Builder capacity.
+MAX_PARALLEL_BUILDERS = int(os.getenv("MAX_PARALLEL_BUILDERS", "2"))
+BUILDING_STAGES = {"coding", "building"}
 
 
 def write_github_output(values: dict[str, str]) -> None:
@@ -97,67 +100,68 @@ def main() -> None:
         "project": "",
         "title": "",
         "failure_count": "0",
+        "dispatch_items": "[]",
     }
 
-    if not active:
-        for candidate in items:
-            if candidate.get("workflow_stage") != "ready":
-                continue
-            repo = candidate.get("repo") or ""
-            issue = candidate.get("issue")
-            if not repo or not issue:
-                continue
+    building = [item for item in active if item.get("workflow_stage") in BUILDING_STAGES]
+    capacity = max(0, MAX_PARALLEL_BUILDERS - len(building))
+    dispatch: list[dict] = []
+    for candidate in items:
+        if len(dispatch) >= capacity or outputs["auto_stop"] == "true":
+            break
+        if candidate.get("workflow_stage") != "ready":
+            continue
+        repo = candidate.get("repo") or ""
+        issue = candidate.get("issue")
+        if not repo or not issue:
+            continue
 
-            stopped, count, already_recorded = failure_gate(repo, int(issue))
-            if stopped and already_recorded:
-                decision["skipped_auto_stops"].append(
-                    {
-                        "project": candidate.get("project_name"),
-                        "repo": repo,
-                        "issue": issue,
-                        "failure_count": count,
-                        "action": "skip_recorded_auto_stop",
-                    }
-                )
-                continue
-
-            if stopped:
-                decision["auto_stop"] = {
+        stopped, count, already_recorded = failure_gate(repo, int(issue))
+        if stopped and already_recorded:
+            decision["skipped_auto_stops"].append(
+                {
                     "project": candidate.get("project_name"),
                     "repo": repo,
                     "issue": issue,
                     "failure_count": count,
-                    "action": "human_intervention",
+                    "action": "skip_recorded_auto_stop",
                 }
-                outputs.update(
-                    {
-                        "auto_stop": "true",
-                        "repo": repo,
-                        "issue": str(issue),
-                        "project": candidate.get("project_name") or "",
-                        "title": candidate.get("title") or "",
-                        "failure_count": str(count),
-                    }
-                )
-                break
+            )
+            continue
 
-            decision["next_ready"] = {
+        if stopped:
+            decision["auto_stop"] = {
                 "project": candidate.get("project_name"),
                 "repo": repo,
                 "issue": issue,
-                "title": candidate.get("title"),
-                "action": "dispatch_builder",
+                "failure_count": count,
+                "action": "human_intervention",
             }
             outputs.update(
                 {
-                    "should_dispatch": "true",
+                    "auto_stop": "true",
                     "repo": repo,
                     "issue": str(issue),
                     "project": candidate.get("project_name") or "",
                     "title": candidate.get("title") or "",
+                    "failure_count": str(count),
                 }
             )
-            break
+            continue
+
+        dispatch.append(
+            {
+                "project": candidate.get("project_name") or "",
+                "repo": repo,
+                "issue": str(issue),
+                "title": candidate.get("title") or "",
+            }
+        )
+
+    decision["next_ready"] = [{**item, "action": "dispatch_builder"} for item in dispatch] or None
+    if dispatch:
+        outputs["should_dispatch"] = "true"
+    outputs["dispatch_items"] = json.dumps(dispatch, ensure_ascii=False)
 
     write_github_output(outputs)
     print(json.dumps(decision, ensure_ascii=False, indent=2))

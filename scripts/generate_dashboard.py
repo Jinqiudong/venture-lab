@@ -14,8 +14,8 @@ OUTPUT_PATH = ROOT / "dashboard" / "data.json"
 API = "https://api.github.com"
 TOKEN = os.getenv("PORTFOLIO_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
 
-# "draft": a linked PR exists but its author has not marked it ready; the owner must act.
-HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "draft"}
+# "hold": the linked PR carries the `hold` label, so the AI team leaves it alone.
+HUMAN_STAGES = {"decision", "human_handoff", "blocked_on_human", "hold"}
 AI_STAGES = {"ready", "coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"}
 DONE_STAGES = {"done", "merged"}
 AUTO_STOP_MARKER = "venture-auto-stop"
@@ -78,13 +78,8 @@ def linked_pr(repo: str, issue_number: int) -> dict | None:
     return candidates[0]
 
 
-def pr_is_draft(repo: str, pr: dict) -> bool:
-    if "draft" in pr:
-        return bool(pr["draft"])
-    try:
-        return bool(request_json(f"/repos/{repo}/pulls/{pr.get('number')}").get("draft"))
-    except Exception:
-        return False
+def pr_is_held(pr: dict) -> bool:
+    return any((label.get("name") or "").lower() == "hold" for label in pr.get("labels") or [])
 
 
 def has_auto_stop(repo: str, issue_number: int) -> bool:
@@ -120,10 +115,10 @@ def workflow_item(repo: str, item: dict) -> dict:
             enriched["pr_url"] = pr.get("html_url")
             if pr.get("state") != "open":
                 enriched["workflow_stage"] = "merged"
-            elif pr_is_draft(repo, pr):
-                enriched["workflow_stage"] = "draft"
+            elif pr_is_held(pr):
+                enriched["workflow_stage"] = "hold"
                 enriched["needs_human"] = True
-                enriched["next_action"] = f"Draft PR #{pr.get('number')}: mark it ready for review to let the AI team pick it up"
+                enriched["next_action"] = f"PR #{pr.get('number')} is labeled hold; remove the label to resume automation"
             else:
                 enriched["workflow_stage"] = "review"
         elif issue.get("state") == "closed":
