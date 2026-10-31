@@ -79,6 +79,7 @@ Every role (Builder, Reviewer, Fixer, QA, Handoff) runs through one composite ac
 
 ## 4. Supporting Actions
 
+- **Agent Guardrails** posts a checkpoint on every failed agent run. A run that stopped on a provider or GitHub limit (for example the shared Claude usage limit) gets a `venture-checkpoint:agent-paused` marker instead of `agent-failed`. It is not counted toward Builder auto-stop, and the hourly heartbeat retries it.
 - **Agent Runtime Guard** caps unhealthy automatic-fix behavior and protects against runaway loops. It counts Fixer attempts from the `<!-- venture-fixer-attempt:<HEAD SHA> -->` marker that Review Cycle posts, so the guard and the workflow must share that exact marker format.
 - **Scope Gate Shadow** analyzes whether ready Issues are sufficiently bounded; currently observational.
 - **Portfolio Dashboard / Checkpoint Dashboard Refresh** expose state/checkpoints; dashboards are observability, not canonical truth.

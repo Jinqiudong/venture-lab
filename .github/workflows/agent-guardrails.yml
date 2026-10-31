@@ -82,7 +82,36 @@ jobs:
                   raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
               return proc.stdout
 
+          logs = ""
+          for _ in range(4):
+              proc = subprocess.run([
+                  "gh", "run", "view", run_id,
+                  "--repo", os.environ["GITHUB_REPOSITORY"], "--log"
+              ], text=True, capture_output=True)
+              if proc.returncode == 0:
+                  logs = proc.stdout
+                  break
+              time.sleep(5)
+          # Provider limits are transient: record a pause, which the Orchestrator does not count toward auto-stop.
+          transient = re.search(r"hit your [^\n]*limit|usage limit|Quota exceeded|rate limit exceeded|API rate limit", logs, re.I)
+
           def post(repo, number, target_kind, stage):
+              if transient:
+                  marker = f"<!-- venture-checkpoint:agent-paused:{run_id} -->"
+                  existing = gh("api", f"repos/{repo}/issues/{number}/comments?per_page=100", "--jq", ".[].body", check=False)
+                  if marker in existing:
+                      return True
+                  body = (
+                      f"{marker}\n"
+                      f"### ⏸️ Paused: AI usage limit\n\n"
+                      f"**Stage:** {stage}\n\n"
+                      f"The run stopped on a provider or GitHub limit (`{transient.group(0)}`), not on a problem with this work.\n\n"
+                      f"**Next:** nothing to do. The hourly heartbeat retries once the limit resets, and this does not count toward auto-stop.\n\n"
+                      f"[View run]({run_url})"
+                  )
+                  gh("api", "--method", "POST", f"repos/{repo}/issues/{number}/comments", "-f", f"body={body}")
+                  print(f"Posted pause checkpoint to {repo} #{number}")
+                  return True
               marker = f"<!-- venture-checkpoint:agent-failed:{run_id} -->"
               existing = gh("api", f"repos/{repo}/issues/{number}/comments?per_page=100", "--jq", ".[].body", check=False)
               if marker in existing:
@@ -129,16 +158,6 @@ jobs:
               print("No Builder checkpoint marker found for failed run; nothing attached.")
               raise SystemExit(0)
 
-          logs = ""
-          for _ in range(4):
-              proc = subprocess.run([
-                  "gh", "run", "view", run_id,
-                  "--repo", os.environ["GITHUB_REPOSITORY"], "--log"
-              ], text=True, capture_output=True)
-              if proc.returncode == 0:
-                  logs = proc.stdout
-                  break
-              time.sleep(5)
           match = re.search(r"Selected\s+([\w.-]+/[\w.-]+)\s+PR\s+#(\d+)", logs)
           if match:
               repo, pr = match.group(1), int(match.group(2))
