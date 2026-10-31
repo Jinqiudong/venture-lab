@@ -48,8 +48,14 @@ DASHBOARD_DATA = os.getenv("DASHBOARD_DATA_URL") or "https://jinqiudong.github.i
 WAITING_STAGES = {"ready", "review", "reviewing", "qa", "changes_requested", "ci"}
 
 
-def gh_json(*args: str):
-    out = subprocess.run(["gh", "api", *args], text=True, capture_output=True)
+# GH_TOKEN is the agent token (product repos, milestones). Dispatching Venture Lab workflows and
+# writing the metrics branch use the workflow's own token: the agent token is a fine-grained PAT
+# without Actions write on this repository.
+WORKFLOW_ENV = {**os.environ, "GH_TOKEN": os.getenv("WORKFLOW_TOKEN") or os.getenv("GH_TOKEN") or ""}
+
+
+def gh_json(*args: str, env: dict | None = None):
+    out = subprocess.run(["gh", "api", *args], text=True, capture_output=True, env=env)
     if out.returncode:
         raise RuntimeError(out.stderr.strip())
     return json.loads(out.stdout or "null")
@@ -109,7 +115,10 @@ def agent_busy() -> bool:
 
 
 def dispatch(workflow: str) -> None:
-    subprocess.run(["gh", "workflow", "run", workflow, "--repo", REPO, "--ref", "main"], check=False)
+    out = subprocess.run(["gh", "workflow", "run", workflow, "--repo", REPO, "--ref", "main"],
+                         text=True, capture_output=True, env=WORKFLOW_ENV)
+    if out.returncode:
+        raise RuntimeError(f"dispatch {workflow} failed: {out.stderr.strip()[:200]}")
 
 
 def api_budget() -> dict:
@@ -157,13 +166,13 @@ def record(sample: dict, now: datetime) -> None:
     path = f"repos/{REPO}/contents/{METRICS_PATH}"
     sha, lines = None, []
     try:
-        current = gh_json(f"{path}?ref={METRICS_BRANCH}")
+        current = gh_json(f"{path}?ref={METRICS_BRANCH}", env=WORKFLOW_ENV)
         sha = current["sha"]
         lines = base64.b64decode(current["content"]).decode().splitlines()
     except RuntimeError:
-        if subprocess.run(["gh", "api", f"repos/{REPO}/branches/{METRICS_BRANCH}"], capture_output=True).returncode:
-            main_sha = gh_json(f"repos/{REPO}/git/ref/heads/main")["object"]["sha"]
-            gh_json(f"repos/{REPO}/git/refs", "-f", f"ref=refs/heads/{METRICS_BRANCH}", "-f", f"sha={main_sha}")
+        if subprocess.run(["gh", "api", f"repos/{REPO}/branches/{METRICS_BRANCH}"], capture_output=True, env=WORKFLOW_ENV).returncode:
+            main_sha = gh_json(f"repos/{REPO}/git/ref/heads/main", env=WORKFLOW_ENV)["object"]["sha"]
+            gh_json(f"repos/{REPO}/git/refs", "-f", f"ref=refs/heads/{METRICS_BRANCH}", "-f", f"sha={main_sha}", env=WORKFLOW_ENV)
     cutoff = now - METRICS_KEEP
     kept = [line for line in lines if line.strip() and datetime.fromisoformat(json.loads(line)["t"]) >= cutoff]
     kept.append(json.dumps(sample, separators=(",", ":")))
@@ -171,7 +180,7 @@ def record(sample: dict, now: datetime) -> None:
     args = [f"{path}", "-X", "PUT", "-f", "message=metrics: heartbeat sample", "-f", f"content={content}", "-f", f"branch={METRICS_BRANCH}"]
     if sha:
         args += ["-f", f"sha={sha}"]
-    gh_json(*args)
+    gh_json(*args, env=WORKFLOW_ENV)
 
 
 def main() -> None:
@@ -191,7 +200,10 @@ def main() -> None:
             record(sample, now)
         except Exception as exc:
             print(f"{now:%H:%M} could not record metrics: {exc}", flush=True)
-        dispatch("dashboard.yml")
+        try:
+            dispatch("dashboard.yml")
+        except RuntimeError as exc:
+            print(f"{now:%H:%M} {exc}", flush=True)
         if time.monotonic() + args.every > deadline:
             break
         time.sleep(args.every)
