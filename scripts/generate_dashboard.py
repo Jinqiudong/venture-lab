@@ -68,13 +68,52 @@ def repo_metrics(repo: str) -> dict:
     return result
 
 
-def recent_merged(repo: str, now: datetime) -> list[dict]:
+def repo_index(repo: str) -> dict | None:
+    """Fetch a repository's issues, pull requests and auto-stop markers in a few bulk calls.
+
+    Looking these up per work item cost hundreds of API calls per refresh and exhausted
+    the 5,000-per-hour token budget, so every work item is resolved from this index.
+    """
+    try:
+        issues: dict[int, dict] = {}
+        for page in (1, 2, 3):
+            batch = request_json(f"/repos/{repo}/issues?state=all&per_page=100&page={page}")
+            for issue in batch if isinstance(batch, list) else []:
+                issues[issue["number"]] = issue
+            if not isinstance(batch, list) or len(batch) < 100:
+                break
+        pulls = request_json(f"/repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=100")
+        comments = request_json(f"/repos/{repo}/issues/comments?sort=created&direction=desc&per_page=100")
+    except Exception:
+        return None
+    stops = set()
+    for comment in comments if isinstance(comments, list) else []:
+        if AUTO_STOP_MARKER in (comment.get("body") or ""):
+            try:
+                stops.add(int((comment.get("issue_url") or "").rstrip("/").split("/")[-1]))
+            except ValueError:
+                pass
+    return {"issues": issues, "pulls": pulls if isinstance(pulls, list) else [], "stops": stops}
+
+
+def indexed_linked_pr(index: dict, repo: str, issue_number: int) -> dict | None:
+    candidates = [pr for pr in index["pulls"] if closes_issue(pr.get("body"), issue_number, repo)]
+    if not candidates:
+        return None
+    candidates.sort(key=lambda pr: pr.get("updated_at") or pr.get("created_at") or "", reverse=True)
+    return candidates[0]
+
+
+def recent_merged(repo: str, now: datetime, index: dict | None = None) -> list[dict]:
     """Merged PRs in the last RECENT_DAYS days, newest first."""
     since = now - timedelta(days=RECENT_DAYS)
-    try:
-        pulls = request_json(f"/repos/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=50")
-    except Exception:
-        return []
+    if index is not None:
+        pulls = index["pulls"]
+    else:
+        try:
+            pulls = request_json(f"/repos/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page=50")
+        except Exception:
+            return []
     merged = []
     for pr in pulls if isinstance(pulls, list) else []:
         merged_at = pr.get("merged_at")
@@ -172,7 +211,7 @@ def has_auto_stop(repo: str, issue_number: int) -> bool:
     return any(AUTO_STOP_MARKER in (item.get("body") or "") for item in comments if isinstance(item, dict))
 
 
-def workflow_item(repo: str, item: dict) -> dict:
+def workflow_item(repo: str, item: dict, index: dict | None = None) -> dict:
     enriched = dict(item)
     issue_number = item.get("issue")
     enriched.setdefault("repo", repo)
@@ -187,11 +226,11 @@ def workflow_item(repo: str, item: dict) -> dict:
         enriched.setdefault("title", item.get("title", "Work item"))
         return enriched
     try:
-        issue = request_json(f"/repos/{repo}/issues/{issue_number}")
+        issue = (index or {}).get("issues", {}).get(issue_number) or request_json(f"/repos/{repo}/issues/{issue_number}")
         enriched["title"] = issue.get("title") or f"Issue #{issue_number}"
         enriched["issue_url"] = issue.get("html_url")
         enriched["issue_state"] = issue.get("state")
-        pr = linked_pr(repo, issue_number)
+        pr = indexed_linked_pr(index, repo, issue_number) if index is not None else linked_pr(repo, issue_number)
         if pr:
             enriched["pr"] = pr.get("number")
             enriched["pr_url"] = pr.get("html_url")
@@ -205,7 +244,7 @@ def workflow_item(repo: str, item: dict) -> dict:
                 enriched["workflow_stage"] = "review"
         elif issue.get("state") == "closed":
             enriched["workflow_stage"] = "done"
-        elif has_auto_stop(repo, int(issue_number)):
+        elif (int(issue_number) in index["stops"]) if index is not None else has_auto_stop(repo, int(issue_number)):
             enriched["workflow_stage"] = "blocked_on_human"
             enriched["needs_human"] = True
             enriched["next_action"] = "Diagnose Builder runtime or rescope the task before retrying"
@@ -247,7 +286,8 @@ def main() -> None:
     work_items = []
     for project in config["projects"]:
         repo = project["repo"]
-        project_items = resolve_dependencies([workflow_item(repo, item) for item in project.get("work_items", [])])
+        index = repo_index(repo)
+        project_items = resolve_dependencies([workflow_item(repo, item, index) for item in project.get("work_items", [])])
         projects.append(
             {
                 **project,
@@ -255,7 +295,7 @@ def main() -> None:
                 "kind": "repo",
                 "work_items": project_items,
                 "progress": project_progress(project_items),
-                "recent_merged": recent_merged(repo, now),
+                "recent_merged": recent_merged(repo, now, index),
             }
         )
         work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
