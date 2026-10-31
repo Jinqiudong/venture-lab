@@ -4,13 +4,18 @@ The dashboard is a read-only portfolio view. Product repositories remain the sou
 
 ## What it shows
 
-For each configured project:
-- stage and health (manual portfolio metadata)
-- current focus and attention item
-- open GitHub issues
-- open pull requests
-- latest GitHub Actions status
-- latest repository activity
+The overview page (`index.html`):
+- **Needs you**: only product judgment. Open PRs whose current HEAD has a Review Cycle Product Owner handoff with no later decision, plus work items configured with `needs_human`. A `hold` is the owner's own pause and an auto-stopped Builder is an engineering failure, so neither appears here.
+- one card per project with a status light (`needs_you`, `stuck`, `stalled`, `moving`, `quiet`), the lifecycle stage, planned-task progress, and the next open milestone
+- what the team shipped, filterable by project and by 3, 7 or 30 days
+
+Each repo card opens `project.html?p=<slug>`, which shows:
+- the project's open asks and a board: waiting on you, AI stuck, AI working, queued, done
+- the plan: GitHub milestones with their due dates and a projected finish from the last four weeks of throughput
+- delivery: PRs merged per week over eight weeks, the four-week pace, and the median time from PR to merge
+- recently shipped work and, for projects that grew out of an idea, how it started
+
+Planned timelines come from GitHub milestones in the product repository. Give a milestone a due date and assign its issues to it; the dashboard does the rest.
 
 ## Add or edit a project
 
