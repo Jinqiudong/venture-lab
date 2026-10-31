@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from orchestrator.retry import since_last_retry
 from orchestrator.state import classify_stage
 
 DATA_PATH = ROOT / "dashboard" / "data.json"
@@ -53,7 +54,9 @@ def failure_gate(repo: str, issue: int) -> tuple[bool, int, bool]:
         # Fail open on telemetry trouble: never block work because GitHub comments could not be read.
         return False, 0, False
 
-    bodies = [item.get("body") or "" for item in comments if isinstance(item, dict)]
+    # An owner `/retry` comment wipes the slate: only failures after it count.
+    comments = since_last_retry([item for item in comments if isinstance(item, dict)], repo.split("/")[0])
+    bodies = [item.get("body") or "" for item in comments]
     failure_count = sum(FAILURE_MARKER in body for body in bodies)
     already_recorded = any(AUTO_STOP_MARKER in body for body in bodies)
     return failure_count >= 2 or already_recorded, failure_count, already_recorded

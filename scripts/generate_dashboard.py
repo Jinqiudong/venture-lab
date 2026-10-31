@@ -4,10 +4,16 @@ import base64
 import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+sys_path_root = Path(__file__).resolve().parents[1]
+if str(sys_path_root) not in sys.path:
+    sys.path.insert(0, str(sys_path_root))
+from orchestrator import retry  # noqa: E402
 
 try:
     from scripts import idea_brain, milestones
@@ -138,13 +144,20 @@ def repo_index(repo: str) -> dict | None:
                 break
     except Exception:
         milestones_ok = False
-    stops = set()
+    # An auto-stop counts until the owner comments `/retry` on the Issue after it.
+    owner = repo.split("/")[0]
+    stopped_at: dict[int, str] = {}
+    retried_at: dict[int, str] = {}
     for comment in comments if isinstance(comments, list) else []:
+        number = comment_target(comment)
+        if number is None:
+            continue
+        created = comment.get("created_at") or ""
         if AUTO_STOP_MARKER in (comment.get("body") or ""):
-            try:
-                stops.add(int((comment.get("issue_url") or "").rstrip("/").split("/")[-1]))
-            except ValueError:
-                pass
+            stopped_at[number] = max(stopped_at.get(number, ""), created)
+        elif retry.is_retry(comment, owner):
+            retried_at[number] = max(retried_at.get(number, ""), created)
+    stops = {number for number, at in stopped_at.items() if at > retried_at.get(number, "")}
     return {
         "issues": issues,
         "pulls": pulls if isinstance(pulls, list) else [],
