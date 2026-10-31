@@ -1,6 +1,6 @@
 # Product Incubator Playbook
 
-This is the canonical guidance contract for turning an Idea into a buildable product through conversation. GitHub stores truth; ChatGPT is the Product Brain and collaboration surface.
+This is the canonical guidance contract for turning an Idea into a buildable product through conversation. GitHub stores truth; Claude is the Product Brain, and the idea issue is the collaboration surface.
 
 ## Experience principle
 

@@ -1,52 +1,30 @@
-name: New Venture Idea
-description: Capture a new product or business idea before deciding whether it deserves a standalone project.
+name: New idea / 新想法
+description: Drop in a raw idea. The Product Brain researches it and replies with findings and 1–3 questions.
 title: "[Idea] "
-labels: []
+labels: ["idea"]
 body:
-  - type: textarea
-    id: problem
+  - type: markdown
     attributes:
-      label: Problem / unmet need
-      description: What real problem or desire does this idea address?
+      value: |
+        Write it the way you would tell a friend. Rough is fine; the Product Brain does the market research and framing, then replies here.
+        像跟朋友聊天一样写下来就好，粗糙也没关系。AI 产品经理会去做市场调研，然后在这里回复你。
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea / 想法
+      description: What do you want to make, and for whom? / 你想做什么？给谁用？
     validations:
       required: true
 
   - type: textarea
-    id: user
+    id: why
     attributes:
-      label: Target user
-      description: Who would care enough to use or pay for this?
-    validations:
-      required: true
+      label: Why you care / 为什么想做
+      description: Optional. A personal pain, something you noticed, a person you know who needs it. / 选填：你自己的痛点、观察到的现象、身边需要它的人。
 
   - type: textarea
-    id: hypothesis
+    id: references
     attributes:
-      label: Product hypothesis
-      description: What is the proposed solution and why might it work?
-    validations:
-      required: true
-
-  - type: textarea
-    id: evidence
-    attributes:
-      label: Evidence / signals
-      description: What observations, personal pain, market signals, competitors, or data support the idea?
-
-  - type: textarea
-    id: validation
-    attributes:
-      label: Cheapest next validation
-      description: What is the fastest way to reduce uncertainty before building?
-
-  - type: dropdown
-    id: stage
-    attributes:
-      label: Initial stage
-      options:
-        - IDEA
-        - RESEARCH
-        - VALIDATE
-        - PARKED
-    validations:
-      required: true
+      label: References / 参考
+      description: Optional. Apps, links, screenshots, competitors. / 选填：类似的 app、链接、截图、竞品。

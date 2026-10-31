@@ -23,6 +23,14 @@ class RunClaudeCommandTests(unittest.TestCase):
         self.assertIn("Bash(git push:*)", cmd)
         self.assertEqual(cmd[cmd.index("--effort") + 1], "medium")
 
+    def test_research_profile_adds_web_tools_but_no_edits(self):
+        cmd = run_claude.build_command("p", ":research", "", "")
+        self.assertIn("WebSearch", cmd)
+        self.assertIn("WebFetch", cmd)
+        self.assertNotIn("bypassPermissions", cmd)
+        for tool in ("Edit", "Write"):
+            self.assertNotIn(tool, cmd)
+
     def test_schema_requests_structured_output(self):
         cmd = run_claude.build_command("p", ":read-only", '{"type":"object"}', "")
         self.assertEqual(cmd[cmd.index("--json-schema") + 1], '{"type":"object"}')

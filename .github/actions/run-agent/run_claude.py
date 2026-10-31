@@ -27,6 +27,9 @@ READ_ONLY_TOOLS = [
     "Bash(cat:*)",
 ]
 
+# Research roles (Product Brain) may also search and read the public web, but still edit nothing.
+RESEARCH_TOOLS = [*READ_ONLY_TOOLS, "WebSearch", "WebFetch"]
+
 # Editing roles get the full workspace, but publishing stays with the workflow.
 WORKSPACE_DISALLOWED_TOOLS = ["Bash(git push:*)", "Bash(gh:*)"]
 
@@ -46,6 +49,8 @@ def build_command(prompt: str, profile: str, schema: str, effort: str) -> list[s
     cmd = ["npx", "-y", CLI_PACKAGE, "-p", prompt, "--output-format", "json"]
     if profile == ":read-only":
         cmd += ["--permission-mode", "default", "--allowedTools", *READ_ONLY_TOOLS]
+    elif profile == ":research":
+        cmd += ["--permission-mode", "default", "--allowedTools", *RESEARCH_TOOLS]
     elif profile == ":workspace":
         cmd += ["--permission-mode", "bypassPermissions", "--disallowedTools", *WORKSPACE_DISALLOWED_TOOLS]
     else:
