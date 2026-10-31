@@ -1,287 +1,210 @@
-const healthLabel = { green: "Stable", yellow: "Watch", red: "At risk" };
-const stageOrder = ["Issue", "Branch", "PR", "CI", "Review", "Merge"];
-let dashboardData = null;
-
-const formatDate = (value) => {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+const STRINGS = {
+  en: {
+    "nav.projects": "Projects",
+    "nav.shipped": "Shipped",
+    "hero.line1": "Ideas in,",
+    "hero.line2": "products out.",
+    "hero.lede": "Your AI team builds, reviews, and ships on its own. Here is where every project stands.",
+    "stat.projects": "projects",
+    "stat.shipped": "shipped in 7 days",
+    "stat.active": "being worked on now",
+    "projects.eyebrow": "Portfolio",
+    "projects.title": "Every project at a glance",
+    "shipped.eyebrow": "Shipped",
+    "shipped.title": "What the team finished",
+    "range.3": "3 days",
+    "range.7": "7 days",
+    "kind.idea": "Incubating",
+    "progress": "{done} of {total} done",
+    "chip.active": "{n} in progress",
+    "chip.shipped": "{n} shipped this week",
+    "chip.hold": "{n} on hold",
+    "pipeline.ok": "AI team is running",
+    "pipeline.failing": "AI team is stuck: runs keep failing",
+    "pipeline.unknown": "AI team status unknown",
+    "shipped.empty": "Nothing shipped in this window yet.",
+    "updated": "Updated {when}",
+    "stage.idea": "Idea",
+    "stage.explore": "Explore",
+    "stage.validate": "Validate",
+    "stage.build": "Build",
+    "stage.beta": "Beta",
+    "stage.launch": "Launch",
+  },
+  zh: {
+    "nav.projects": "项目",
+    "nav.shipped": "已完成",
+    "hero.line1": "想法丢进去，",
+    "hero.line2": "产品端出来。",
+    "hero.lede": "AI 团队自己写代码、审查、上线。每个项目走到哪一步，这里一眼就能看到。",
+    "stat.projects": "个项目",
+    "stat.shipped": "7 天内完成",
+    "stat.active": "正在进行",
+    "projects.eyebrow": "项目总览",
+    "projects.title": "所有项目，一眼看清",
+    "shipped.eyebrow": "已完成",
+    "shipped.title": "团队最近做完了什么",
+    "range.3": "3 天",
+    "range.7": "7 天",
+    "kind.idea": "孵化中",
+    "progress": "已完成 {done} / {total}",
+    "chip.active": "{n} 项进行中",
+    "chip.shipped": "本周完成 {n} 项",
+    "chip.hold": "{n} 项暂停",
+    "pipeline.ok": "AI 团队运转正常",
+    "pipeline.failing": "AI 团队卡住了：连续运行失败",
+    "pipeline.unknown": "AI 团队状态未知",
+    "shipped.empty": "这段时间还没有完成的内容。",
+    "updated": "更新于 {when}",
+    "stage.idea": "想法",
+    "stage.explore": "探索",
+    "stage.validate": "验证",
+    "stage.build": "开发",
+    "stage.beta": "内测",
+    "stage.launch": "上线",
+  },
 };
 
-const statusLabel = (status) => ({
-  ready: "Ready for Builder",
-  decision: "Decision needed",
-  human_handoff: "Experience review",
-  blocked_on_human: "Waiting on you",
-  blocked: "Blocked",
-  review: "AI review",
-  reviewing: "AI review",
-  merged: "Merged",
-  done: "Done",
-  coding: "Coding",
-  building: "Building",
-  ci: "CI running",
-  qa: "QA",
-  changes_requested: "Fixing review findings",
-}[status] || status || "Unknown");
+const LIFECYCLE = ["idea", "explore", "validate", "build", "beta", "launch"];
+const ACTIVE_STAGES = ["coding", "building", "ci", "review", "reviewing", "qa", "changes_requested"];
 
-const projectSlug = (name = "project") => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-const stageState = (item, stage) => {
-  const status = item.workflow_stage;
-  if (["merged", "done"].includes(status)) return "done";
-  if (stage === "Issue") return "done";
-  if (["blocked", "decision", "blocked_on_human"].includes(status)) return "todo";
-  if (status === "ready") return stage === "Branch" ? "current" : "todo";
-  if (stage === "Branch") return ["coding", "building", "ci", "review", "reviewing", "qa", "human_handoff"].includes(status) ? "done" : "todo";
-  if (stage === "PR") return item.pr ? "done" : (["coding", "building"].includes(status) ? "current" : "todo");
-  if (stage === "CI") return status === "ci" || status === "qa" ? "current" : (["review", "reviewing", "human_handoff"].includes(status) ? "done" : "todo");
-  if (stage === "Review") return ["review", "reviewing"].includes(status) ? "current" : (status === "human_handoff" ? "done" : "todo");
-  return "todo";
+const store = {
+  get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(key, value); } catch { /* storage unavailable */ } },
 };
 
-const pipeline = (item) => `
-  <div class="pipeline" aria-label="Issue to merge workflow">
-    ${stageOrder.map((stage) => {
-      const state = stageState(item, stage);
-      const mark = state === "done" ? "✓" : "";
-      return `<div class="pipeline-step ${state}"><span class="dot">${mark}</span><small>${stage}</small></div>`;
-    }).join("")}
-  </div>
-`;
+let lang = store.get("lang") || ((navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en");
+let range = Number(store.get("range")) || 7;
+let data = null;
 
-const issueHref = (item) => {
-  if (item.issue_url) return item.issue_url;
-  if (item.repo && item.issue) return `https://github.com/${item.repo}/issues/${item.issue}`;
-  if (item.repo) return `https://github.com/${item.repo}`;
-  return "#";
+const t = (key, vars = {}) =>
+  (STRINGS[lang][key] ?? STRINGS.en[key] ?? key).replace(/\{(\w+)\}/g, (_, name) => vars[name] ?? "");
+
+const escapeHtml = (value) =>
+  String(value ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+
+const relative = (iso) => {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  const seconds = (then.getTime() - Date.now()) / 1000;
+  const rtf = new Intl.RelativeTimeFormat(lang === "zh" ? "zh-CN" : "en", { numeric: "auto" });
+  const units = [["day", 86400], ["hour", 3600], ["minute", 60]];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size || unit === "minute") return rtf.format(Math.round(seconds / size), unit);
+  }
+  return "";
 };
 
-const attentionCard = (item) => {
-  const link = item.pr_url || issueHref(item);
-  const slug = projectSlug(item.project_name);
-  const handoff = item.human_handoff || {};
-  const questions = Array.isArray(handoff.questions) && handoff.questions.length
-    ? `<ul>${handoff.questions.map((question) => `<li>${question}</li>`).join("")}</ul>`
-    : "";
+const allProjects = () => [...(data?.projects || []), ...(data?.ideas || [])];
+
+const shippedWithin = (days) => {
+  const since = Date.now() - days * 86400 * 1000;
+  return (data?.projects || [])
+    .flatMap((project) => (project.recent_merged || []).map((pr) => ({ ...pr, project: project.name, repo: project.repo })))
+    .filter((pr) => new Date(pr.merged_at).getTime() >= since)
+    .sort((a, b) => b.merged_at.localeCompare(a.merged_at));
+};
+
+const activeItems = (project) => (project.work_items || []).filter((item) => ACTIVE_STAGES.includes(item.workflow_stage));
+
+function renderStatic() {
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-lang]").forEach((el) => el.classList.toggle("on", el.dataset.lang === lang));
+  document.querySelectorAll("[data-range]").forEach((el) => el.classList.toggle("on", Number(el.dataset.range) === range));
+}
+
+function renderPipeline() {
+  const status = data?.pipeline?.status || "unknown";
+  const pill = document.getElementById("pipeline-pill");
+  pill.className = `pill ${status}`;
+  document.getElementById("pipeline-text").textContent = t(`pipeline.${status}`);
+}
+
+function renderStats() {
+  const projects = allProjects();
+  document.getElementById("stat-projects").textContent = projects.length;
+  document.getElementById("stat-shipped").textContent = shippedWithin(7).length;
+  document.getElementById("stat-active").textContent = projects.reduce((sum, p) => sum + activeItems(p).length, 0);
+}
+
+function timeline(current) {
+  const index = LIFECYCLE.indexOf(current);
+  return `<div class="timeline">${LIFECYCLE.map((stage, i) => {
+    const state = i < index ? "done" : i === index ? "now" : "";
+    return `<div class="step ${state}"><i></i><small>${t(`stage.${stage}`)}</small></div>`;
+  }).join("")}</div>`;
+}
+
+function projectCard(project) {
+  const progress = project.progress || { done: 0, total: 0 };
+  const percent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+  const focus = (lang === "zh" && project.current_focus_zh) || project.current_focus || "";
+  const active = activeItems(project).length;
+  const shipped = (project.recent_merged || []).length;
+  const held = (project.work_items || []).filter((item) => item.workflow_stage === "hold").length;
+  const href = project.repo ? `https://github.com/${project.repo}` : project.issue_url || "#";
+  const chips = [
+    active ? `<span class="chip live">${t("chip.active", { n: active })}</span>` : "",
+    shipped ? `<span class="chip">${t("chip.shipped", { n: shipped })}</span>` : "",
+    held ? `<span class="chip">${t("chip.hold", { n: held })}</span>` : "",
+  ].join("");
   return `
-    <article class="attention-card searchable project-${slug}" data-search="${[item.project_name, item.title, item.next_action, statusLabel(item.workflow_stage)].join(" ").toLowerCase()}">
-      <div>
-        <div class="attention-meta"><span class="project-dot"></span>${item.project_name} / ${statusLabel(item.workflow_stage)}</div>
-        <h3>${handoff.title || item.title || "Work item"}</h3>
-        <p>${handoff.what_you_need_to_do || item.next_action || "A product decision is needed."}</p>
-        ${handoff.where_to_look ? `<p><strong>Where to look:</strong> ${handoff.where_to_look}</p>` : ""}
-        ${questions}
-        ${handoff.approve_action ? `<p><strong>If approved:</strong> ${handoff.approve_action}</p>` : ""}
+    <article class="card">
+      <a class="card-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="${escapeHtml(project.name)}"></a>
+      <div class="card-top">
+        <h3>${escapeHtml(project.name)}</h3>
+        ${project.kind === "idea" ? `<span class="tag idea">${t("kind.idea")}</span>` : ""}
       </div>
-      <a href="${link}" target="_blank" rel="noreferrer">Open ↗</a>
-    </article>
-  `;
-};
-
-const workflowCard = (item) => {
-  const blocked = item.blocked_by?.length ? `Blocked by ${item.blocked_by.map((n) => `#${n}`).join(", ")}` : "";
-  const issueLink = issueHref(item);
-  const slug = projectSlug(item.project_name);
-  const search = [item.project_name, item.project_stage, item.issue ? `#${item.issue}` : "", item.title, item.next_action, statusLabel(item.workflow_stage), blocked].join(" ").toLowerCase();
-  return `
-    <article class="workflow-card searchable project-${slug} ${item.workflow_stage === "blocked" ? "is-blocked" : ""} ${["merged", "done"].includes(item.workflow_stage) ? "is-complete" : ""}" data-search="${search}">
-      <div class="workflow-head">
-        <div><div class="workflow-meta"><span class="project-dot"></span>${item.project_name} / ${item.project_stage}</div><h3>${item.issue ? `#${item.issue} ` : ""}${item.title || "Work item"}</h3></div>
-        <span class="status status-${item.workflow_stage}">${["merged", "done"].includes(item.workflow_stage) ? "✓ " : ""}${statusLabel(item.workflow_stage)}</span>
-      </div>
-      ${pipeline(item)}
-      <div class="workflow-foot">
-        <div><strong>${["merged", "done"].includes(item.workflow_stage) ? "Completed" : (item.next_action || "AI team owns the next move")}</strong>${blocked ? `<span>${blocked}</span>` : ""}</div>
-        <div class="workflow-links"><a href="${issueLink}" target="_blank" rel="noreferrer">Issue ↗</a>${item.pr_url ? `<a href="${item.pr_url}" target="_blank" rel="noreferrer">PR #${item.pr} ↗</a>` : ""}</div>
-      </div>
-    </article>
-  `;
-};
-
-const workflowGroups = (items) => {
-  const groups = new Map();
-  for (const item of items) {
-    const name = item.project_name || "Other";
-    if (!groups.has(name)) groups.set(name, []);
-    groups.get(name).push(item);
-  }
-  return [...groups.entries()].map(([name, groupItems]) => {
-    const slug = projectSlug(name);
-    return `<section class="project-workflow-group project-${slug}"><div class="project-group-head"><div><span class="project-dot"></span><strong>${name}</strong></div><span>${groupItems.length} item${groupItems.length === 1 ? "" : "s"}</span></div><div class="project-workflow-cards">${groupItems.map(workflowCard).join("")}</div></section>`;
-  }).join("");
-};
-
-const projectCard = (project) => {
-  const slug = projectSlug(project.name);
-  const search = [project.name, project.repo, project.stage, project.current_focus, project.health].join(" ").toLowerCase();
-  return `
-    <article class="portfolio-card searchable project-${slug}" data-search="${search}">
-      <div class="portfolio-topline"><div><div class="repo"><span class="project-dot"></span>${project.repo}</div><h3>${project.name}</h3></div><span class="health health-${project.health}">${healthLabel[project.health] || project.health}</span></div>
-      <div class="stage">${project.stage}</div><p>${project.current_focus}</p>
-      <div class="portfolio-stats"><span>${project.open_issues ?? "—"} issues</span><span>${project.open_prs ?? "—"} PRs</span><span>${project.live ? "synced" : "fallback"}</span></div>
-      <a class="repo-link" href="https://github.com/${project.repo}" target="_blank" rel="noreferrer">Open repo ↗</a>
-    </article>
-  `;
-};
-
-function applyFilter(query) {
-  const normalized = (query || "").trim().toLowerCase();
-  document.querySelectorAll(".searchable").forEach((node) => {
-    const haystack = node.dataset.search || "";
-    node.classList.toggle("filtered-out", normalized && !haystack.includes(normalized));
-  });
-  document.querySelectorAll(".project-workflow-group").forEach((group) => {
-    const visibleCards = [...group.querySelectorAll(".workflow-card")].some((card) => !card.classList.contains("filtered-out"));
-    group.classList.toggle("filtered-out", normalized && !visibleCards);
-  });
+      <p class="focus">${escapeHtml(focus)}</p>
+      ${timeline(project.lifecycle || "idea")}
+      ${progress.total ? `<div class="meter"><div class="bar"><b style="width:${percent}%"></b></div><span>${t("progress", progress)}</span></div>` : ""}
+      ${chips ? `<div class="card-foot">${chips}</div>` : ""}
+    </article>`;
 }
 
-function wireSearch() {
-  const input = document.querySelector("#command-search");
-  if (!input) return;
-  input.addEventListener("input", (event) => applyFilter(event.target.value));
-  document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
-    input.value = button.dataset.filter || "";
-    applyFilter(input.value);
-    input.focus();
-  }));
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "/" && document.activeElement !== input) {
-      event.preventDefault();
-      input.focus();
-    }
-  });
+function renderProjects() {
+  const order = (p) => -LIFECYCLE.indexOf(p.lifecycle || "idea");
+  const projects = allProjects().sort((a, b) => order(a) - order(b));
+  document.getElementById("project-grid").innerHTML = projects.map(projectCard).join("");
 }
 
-async function loadDashboard() {
-  const attentionNode = document.querySelector("#attention-list");
-  const aiTeamNode = document.querySelector("#ai-team-list");
-  const queueNode = document.querySelector("#queue-list");
-  const projectsNode = document.querySelector("#projects-grid");
-  const updatedNode = document.querySelector("#updated");
-
-  try {
-    const response = await fetch("./data.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    dashboardData = await response.json();
-
-    const needsYou = dashboardData.needs_you || [];
-    const aiTeam = dashboardData.ai_team || [];
-    const queue = dashboardData.queue || [];
-
-    attentionNode.innerHTML = needsYou.length ? needsYou.map(attentionCard).join("") : `<div class="empty-state">Nothing needs you right now. The AI team owns the next move.</div>`;
-    aiTeamNode.innerHTML = aiTeam.length ? workflowGroups(aiTeam) : `<div class="empty-state">No AI work is active or ready.</div>`;
-    queueNode.innerHTML = queue.length ? workflowGroups(queue) : `<div class="empty-state">Queue is clear.</div>`;
-    projectsNode.innerHTML = (dashboardData.projects || []).map(projectCard).join("");
-
-    const attentionCount = document.querySelector('#attention-count');
-    const aiCount = document.querySelector('#ai-team-count');
-    const queueCount = document.querySelector('#queue-count');
-    if (attentionCount) attentionCount.textContent = needsYou.length;
-    if (aiCount) aiCount.textContent = aiTeam.length;
-    if (queueCount) queueCount.textContent = queue.length;
-
-    updatedNode.textContent = `Synced ${formatDate(dashboardData.generated_at)}`;
-    wireSearch();
-  } catch (error) {
-    updatedNode.textContent = "Sync failed";
-    attentionNode.innerHTML = `<div class="empty-state">Could not load dashboard data.</div>`;
-    aiTeamNode.innerHTML = `<div class="empty-state">AI Team data is unavailable.</div>`;
-    queueNode.innerHTML = `<div class="empty-state">Queue data is unavailable.</div>`;
-    projectsNode.innerHTML = `<div class="empty-state">Project data is unavailable.</div>`;
-    wireSearch();
-  }
+function renderShipped() {
+  const items = shippedWithin(range);
+  document.getElementById("shipped-list").innerHTML = items.length
+    ? items.map((pr) => `
+        <li><a href="${escapeHtml(pr.url)}" target="_blank" rel="noopener">
+          <span class="check">✓</span>
+          <span class="title">${escapeHtml(pr.title)}</span>
+          <span class="chip">${escapeHtml(pr.project)}</span>
+          <span class="when">${relative(pr.merged_at)}</span>
+        </a></li>`).join("")
+    : `<li class="empty">${t("shipped.empty")}</li>`;
 }
 
-async function loadHeroCat() {
-  const img = document.querySelector('.mascot-hero img');
-  if (!img) return;
-  const fallback = () => {
-    img.dataset.removeEdgeWhite = 'true';
-    img.src = 'assets/cat-hero.webp';
-    setTimeout(() => {
-      if (typeof removeEdgeWhite === 'function') removeEdgeWhite(img);
-    }, 0);
-  };
-  try {
-    const response = await fetch('./assets/cat-hero-gpt-fixed-small.b64', { cache: 'no-store' });
-    if (!response.ok) return fallback();
-    const b64 = (await response.text()).replace(/\s+/g, '');
-    if (!b64.startsWith('UklG')) return fallback();
-    img.onerror = fallback;
-    img.src = `data:image/webp;base64,${b64}`;
-  } catch (_) {
-    fallback();
-  }
+function render() {
+  renderStatic();
+  if (!data) return;
+  renderPipeline();
+  renderStats();
+  renderProjects();
+  renderShipped();
+  document.getElementById("updated").textContent = t("updated", { when: relative(data.generated_at) });
 }
 
-loadHeroCat();
-loadDashboard();
+document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => {
+  lang = button.dataset.lang;
+  store.set("lang", lang);
+  render();
+}));
+document.querySelectorAll("[data-range]").forEach((button) => button.addEventListener("click", () => {
+  range = Number(button.dataset.range);
+  store.set("range", String(range));
+  render();
+}));
 
-const incubationStages = ["SPARK", "EXPLORE", "VALIDATE", "INCUBATE", "BUILD"];
-
-const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-}[char]));
-
-const incubationIdeaCard = (idea) => {
-  const decision = idea.decision || {};
-  const title = idea.title || `Idea #${idea.idea_issue}`;
-  const url = `https://github.com/Jinqiudong/venture-lab/issues/${idea.idea_issue}`;
-  const guidance = idea.guidance || {};
-  const completed = Array.isArray(guidance.completed) ? guidance.completed : [];
-  const prompt = guidance.chat_prompt || `Use the Idea Cauldron Product Incubator on Idea #${idea.idea_issue}.`;
-  return `<article class="incubation-idea">
-    <span class="incubation-idea-meta">#${idea.idea_issue} · ${escapeHtml(idea.stage || "—")} · Step ${escapeHtml(guidance.step || "—")} of ${escapeHtml(guidance.total_steps || 6)}</span>
-    <strong>${escapeHtml(title)}</strong>
-    <small><b>${escapeHtml(guidance.phase || "Next")}</b> · ${escapeHtml(guidance.current || decision.next_action || "No next action recorded.")}</small>
-    ${completed.length ? `<small>✓ ${completed.map(escapeHtml).join(" · ✓ ")}</small>` : ""}
-    <div class="workflow-links"><a href="${url}" target="_blank" rel="noreferrer">Idea ↗</a><button type="button" class="copy-incubation-prompt" data-prompt="${escapeHtml(prompt)}">Copy ChatGPT prompt</button></div>
-  </article>`;
-};
-
-const renderIncubationBoard = (ideas = []) => {
-  const board = document.getElementById("incubation-board");
-  if (!board) return;
-  const active = incubationStages.map((stage) => {
-    const stageIdeas = ideas.filter((idea) => idea.stage === stage);
-    return `<section class="incubation-column ${stageIdeas.length ? "has-ideas" : ""}">
-      <div class="incubation-column-head"><span>${stage}</span><b>${stageIdeas.length}</b></div>
-      <div class="incubation-column-body">${stageIdeas.length ? stageIdeas.map(incubationIdeaCard).join("") : '<span class="incubation-empty">—</span>'}</div>
-    </section>`;
-  }).join("");
-  const exits = ["PARK", "REJECT"].map((stage) => {
-    const stageIdeas = ideas.filter((idea) => idea.stage === stage);
-    return `<section class="incubation-exit"><span>${stage}</span><b>${stageIdeas.length}</b>${stageIdeas.map(incubationIdeaCard).join("")}</section>`;
-  }).join("");
-  board.innerHTML = `<div class="incubation-lanes">${active}</div><div class="incubation-exit-row">${exits}</div>`;
-};
-
-async function loadIncubationBoard() {
-  try {
-    const response = await fetch("./incubation.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const payload = await response.json();
-    renderIncubationBoard(Array.isArray(payload.ideas) ? payload.ideas : []);
-  } catch (_) {
-    const board = document.getElementById("incubation-board");
-    if (board) board.innerHTML = '<div class="incubation-loading">Incubation data is unavailable.</div>';
-  }
-}
-
-loadIncubationBoard();
-
-document.addEventListener("click", async (event) => {
-  const button = event.target.closest(".copy-incubation-prompt");
-  if (!button) return;
-  try {
-    await navigator.clipboard.writeText(button.dataset.prompt || "");
-    const original = button.textContent;
-    button.textContent = "Copied";
-    setTimeout(() => { button.textContent = original; }, 1200);
-  } catch (_) {
-    button.textContent = "Copy failed";
-  }
-});
+render();
+fetch("data.json", { cache: "no-store" })
+  .then((response) => response.json())
+  .then((json) => { data = json; render(); })
+  .catch(() => { document.getElementById("updated").textContent = "data.json unavailable"; });

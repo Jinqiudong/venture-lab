@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Land #9 (PR #34) and the Dream Atlas iOS design slices (#40); keep docs/agent context English-only (#45, #47)",
+      "current_focus": "Land the iOS dream flow (#34), Dream Atlas design and the language switch",
       "work_items": [
         {
           "issue": 3,
@@ -190,7 +190,9 @@
           ],
           "ready_action": "Review PR #44 (English / Simplified Chinese language switch)"
         }
-      ]
+      ],
+      "lifecycle": "build",
+      "current_focus_zh": "合并 iOS 记梦流程（#34）、Dream Atlas 设计和中英切换"
     },
     {
       "name": "Digital You",
@@ -205,7 +207,9 @@
           "next_action": "Define the first measurable skill loop",
           "needs_human": true
         }
-      ]
+      ],
+      "lifecycle": "explore",
+      "current_focus_zh": "定义第一个可衡量的舞蹈提升闭环"
     }
   ]
 }
