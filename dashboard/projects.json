@@ -298,6 +298,62 @@
       "current_focus_zh": "定义第一个可衡量的舞蹈提升闭环"
     },
     {
+      "name": "Cat Companion",
+      "repo": "Jinqiudong/cat-companion",
+      "idea_issue": 9,
+      "stage": "Validation prototype",
+      "health": "green",
+      "lifecycle": "validate",
+      "current_focus": "Milestone 1 (#1): meet your cat. Cat profile by photo, text or voice, then a semi-realistic digital cat and a line-art home",
+      "current_focus_zh": "里程碑 1（#1）：认识你的猫。拍照、文字或语音建档 → 半写实数字猫 → 线稿的家",
+      "work_items": [
+        {
+          "issue": 5,
+          "status": "ready",
+          "needs_human": true,
+          "next_action": "Owner + Product Brain: compare image providers on the owner's two cats; owner judges recognizability"
+        },
+        {
+          "issue": 2,
+          "status": "ready",
+          "next_action": "Builder: bootstrap SwiftUI app, iOS CI and backend proxy skeleton"
+        },
+        {
+          "issue": 3,
+          "status": "blocked",
+          "blocked_by": [
+            2
+          ],
+          "ready_action": "Builder: cat profile onboarding"
+        },
+        {
+          "issue": 4,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "ready_action": "Builder: voice-to-personality card"
+        },
+        {
+          "issue": 6,
+          "status": "blocked",
+          "blocked_by": [
+            3,
+            5
+          ],
+          "ready_action": "Builder: generate the digital cat pose set"
+        },
+        {
+          "issue": 7,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "ready_action": "Builder: default line-art room and optional room from photos"
+        }
+      ]
+    },
+    {
       "name": "Venture Lab",
       "repo": "Jinqiudong/venture-lab",
       "stage": "Control plane",
