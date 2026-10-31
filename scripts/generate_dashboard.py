@@ -143,12 +143,18 @@ def pipeline_health() -> dict:
     return health
 
 
-def incubation_projects() -> list[dict]:
-    """Ideas still in incubation appear as projects without a repository."""
+def incubation_projects(represented: set[int] | None = None) -> list[dict]:
+    """Ideas still in incubation appear as projects without a repository.
+
+    An idea that already has a product repo is shown once, by its repo card.
+    """
+    represented = represented or set()
     projects = []
     for path in sorted(INCUBATION_RECORDS.glob("*.json")) if INCUBATION_RECORDS.exists() else []:
         record = json.loads(path.read_text())
         if record.get("stage") in {"BUILD", "REJECT"}:
+            continue
+        if record.get("product_repo") or record.get("idea_issue") in represented:
             continue
         guidance = record.get("guidance") or {}
         projects.append(
@@ -279,6 +285,22 @@ def resolve_dependencies(items: list[dict]) -> list[dict]:
     return items
 
 
+def idea_summary(issue: int) -> dict | None:
+    """Incubation context for a repo project that grew out of an idea."""
+    path = INCUBATION_RECORDS / f"{issue}.json"
+    if not path.exists():
+        return None
+    record = json.loads(path.read_text())
+    guidance = record.get("guidance") or {}
+    return {
+        "issue": issue,
+        "issue_url": f"https://github.com/Jinqiudong/venture-lab/issues/{issue}",
+        "title": record.get("title"),
+        "done_steps": guidance.get("completed", []),
+        "next_steps": guidance.get("up_next", []),
+    }
+
+
 def main() -> None:
     config = json.loads(CONFIG_PATH.read_text())
     now = datetime.now(timezone.utc)
@@ -296,6 +318,7 @@ def main() -> None:
                 "work_items": project_items,
                 "progress": project_progress(project_items),
                 "recent_merged": recent_merged(repo, now, index),
+                "idea": idea_summary(project["idea_issue"]) if project.get("idea_issue") else None,
             }
         )
         work_items.extend({**item, "project_name": project["name"], "project_stage": project["stage"]} for item in project_items)
@@ -313,7 +336,7 @@ def main() -> None:
         "generated_at": now.isoformat(),
         "lifecycle": LIFECYCLE,
         "pipeline": pipeline_health(),
-        "ideas": incubation_projects(),
+        "ideas": incubation_projects({p["idea_issue"] for p in config["projects"] if p.get("idea_issue")}),
         "needs_you": needs_you,
         "ai_team": ai_team,
         "queue": queue,

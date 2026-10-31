@@ -299,6 +299,7 @@
     },
     {
       "name": "Cat Companion",
+      "name_zh": "猫猫美容中心",
       "repo": "Jinqiudong/cat-companion",
       "idea_issue": 9,
       "stage": "Validation prototype",

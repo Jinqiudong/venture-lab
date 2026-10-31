@@ -108,6 +108,8 @@ h2 { margin: 6px 0 0; font-size: clamp(28px, 4.4vw, 40px); letter-spacing: -.025
 .chip { padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .06); font-size: 12px; font-weight: 800; color: var(--muted); }
 .chip.live { color: var(--mint); background: rgba(127, 227, 196, .12); }
 .card-link { position: absolute; inset: 0; border-radius: var(--radius); }
+.chip-link { position: relative; z-index: 1; text-decoration: none; }
+.chip-link:hover { color: var(--text); }
 
 /* Shipped */
 .shipped-wrap { position: relative; }

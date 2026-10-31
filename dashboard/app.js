@@ -19,6 +19,7 @@ const STRINGS = {
     "chip.active": "{n} in progress",
     "chip.shipped": "{n} shipped this week",
     "chip.hold": "{n} on hold",
+    "chip.idea": "Idea #{n}",
     "pipeline.ok": "AI team is running",
     "pipeline.failing": "AI team is stuck: runs keep failing",
     "pipeline.unknown": "AI team status unknown",
@@ -51,6 +52,7 @@ const STRINGS = {
     "chip.active": "{n} 项进行中",
     "chip.shipped": "本周完成 {n} 项",
     "chip.hold": "{n} 项暂停",
+    "chip.idea": "想法 #{n}",
     "pipeline.ok": "AI 团队运转正常",
     "pipeline.failing": "AI 团队卡住了：连续运行失败",
     "pipeline.unknown": "AI 团队状态未知",
@@ -140,6 +142,7 @@ function projectCard(project) {
   const progress = project.progress || { done: 0, total: 0 };
   const percent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
   const focus = (lang === "zh" && project.current_focus_zh) || project.current_focus || "";
+  const name = (lang === "zh" && project.name_zh) || project.name;
   const active = activeItems(project).length;
   const shipped = (project.recent_merged || []).length;
   const held = (project.work_items || []).filter((item) => item.workflow_stage === "hold").length;
@@ -148,12 +151,13 @@ function projectCard(project) {
     active ? `<span class="chip live">${t("chip.active", { n: active })}</span>` : "",
     shipped ? `<span class="chip">${t("chip.shipped", { n: shipped })}</span>` : "",
     held ? `<span class="chip">${t("chip.hold", { n: held })}</span>` : "",
+    project.idea ? `<a class="chip chip-link" href="${escapeHtml(project.idea.issue_url)}" target="_blank" rel="noopener">${t("chip.idea", { n: project.idea.issue })}</a>` : "",
   ].join("");
   return `
     <article class="card">
-      <a class="card-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="${escapeHtml(project.name)}"></a>
+      <a class="card-link" href="${escapeHtml(href)}" target="_blank" rel="noopener" aria-label="${escapeHtml(name)}"></a>
       <div class="card-top">
-        <h3>${escapeHtml(project.name)}</h3>
+        <h3>${escapeHtml(name)}</h3>
         ${project.kind === "idea" ? `<span class="tag idea">${t("kind.idea")}</span>` : ""}
       </div>
       <p class="focus">${escapeHtml(focus)}</p>
