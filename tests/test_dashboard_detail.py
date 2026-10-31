@@ -14,6 +14,32 @@ def comment(number, body, created):
     return {"issue_url": f"https://api.github.com/repos/o/r/issues/{number}", "body": body, "created_at": created, "html_url": f"c{number}"}
 
 
+class IndexPagingTests(unittest.TestCase):
+    def test_open_pr_thread_is_fetched_beyond_the_repo_wide_comment_page(self):
+        handoff = {"id": 1000, **comment(5, HANDOFF.format(sha="abc"), "2026-10-01T00:00:00Z")}
+        busy = [{"id": i, **comment(7, "chatter", "2026-10-30T00:00:00Z")} for i in range(100)]
+
+        def fake(path):
+            if "/issues/5/comments" in path:
+                return [handoff]
+            if "/issues/comments" in path:
+                return busy
+            if "/pulls" in path:
+                return [{**pr(5), "updated_at": "2026-10-31T00:00:00Z"}]
+            if "/milestones" in path:
+                raise RuntimeError("boom")
+            return []
+
+        original = dashboard.request_json
+        dashboard.request_json = fake
+        try:
+            index = dashboard.repo_index("o/r")
+        finally:
+            dashboard.request_json = original
+        self.assertEqual(len(dashboard.pending_handoffs("o/r", index)), 1)
+        self.assertFalse(index["milestones_ok"])
+
+
 class HandoffTests(unittest.TestCase):
     def test_handoff_on_current_head_needs_the_owner(self):
         index = {"pulls": [pr(5)], "comments": [comment(5, HANDOFF.format(sha="abc"), "2026-10-31T01:00:00Z")]}

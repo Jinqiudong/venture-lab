@@ -80,6 +80,20 @@ def repo_metrics(repo: str) -> dict:
     return result
 
 
+def fetch_pulls(repo: str, max_pages: int = 5) -> list[dict]:
+    """Pull requests newest-updated first, paged until the trend window is covered."""
+    cutoff = datetime.now(timezone.utc) - timedelta(weeks=TREND_WEEKS + 1)
+    pulls: list[dict] = []
+    for page in range(1, max_pages + 1):
+        batch = request_json(f"/repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=100&page={page}")
+        if not isinstance(batch, list):
+            break
+        pulls.extend(batch)
+        if len(batch) < 100 or parse_time(batch[-1].get("updated_at") or "1970-01-01T00:00:00Z") < cutoff:
+            break
+    return pulls
+
+
 def repo_index(repo: str) -> dict | None:
     """Fetch a repository's issues, pull requests and auto-stop markers in a few bulk calls.
 
@@ -94,14 +108,34 @@ def repo_index(repo: str) -> dict | None:
                 issues[issue["number"]] = issue
             if not isinstance(batch, list) or len(batch) < 100:
                 break
-        pulls = request_json(f"/repos/{repo}/pulls?state=all&sort=updated&direction=desc&per_page=100")
+        pulls = fetch_pulls(repo)
         comments = request_json(f"/repos/{repo}/issues/comments?sort=created&direction=desc&per_page=100")
+        comments = comments if isinstance(comments, list) else []
+        # The repo-wide feed holds only the newest 100 comments, so an open PR's own thread is
+        # fetched too; otherwise a pending handoff silently drops out once the repo gets busy.
+        seen = {c.get("id") for c in comments}
+        for pr in pulls:
+            if pr.get("state") == "open":
+                thread = request_json(f"/repos/{repo}/issues/{pr['number']}/comments?per_page=100")
+                for c in thread if isinstance(thread, list) else []:
+                    if c.get("id") not in seen:
+                        seen.add(c.get("id"))
+                        comments.append(c)
     except Exception:
         return None
+    milestones: list[dict] = []
+    milestones_ok = True
     try:
-        milestones = request_json(f"/repos/{repo}/milestones?state=all&per_page=100")
+        for page in (1, 2, 3):
+            batch = request_json(f"/repos/{repo}/milestones?state=all&per_page=100&page={page}")
+            if not isinstance(batch, list):
+                milestones_ok = False
+                break
+            milestones.extend(batch)
+            if len(batch) < 100:
+                break
     except Exception:
-        milestones = []
+        milestones_ok = False
     stops = set()
     for comment in comments if isinstance(comments, list) else []:
         if AUTO_STOP_MARKER in (comment.get("body") or ""):
@@ -114,7 +148,8 @@ def repo_index(repo: str) -> dict | None:
         "pulls": pulls if isinstance(pulls, list) else [],
         "stops": stops,
         "comments": comments if isinstance(comments, list) else [],
-        "milestones": milestones if isinstance(milestones, list) else [],
+        "milestones": milestones,
+        "milestones_ok": milestones_ok,
     }
 
 
@@ -506,6 +541,7 @@ def main() -> None:
                 "recent_merged": recent_merged(repo, now, index),
                 "delivery": stats,
                 "milestones": milestone_plan(index["milestones"], stats["per_week"], now) if index else [],
+                "milestones_error": bool(index) and not index.get("milestones_ok", True),
                 "handoffs": project_handoffs,
                 "status": project_status(project_items, project_handoffs, metrics, now),
                 "idea": idea_summary(project["idea_issue"]) if project.get("idea_issue") else None,

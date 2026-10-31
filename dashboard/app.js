@@ -59,6 +59,7 @@ const STRINGS = {
     "board.queue": "Queued",
     "board.done": "Done",
     "detail.milestones": "Plan",
+    "milestones.error": "Milestones could not be loaded from GitHub just now.",
     "milestones.empty": "No milestones with target dates yet, so there is no planned timeline to compare against.",
     "milestone.tasks": "{closed} of {total} tasks",
     "milestone.due": "target {date}",
@@ -138,6 +139,7 @@ const STRINGS = {
     "board.queue": "排队中",
     "board.done": "已完成",
     "detail.milestones": "计划",
+    "milestones.error": "暂时无法从 GitHub 加载里程碑。",
     "milestones.empty": "还没有设定带目标日期的里程碑，所以暂时没有计划时间线可以对照。",
     "milestone.tasks": "{closed} / {total} 项任务",
     "milestone.due": "目标 {date}",
@@ -374,6 +376,7 @@ function board(project) {
 
 function milestones(project) {
   const list = project.milestones || [];
+  if (project.milestones_error) return `<p class="note">${t("milestones.error")}</p>`;
   if (!list.length) return `<p class="note">${t("milestones.empty")}</p>`;
   return `<div class="milestones">${list.map((m) => {
     const total = m.open + m.closed;
