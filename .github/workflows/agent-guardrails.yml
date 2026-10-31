@@ -5,7 +5,7 @@ on:
     workflows: ["Agent Orchestrator", "Agent Review Cycle"]
     types: [completed]
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -75,6 +75,20 @@ jobs:
           conclusion = os.environ["RUN_CONCLUSION"]
           run_url = os.environ["RUN_URL"]
           projects = json.loads(Path("dashboard/projects.json").read_text())["projects"]
+
+          # A Claude usage limit is not a Builder failure: the heartbeat waits for the reset and retries.
+          # Counting it would auto-stop healthy Issues after two exhausted windows.
+          repo_self = os.environ["GITHUB_REPOSITORY"]
+          jobs = json.loads(subprocess.run(["gh", "api", f"repos/{repo_self}/actions/runs/{run_id}/jobs?per_page=50"],
+                                           text=True, capture_output=True).stdout or "{}").get("jobs", [])
+          for job in jobs:
+              if job.get("conclusion") != "failure":
+                  continue
+              notes = subprocess.run(["gh", "api", f"repos/{repo_self}/check-runs/{job['id']}/annotations", "--jq", ".[].message"],
+                                     text=True, capture_output=True).stdout
+              if re.search(r"hit your .*?limit", notes, re.I):
+                  print("Run failed on a Claude usage limit; not recording a failure checkpoint.")
+                  raise SystemExit(0)
 
           def gh(*args, check=True):
               proc = subprocess.run(["gh", *args], text=True, capture_output=True)

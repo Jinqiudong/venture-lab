@@ -1,9 +1,8 @@
 name: Portfolio Dashboard
 
 on:
+  # The AI Team Heartbeat refreshes the dashboard every 10 minutes; per-event refreshes were most of the API cost.
   workflow_dispatch:
-  repository_dispatch:
-    types: [portfolio-refresh]
   schedule:
     - cron: "17 */6 * * *"
   push:

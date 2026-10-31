@@ -9,9 +9,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 try:
-    from scripts import idea_brain
+    from scripts import idea_brain, milestones
 except ImportError:  # run as `python3 scripts/generate_dashboard.py`
     import idea_brain
+    import milestones
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "dashboard" / "projects.json"
@@ -198,6 +199,45 @@ def pending_handoffs(repo: str, index: dict) -> list[dict]:
             }
         )
     return handoffs
+
+
+def pending_acceptances(repo: str, index: dict) -> list[dict]:
+    """Milestone PRs whose checklist is posted for the current HEAD and that the owner has not accepted yet."""
+    owner = repo.split("/")[0]
+    milestone_prs = {
+        pr["number"]: pr for pr in index["pulls"]
+        if pr.get("state") == "open" and ((pr.get("head") or {}).get("ref") or "").startswith("milestone/")
+    }
+    ready: dict[int, dict] = {}
+    for comment in index["comments"]:
+        number = comment_target(comment)
+        pr = milestone_prs.get(number)
+        if not pr:
+            continue
+        if f"<!-- venture-acceptance-ready:{(pr.get('head') or {}).get('sha')} -->" in (comment.get("body") or ""):
+            ready[number] = comment
+    acceptances = []
+    for number, checklist in ready.items():
+        accepted = any(
+            comment_target(c) == number and milestones.owner_accepts(c, owner, checklist.get("created_at") or "")
+            for c in index["comments"]
+        )
+        if accepted:
+            continue
+        pr = milestone_prs[number]
+        acceptances.append(
+            {
+                "repo": repo,
+                "pr": number,
+                "pr_url": pr.get("html_url"),
+                "title": pr.get("title"),
+                "acceptance": True,
+                "ask": "Try the finished milestone, then merge it or comment /accept",
+                "since": checklist.get("created_at"),
+                "url": checklist.get("html_url") or pr.get("html_url"),
+            }
+        )
+    return acceptances
 
 
 def parse_time(value: str) -> datetime:
@@ -528,7 +568,7 @@ def main() -> None:
         index = repo_index(repo)
         project_items = resolve_dependencies([workflow_item(repo, item, index) for item in project.get("work_items", [])])
         metrics = repo_metrics(repo)
-        project_handoffs = pending_handoffs(repo, index) if index else []
+        project_handoffs = (pending_acceptances(repo, index) + pending_handoffs(repo, index)) if index else []
         stats = delivery_stats(index["pulls"], now) if index else {"weekly": [], "median_hours_to_merge": None, "per_week": 0}
         projects.append(
             {

@@ -2,9 +2,7 @@ name: Agent Orchestrator
 
 on:
   workflow_dispatch:
-  # Heartbeat: retry after transient failures (quota, outages) without a human re-trigger.
-  schedule:
-    - cron: "5 * * * *"
+  # The AI Team Heartbeat workflow wakes the Orchestrator every 10 minutes; product-repo CI events wake it sooner.
   repository_dispatch:
     types: [portfolio-refresh, orchestrator-tick]
   push:
@@ -142,8 +140,15 @@ jobs:
           path: target
 
       - name: Prepare implementation branch
-        working-directory: target
-        run: git checkout -B "$BRANCH_NAME" origin/main
+        id: base
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          # Issues in an open GitHub milestone build on that milestone's branch; others on the default branch.
+          BASE_BRANCH=$(python3 control-plane/scripts/milestones.py base --repo "$TARGET_REPO" --issue "$ISSUE_NUMBER")
+          echo "branch=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
+          git -C target fetch origin "$BASE_BRANCH"
+          git -C target checkout -B "$BRANCH_NAME" "origin/$BASE_BRANCH"
 
       - name: Build agent prompt
         env:
@@ -185,14 +190,6 @@ jobs:
             } > "$BODY_FILE"
             gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
           fi
-
-      - name: Refresh dashboard after Builder checkpoint
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
-            -f ref='main'
-          echo "Dispatched Dashboard so the Builder checkpoint is visible immediately."
 
       - name: Start workspace checkpoint watcher
         env:
@@ -258,6 +255,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
           BUILDER_SUMMARY: ${{ steps.codex.outputs.final-message }}
+          BASE_BRANCH: ${{ steps.base.outputs.branch }}
         run: |
           BODY_FILE=$(mktemp)
           {
@@ -265,10 +263,10 @@ jobs:
             printf '## Autonomous Builder\n'
             printf 'Implemented by the Venture Lab Builder agent from the canonical GitHub Issue contract.\n\n'
             printf '## Builder report\n%s\n\n' "$BUILDER_SUMMARY"
-            printf '## Human gate\n'
-            printf 'This PR is intentionally **not auto-merged**. Independent review/QA and any required product handoff happen before human merge.\n'
+            printf '## Merge policy\n'
+            printf 'Independent Review, QA and CI decide. A routine change merges automatically into `%s`; risk categories still go to the Product Owner.\n' "$BASE_BRANCH"
           } > "$BODY_FILE"
-          PR_URL=$(gh pr create --repo "$TARGET_REPO" --base main --head "$BRANCH_NAME" --title "feat: $ISSUE_TITLE" --body-file "$BODY_FILE")
+          PR_URL=$(gh pr create --repo "$TARGET_REPO" --base "$BASE_BRANCH" --head "$BRANCH_NAME" --title "feat: $ISSUE_TITLE" --body-file "$BODY_FILE")
           echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "Opened $PR_URL"
           git -C target push "https://x-access-token:${GH_TOKEN}@github.com/${TARGET_REPO}.git" --delete "$CHECKPOINT_BRANCH" 2>/dev/null || true
@@ -280,9 +278,7 @@ jobs:
         run: |
           gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/review-cycle.yml/dispatches" \
             -f ref='main'
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/actions/workflows/dashboard.yml/dispatches" \
-            -f ref='main'
-          echo "Dispatched Review Cycle and Dashboard after Builder PR creation."
+          echo "Dispatched Review Cycle after Builder PR creation."
 
       - name: Report no-change Builder run
         if: steps.changes.outputs.has_changes != 'true'

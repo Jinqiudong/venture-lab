@@ -13,6 +13,8 @@ const STRINGS = {
     "needs.title": "Only what needs you",
     "needs.empty": "Nothing needs you right now. The AI team is moving on its own.",
     "needs.handoff": "Review",
+    "needs.accept": "Accept",
+    "needs.accept.ask": "The milestone is finished. Try it, then merge it or comment /accept.",
     "needs.decision": "Decide",
     "needs.open": "Open",
     "projects.eyebrow": "Portfolio",
@@ -93,6 +95,8 @@ const STRINGS = {
     "needs.title": "只放真正需要你的事",
     "needs.empty": "现在没有需要你处理的事，AI 团队在自己推进。",
     "needs.handoff": "需要你看",
+    "needs.accept": "待验收",
+    "needs.accept.ask": "这个里程碑做完了。试用一下，满意就合并，或者评论 /accept。",
     "needs.decision": "需要你决定",
     "needs.open": "打开",
     "projects.eyebrow": "项目总览",
@@ -300,11 +304,11 @@ function needsYouList(items, withProject = true) {
   if (!items.length) return `<li class="empty">${t("needs.empty")}</li>`;
   return items.map((item) => {
     const url = item.url || item.pr_url || item.issue_url || "#";
-    const ask = item.kind === "handoff" ? item.ask : item.next_action;
+    const ask = item.acceptance ? t("needs.accept.ask") : item.kind === "handoff" ? item.ask : item.next_action;
     const label = item.kind === "handoff" ? `PR #${item.pr}` : item.issue ? `#${item.issue}` : "";
     return `
       <li><a href="${escapeHtml(url)}" target="_blank" rel="noopener">
-        <span class="ask-kind">${t(item.kind === "handoff" ? "needs.handoff" : "needs.decision")}</span>
+        <span class="ask-kind">${t(item.acceptance ? "needs.accept" : item.kind === "handoff" ? "needs.handoff" : "needs.decision")}</span>
         <span class="ask-body">
           <strong>${escapeHtml(item.title)}</strong>
           ${ask ? `<small>${escapeHtml(ask)}</small>` : ""}
