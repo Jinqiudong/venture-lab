@@ -47,6 +47,8 @@ Builds, tests, linting, simulator/device checks, and other platform-specific val
 ### Agent Orchestrator — `.github/workflows/orchestrator.yml`
 The Orchestrator refreshes portfolio state and asks `scripts/orchestrate.py` for the next action. It can build a dependency-ready Issue, wake Review Cycle for an existing managed PR, auto-stop repeated Builder failures, or remain idle.
 
+**Auto-stop and `/retry`.** After two Builder failures on an Issue, the Orchestrator posts an auto-stop and skips it. A Claude usage limit is not counted as a failure. When the cause is fixed, the owner comments `/retry` (or `重试`) on the Issue (`orchestrator/retry.py`). Failures and auto-stops before that comment are then ignored by the Orchestrator and the dashboard, so nobody has to delete comments.
+
 **Scheduling.** The AI Team Heartbeat wakes the Orchestrator (see below). Product-repo CI events also wake it through `portfolio-refresh`, and every auto-merge dispatches it so the next ready Issue starts at once. Up to `MAX_PARALLEL_BUILDERS` (default 2) ready Issues are built at once as a job matrix; Issues already in review do not use Builder capacity.
 
 For a build it checks out the target repo and picks the base branch with `scripts/milestones.py base`. That is `milestone/<slug>` when the Issue belongs to an open GitHub milestone, created from the default branch and synced with it on each build, and the default branch otherwise. It then creates `agent/issue-<n>`, runs Builder, checkpoints work, commits, opens a PR against that base, and dispatches Review Cycle.

@@ -77,7 +77,7 @@ jobs:
             printf '### 🛑 Auto-stop: needs human intervention\n\n'
             printf 'Builder has failed or been cancelled **%s times** without producing a PR.\n\n' "$FAILURE_COUNT"
             printf '**Automation:** paused for this Issue; the Orchestrator will not retry it automatically.\n\n'
-            printf '**Next:** diagnose the Builder runtime, then explicitly clear this checkpoint before retrying.\n'
+            printf '**Next:** check the failed runs above. When the cause is fixed, comment `/retry` (or `重试`) on this Issue and the Builder starts again.\n'
           } > "$BODY_FILE"
           gh issue comment "$ISSUE_NUMBER" --repo "$TARGET_REPO" --body-file "$BODY_FILE"
 
