@@ -3,8 +3,9 @@
 An Issue assigned to an open GitHub milestone is built on `milestone/<slug>` instead of the
 default branch. Its task PR is reviewed, QA'd and auto-merged into that branch as usual. One
 milestone PR (milestone branch -> default branch) collects the work. When the milestone has no
-open issues left, the milestone PR gets an acceptance checklist and becomes the owner's single
-review point. The owner merges it, or comments `/accept` (or `验收通过`) and the heartbeat merges it.
+open issues left, the milestone PR is marked ready, which runs platform CI once for the whole
+milestone. Once CI passes it gets an acceptance checklist and becomes the owner's single review
+point. The owner merges it, or comments `/accept` (or `验收通过`) and the heartbeat merges it.
 
 Commands used by the workflows:
   milestones.py base --repo R --issue N       print the base branch for Issue N (creating it if needed)
@@ -147,7 +148,7 @@ def acceptance_body(repo: str, pr: dict, milestone: dict, comments: list[dict]) 
         ACCEPTANCE_MARKER.format(sha=pr["head"]["sha"]),
         f"## 👤 Milestone ready for you: {milestone['title']}",
         "",
-        f"All {milestone['closed_issues']} issues are done and every task PR passed review, QA and CI.",
+        f"All {milestone['closed_issues']} issues are done, every task PR passed review and QA, and CI passed on this PR.",
         "",
         "### What shipped",
         *[f"- #{p['number']} {p['title']}" for p in sorted(merged, key=lambda p: p["merged_at"])],
@@ -160,6 +161,26 @@ def acceptance_body(repo: str, pr: dict, milestone: dict, comments: list[dict]) 
         "- Something to change: comment what you saw. Fixes go into this same milestone before it ships.",
     ]
     return "\n".join(lines)
+
+
+def ci_state(runs: list[dict], jobs_of) -> str:
+    """CI on a milestone PR head: none, pending, blocked (GitHub never started it), failed or passed."""
+    runs = [r for r in runs if r.get("event") == "pull_request"]
+    if not runs:
+        return "none"
+    if any(r.get("status") != "completed" for r in runs):
+        return "pending"
+    failed = [r for r in runs if r.get("conclusion") not in {"success", "skipped", "neutral"}]
+    if not failed:
+        return "passed"
+    if all(not job.get("steps") for r in failed for job in jobs_of(r)):
+        return "blocked"
+    return "failed"
+
+
+def head_ci(repo: str, sha: str) -> str:
+    runs = (api(f"repos/{repo}/actions/runs?head_sha={sha}&per_page=50") or {}).get("workflow_runs", [])
+    return ci_state(runs, lambda run: (api(f"repos/{repo}/actions/runs/{run['id']}/jobs") or {}).get("jobs", []))
 
 
 def owner_accepts(comment: dict, owner: str, since: str) -> bool:
@@ -197,9 +218,15 @@ def advance(now: datetime | None = None) -> list[str]:
             marker = ACCEPTANCE_MARKER.format(sha=pr["head"]["sha"])
             posted = [c for c in comments if marker in (c.get("body") or "")]
             if not posted:
-                gh("pr", "comment", str(pr["number"]), "--repo", repo, "--body", acceptance_body(repo, pr, milestone, comments))
+                # Platform CI runs once per milestone: marking the PR ready starts it. The Review Cycle sends a
+                # failure to Fixer on this branch; the owner only sees the milestone once CI is green.
                 if pr.get("draft"):
                     gh("pr", "ready", str(pr["number"]), "--repo", repo, check=False)
+                    actions.append(f"{repo}#{pr['number']} ready, CI started")
+                    continue
+                if head_ci(repo, pr["head"]["sha"]) not in {"passed", "none"}:
+                    continue
+                gh("pr", "comment", str(pr["number"]), "--repo", repo, "--body", acceptance_body(repo, pr, milestone, comments))
                 actions.append(f"{repo}#{pr['number']} acceptance posted")
                 continue
             accepted = any(owner_accepts(c, owner, posted[-1]["created_at"]) for c in comments)

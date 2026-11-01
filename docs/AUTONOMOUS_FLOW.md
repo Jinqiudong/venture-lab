@@ -75,7 +75,9 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 **Auto-merge** re-checks the exact HEAD before squash-merging and deleting the branch. PRs stacked on it are retargeted to the merged PR's base. After a merge into a milestone branch, `scripts/milestones.py after-merge` closes the Issue, because `Closes #n` only fires on the default branch and dependent Issues would otherwise never become ready. It also opens the milestone PR if needed and adds QA's try note. Every merge then dispatches the Orchestrator.
 
 ### Milestones — `scripts/milestones.py`
-A milestone is the Product Owner's unit of review. Its task PRs merge into `milestone/<slug>`, and one milestone PR (draft until finished) carries the branch to the default branch. Review Cycle never selects a milestone PR. When the GitHub milestone has no open Issues, the heartbeat posts an acceptance checklist on the milestone PR (`<!-- venture-acceptance-ready:<HEAD SHA> -->`) with what shipped and every QA try note, and marks it ready. The dashboard shows it under "Needs you". The owner merges it, or comments `/accept` (or `验收通过`) and the heartbeat merges it and closes the milestone. Feedback becomes new Issues in the same milestone; once they merge, the HEAD changes and a fresh checklist is posted. Keep milestones small, about ten Issues or a few days, so the branch does not drift.
+A milestone is the Product Owner's unit of review. Its task PRs merge into `milestone/<slug>`, and one milestone PR (draft until finished) carries the branch to the default branch. When the GitHub milestone has no open Issues, the heartbeat marks the milestone PR ready, and once its CI passes it posts an acceptance checklist (`<!-- venture-acceptance-ready:<HEAD SHA> -->`) with what shipped and every QA try note.
+
+**Platform CI runs once per milestone.** Product-repo CI (including iOS on macOS, billed at ten times the Linux rate on private repos) triggers only on non-draft PRs into the default branch: the milestone PR once it is marked ready, or a task PR that targets the default branch directly. Task PRs into a milestone branch get no CI; Reviewer and QA are told this is expected. Review Cycle selects a milestone PR only when its CI failed: Reviewer turns the failure into findings, Fixer pushes to the milestone branch, CI runs again, and QA and Auto-merge never run on it. Product repos have no "Notify Venture Lab" workflow: the heartbeat polls every ten minutes, so the per-event notify runs only spent Actions minutes. The dashboard shows it under "Needs you". The owner merges it, or comments `/accept` (or `验收通过`) and the heartbeat merges it and closes the milestone. Feedback becomes new Issues in the same milestone; once they merge, the HEAD changes and a fresh checklist is posted. Keep milestones small, about ten Issues or a few days, so the branch does not drift.
 
 ### AI Team Heartbeat — `.github/workflows/heartbeat.yml`
 GitHub cron is not reliable enough to drive the team. On 2026-10-31 the hourly Orchestrator schedule ran twice in twelve hours, and the pipeline sat idle for hours after each PR. The heartbeat is one long job (`scripts/heartbeat.py`) that re-arms itself before the Actions time limit. It dispatches workflows and writes the `metrics` branch with the workflow's own `GITHUB_TOKEN`, because `AGENT_GITHUB_TOKEN` is a fine-grained PAT without Actions write on Venture Lab. It uses the agent token only for product-repo milestone work. A failed dispatch is recorded as an `error` sample, so it shows on the Operations page instead of failing silently. A sparse cron only restarts it if a run is ever lost. Every ten minutes it:
@@ -120,12 +122,12 @@ Every role (Builder, Reviewer, Fixer, QA, Handoff) runs through one composite ac
 ## 6. Typical lifecycle
 
 ```text
-Issue ready → Orchestrator → Builder → task PR (into milestone/<slug>) → product CI → Reviewer
+Issue ready → Orchestrator → Builder → task PR (into milestone/<slug>) → Reviewer
 → [Fixer → new HEAD → CI → Reviewer] as needed
 → Reviewer approve → QA (try notes to the milestone) → Risk Gate
 → Auto-merge (Issue closed, Orchestrator dispatched) OR Product Owner decision → merge
 → dependency graph exposes next ready Issue → Orchestrator continues
-→ milestone finished → acceptance checklist → Product Owner accepts → default branch
+→ milestone finished → milestone PR ready → product CI once (failure → Fixer) → acceptance checklist → Product Owner accepts → default branch
 ```
 
 ## 7. Keeping this document synchronized

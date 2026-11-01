@@ -92,6 +92,18 @@ class MilestoneTests(unittest.TestCase):
         self.assertEqual(milestones.qa_try_note(handle.name), "")
         self.assertEqual(milestones.qa_try_note(None), "")
 
+    def test_ci_state_of_the_milestone_pr(self):
+        run = lambda status="completed", conclusion="success", rid=1: {
+            "id": rid, "event": "pull_request", "status": status, "conclusion": conclusion}
+        ran = lambda r: [{"steps": [{"name": "build"}]}]
+        refused = lambda r: [{"steps": []}]
+        self.assertEqual(milestones.ci_state([], ran), "none")
+        self.assertEqual(milestones.ci_state([{**run(), "event": "workflow_run"}], ran), "none")
+        self.assertEqual(milestones.ci_state([run(), run("in_progress", None)], ran), "pending")
+        self.assertEqual(milestones.ci_state([run(), run(conclusion="skipped")], ran), "passed")
+        self.assertEqual(milestones.ci_state([run(conclusion="failure")], ran), "failed")
+        self.assertEqual(milestones.ci_state([run(conclusion="failure")], refused), "blocked")
+
     def test_after_merge_into_the_default_branch_does_nothing(self):
         with mock.patch.object(milestones, "gh") as gh:
             milestones.after_merge("o/r", 5, 9, "main", "main", None)
