@@ -45,6 +45,13 @@ def set_output(name: str, value: str) -> None:
         fh.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
 
 
+def load_schema(path: str) -> str:
+    """The schema as compact JSON. Claude Code rejects a "$schema" meta-schema URL it does not bundle."""
+    schema = json.loads(Path(path).read_text(encoding="utf-8"))
+    schema.pop("$schema", None)
+    return json.dumps(schema)
+
+
 def build_command(prompt: str, profile: str, schema: str, effort: str) -> list[str]:
     cmd = ["npx", "-y", CLI_PACKAGE, "-p", prompt, "--output-format", "json"]
     if profile == ":read-only":
@@ -81,7 +88,7 @@ def main() -> None:
     workspace = Path(os.environ["GITHUB_WORKSPACE"])
     prompt = (workspace / os.environ["PROMPT_FILE"]).read_text(encoding="utf-8")
     schema_file = os.environ.get("SCHEMA_FILE", "")
-    schema = Path(schema_file).read_text(encoding="utf-8") if schema_file else ""
+    schema = load_schema(schema_file) if schema_file else ""
     output_file = os.environ.get("OUTPUT_FILE", "")
     if output_file and not schema:
         fail("output-file requires output-schema-file.")
