@@ -1,19 +1,2291 @@
 {
-  "generated_at": "2026-10-02T01:00:00+00:00",
+  "generated_at": "2026-11-01T18:46:10.303619+00:00",
+  "lifecycle": [
+    "idea",
+    "explore",
+    "validate",
+    "build",
+    "beta",
+    "launch"
+  ],
+  "pipeline": {
+    "status": "unknown",
+    "workflows": {}
+  },
+  "ideas": [],
+  "new_idea_url": "https://github.com/Jinqiudong/venture-lab/issues/new?template=idea.yml",
+  "needs_you": [
+    {
+      "kind": "decision",
+      "issue": 3,
+      "status": "ready",
+      "next_action": "Start architecture work",
+      "needs_human": true,
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #3",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "kind": "decision",
+      "issue": 8,
+      "status": "human_handoff",
+      "blocked_by": [
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "needs_human": true,
+      "next_action": "Tracking parent only: wait for #23–#27 PRs to merge, then validate live Supabase sign-in → /me → relaunch/restore → sign-out before closing #8.",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "human_handoff",
+      "human_handoff": null,
+      "title": "Issue #8",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "kind": "decision",
+      "title": "Finalize first skill metrics and MVP data model",
+      "status": "decision",
+      "next_action": "Define the first measurable skill loop",
+      "needs_human": true,
+      "repo": "Jinqiudong/digital-you",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "decision",
+      "human_handoff": null,
+      "project_name": "Digital You",
+      "project_slug": "digital-you",
+      "project_stage": "MVP Definition"
+    },
+    {
+      "kind": "decision",
+      "issue": 5,
+      "status": "ready",
+      "needs_human": true,
+      "next_action": "Owner + Product Brain: compare image providers on the owner's two cats; owner judges recognizability",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #5",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    }
+  ],
+  "ops": {
+    "now": null,
+    "timeline": [],
+    "tick_minutes": 10,
+    "shares": {
+      "working": 0,
+      "idle_with_work": 0,
+      "idle": 0,
+      "paused": 0,
+      "api_guard": 0,
+      "error": 0
+    },
+    "samples_24h": 0,
+    "api_hourly": [],
+    "claude": {
+      "limit_hits_24h": 0,
+      "limit_hits_7d": 0,
+      "paused_minutes_24h": 0
+    },
+    "actions": {
+      "runs_24h": 0,
+      "runs_capped": false,
+      "minutes_24h": 0,
+      "by_workflow": {},
+      "merged_24h": 5,
+      "runs_per_merge": 0.0
+    },
+    "warnings": []
+  },
+  "paused": [],
+  "ai_team": [
+    {
+      "issue": 38,
+      "status": "ready",
+      "next_action": "Review PR #37 (auth failures return 401 instead of 500)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #38",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 39,
+      "status": "ready",
+      "next_action": "Review PR #36 (tests ignore local .env)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #39",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 45,
+      "status": "ready",
+      "next_action": "Review PR #46 (AGENTS.md)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #45",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 57,
+      "status": "ready",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #57",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 59,
+      "status": "ready",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #59",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 2,
+      "status": "ready",
+      "next_action": "Builder: bootstrap SwiftUI app, iOS CI and backend proxy skeleton",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #2",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    }
+  ],
+  "queue": [
+    {
+      "issue": 4,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "next_action": "Wait for architecture decision",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #4",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 5,
+      "status": "blocked",
+      "blocked_by": [
+        3,
+        4
+      ],
+      "next_action": "Wait for architecture and auth",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #5",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 6,
+      "status": "blocked",
+      "blocked_by": [
+        4,
+        5
+      ],
+      "ready_action": "Start Web sign-in and session integration",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #6",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 7,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Start native SwiftUI app shell",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #7",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 23,
+      "status": "blocked",
+      "blocked_by": [
+        4,
+        7
+      ],
+      "ready_action": "Builder: iOS auth 1/5: add Supabase SDK and public configuration",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #23",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 24,
+      "status": "blocked",
+      "blocked_by": [
+        23
+      ],
+      "ready_action": "Builder: iOS auth 2/5: add testable session manager and secure persistence",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #24",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 25,
+      "status": "blocked",
+      "blocked_by": [
+        24
+      ],
+      "ready_action": "Builder: iOS auth 3/5: attach bearer tokens and verify /me",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #25",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 26,
+      "status": "blocked",
+      "blocked_by": [
+        24,
+        25
+      ],
+      "ready_action": "Builder: iOS auth 4/5: connect Profile sign-in and account UI",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #26",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 27,
+      "status": "blocked",
+      "blocked_by": [
+        26
+      ],
+      "ready_action": "Builder: iOS auth 5/5: run deterministic auth tests in CI and document acceptance",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #27",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 9,
+      "status": "blocked",
+      "blocked_by": [
+        5,
+        7,
+        8
+      ],
+      "ready_action": "Start iOS dream create and archive flow",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #9",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 10,
+      "status": "blocked",
+      "blocked_by": [
+        5,
+        6,
+        9
+      ],
+      "ready_action": "Unify shared AI result flow across Web and iOS",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #10",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 11,
+      "status": "blocked",
+      "blocked_by": [
+        6,
+        8,
+        9,
+        10
+      ],
+      "ready_action": "Run cross-client end-to-end coverage",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #11",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 12,
+      "status": "blocked",
+      "blocked_by": [
+        11
+      ],
+      "ready_action": "Prepare staging and TestFlight beta",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #12",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 47,
+      "status": "blocked",
+      "blocked_by": [
+        45
+      ],
+      "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #47",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 41,
+      "status": "blocked",
+      "blocked_by": [
+        9
+      ],
+      "ready_action": "Review PR #42 (Dream Atlas 1/5: tokens, Home, tab tint)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #41",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 43,
+      "status": "blocked",
+      "blocked_by": [
+        41
+      ],
+      "ready_action": "Review PR #44 (English / Simplified Chinese language switch)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #43",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 60,
+      "status": "blocked",
+      "blocked_by": [
+        59
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #60",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 51,
+      "status": "blocked",
+      "blocked_by": [
+        57
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #51",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 52,
+      "status": "blocked",
+      "blocked_by": [
+        51,
+        59
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #52",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 53,
+      "status": "blocked",
+      "blocked_by": [
+        52,
+        60
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #53",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 54,
+      "status": "blocked",
+      "blocked_by": [
+        53
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #54",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 55,
+      "status": "blocked",
+      "blocked_by": [
+        54
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #55",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 56,
+      "status": "blocked",
+      "blocked_by": [
+        55
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #56",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 62,
+      "status": "blocked",
+      "blocked_by": [
+        56
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #62",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 61,
+      "status": "blocked",
+      "blocked_by": [
+        62
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #61",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 63,
+      "status": "blocked",
+      "blocked_by": [
+        61
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #63",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 40,
+      "status": "blocked",
+      "blocked_by": [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        61,
+        62,
+        63
+      ],
+      "ready_action": "Confirm the Morning Capture epic is complete and close #40",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #40",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 3,
+      "status": "blocked",
+      "blocked_by": [
+        2
+      ],
+      "ready_action": "Builder: cat profile onboarding",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #3",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 4,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Builder: voice-to-personality card",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #4",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 6,
+      "status": "blocked",
+      "blocked_by": [
+        3,
+        5
+      ],
+      "ready_action": "Builder: generate the digital cat pose set",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #6",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 7,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Builder: default line-art room and optional room from photos",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #7",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    }
+  ],
+  "work_items": [
+    {
+      "issue": 3,
+      "status": "ready",
+      "next_action": "Start architecture work",
+      "needs_human": true,
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #3",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 4,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "next_action": "Wait for architecture decision",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #4",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 5,
+      "status": "blocked",
+      "blocked_by": [
+        3,
+        4
+      ],
+      "next_action": "Wait for architecture and auth",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #5",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 6,
+      "status": "blocked",
+      "blocked_by": [
+        4,
+        5
+      ],
+      "ready_action": "Start Web sign-in and session integration",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #6",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 7,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Start native SwiftUI app shell",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #7",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 8,
+      "status": "human_handoff",
+      "blocked_by": [
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "needs_human": true,
+      "next_action": "Tracking parent only: wait for #23–#27 PRs to merge, then validate live Supabase sign-in → /me → relaunch/restore → sign-out before closing #8.",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "human_handoff",
+      "human_handoff": null,
+      "title": "Issue #8",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 23,
+      "status": "blocked",
+      "blocked_by": [
+        4,
+        7
+      ],
+      "ready_action": "Builder: iOS auth 1/5: add Supabase SDK and public configuration",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #23",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 24,
+      "status": "blocked",
+      "blocked_by": [
+        23
+      ],
+      "ready_action": "Builder: iOS auth 2/5: add testable session manager and secure persistence",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #24",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 25,
+      "status": "blocked",
+      "blocked_by": [
+        24
+      ],
+      "ready_action": "Builder: iOS auth 3/5: attach bearer tokens and verify /me",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #25",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 26,
+      "status": "blocked",
+      "blocked_by": [
+        24,
+        25
+      ],
+      "ready_action": "Builder: iOS auth 4/5: connect Profile sign-in and account UI",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #26",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 27,
+      "status": "blocked",
+      "blocked_by": [
+        26
+      ],
+      "ready_action": "Builder: iOS auth 5/5: run deterministic auth tests in CI and document acceptance",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #27",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 9,
+      "status": "blocked",
+      "blocked_by": [
+        5,
+        7,
+        8
+      ],
+      "ready_action": "Start iOS dream create and archive flow",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #9",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 10,
+      "status": "blocked",
+      "blocked_by": [
+        5,
+        6,
+        9
+      ],
+      "ready_action": "Unify shared AI result flow across Web and iOS",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #10",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 11,
+      "status": "blocked",
+      "blocked_by": [
+        6,
+        8,
+        9,
+        10
+      ],
+      "ready_action": "Run cross-client end-to-end coverage",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #11",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 12,
+      "status": "blocked",
+      "blocked_by": [
+        11
+      ],
+      "ready_action": "Prepare staging and TestFlight beta",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #12",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 38,
+      "status": "ready",
+      "next_action": "Review PR #37 (auth failures return 401 instead of 500)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #38",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 39,
+      "status": "ready",
+      "next_action": "Review PR #36 (tests ignore local .env)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #39",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 45,
+      "status": "ready",
+      "next_action": "Review PR #46 (AGENTS.md)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #45",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 47,
+      "status": "blocked",
+      "blocked_by": [
+        45
+      ],
+      "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #47",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 41,
+      "status": "blocked",
+      "blocked_by": [
+        9
+      ],
+      "ready_action": "Review PR #42 (Dream Atlas 1/5: tokens, Home, tab tint)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #41",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 43,
+      "status": "blocked",
+      "blocked_by": [
+        41
+      ],
+      "ready_action": "Review PR #44 (English / Simplified Chinese language switch)",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #43",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 57,
+      "status": "ready",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #57",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 59,
+      "status": "ready",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #59",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 60,
+      "status": "blocked",
+      "blocked_by": [
+        59
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #60",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 51,
+      "status": "blocked",
+      "blocked_by": [
+        57
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #51",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 52,
+      "status": "blocked",
+      "blocked_by": [
+        51,
+        59
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #52",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 53,
+      "status": "blocked",
+      "blocked_by": [
+        52,
+        60
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #53",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 54,
+      "status": "blocked",
+      "blocked_by": [
+        53
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #54",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 55,
+      "status": "blocked",
+      "blocked_by": [
+        54
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #55",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 56,
+      "status": "blocked",
+      "blocked_by": [
+        55
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #56",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 62,
+      "status": "blocked",
+      "blocked_by": [
+        56
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #62",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 61,
+      "status": "blocked",
+      "blocked_by": [
+        62
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #61",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 63,
+      "status": "blocked",
+      "blocked_by": [
+        61
+      ],
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #63",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "issue": 40,
+      "status": "blocked",
+      "blocked_by": [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        61,
+        62,
+        63
+      ],
+      "ready_action": "Confirm the Morning Capture epic is complete and close #40",
+      "repo": "Jinqiudong/AniDream",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #40",
+      "project_name": "AniDream",
+      "project_slug": "anidream",
+      "project_stage": "Mobile MVP"
+    },
+    {
+      "title": "Finalize first skill metrics and MVP data model",
+      "status": "decision",
+      "next_action": "Define the first measurable skill loop",
+      "needs_human": true,
+      "repo": "Jinqiudong/digital-you",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "decision",
+      "human_handoff": null,
+      "project_name": "Digital You",
+      "project_slug": "digital-you",
+      "project_stage": "MVP Definition"
+    },
+    {
+      "issue": 5,
+      "status": "ready",
+      "needs_human": true,
+      "next_action": "Owner + Product Brain: compare image providers on the owner's two cats; owner judges recognizability",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #5",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 2,
+      "status": "ready",
+      "next_action": "Builder: bootstrap SwiftUI app, iOS CI and backend proxy skeleton",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "ready",
+      "human_handoff": null,
+      "title": "Issue #2",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 3,
+      "status": "blocked",
+      "blocked_by": [
+        2
+      ],
+      "ready_action": "Builder: cat profile onboarding",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #3",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 4,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Builder: voice-to-personality card",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #4",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 6,
+      "status": "blocked",
+      "blocked_by": [
+        3,
+        5
+      ],
+      "ready_action": "Builder: generate the digital cat pose set",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #6",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    },
+    {
+      "issue": 7,
+      "status": "blocked",
+      "blocked_by": [
+        3
+      ],
+      "ready_action": "Builder: default line-art room and optional room from photos",
+      "repo": "Jinqiudong/cat-companion",
+      "issue_url": null,
+      "issue_state": null,
+      "pr": null,
+      "pr_url": null,
+      "ci": null,
+      "workflow_stage": "blocked",
+      "human_handoff": null,
+      "title": "Issue #7",
+      "project_name": "Cat Companion",
+      "project_slug": "cat-companion",
+      "project_stage": "Validation prototype"
+    }
+  ],
   "projects": [
     {
       "name": "AniDream",
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Shared Web + iOS architecture, auth, and persistent user data",
-      "attention": "Start with architecture Issue #3 before implementation.",
+      "current_focus": "Morning Dream Capture: design reference, staged backend generation, then the iOS slices (#40)",
+      "work_items": [
+        {
+          "issue": 3,
+          "status": "ready",
+          "next_action": "Start architecture work",
+          "needs_human": true,
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #3"
+        },
+        {
+          "issue": 4,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "next_action": "Wait for architecture decision",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #4"
+        },
+        {
+          "issue": 5,
+          "status": "blocked",
+          "blocked_by": [
+            3,
+            4
+          ],
+          "next_action": "Wait for architecture and auth",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #5"
+        },
+        {
+          "issue": 6,
+          "status": "blocked",
+          "blocked_by": [
+            4,
+            5
+          ],
+          "ready_action": "Start Web sign-in and session integration",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #6"
+        },
+        {
+          "issue": 7,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "ready_action": "Start native SwiftUI app shell",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #7"
+        },
+        {
+          "issue": 8,
+          "status": "human_handoff",
+          "blocked_by": [
+            23,
+            24,
+            25,
+            26,
+            27
+          ],
+          "needs_human": true,
+          "next_action": "Tracking parent only: wait for #23–#27 PRs to merge, then validate live Supabase sign-in → /me → relaunch/restore → sign-out before closing #8.",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "human_handoff",
+          "human_handoff": null,
+          "title": "Issue #8"
+        },
+        {
+          "issue": 23,
+          "status": "blocked",
+          "blocked_by": [
+            4,
+            7
+          ],
+          "ready_action": "Builder: iOS auth 1/5: add Supabase SDK and public configuration",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #23"
+        },
+        {
+          "issue": 24,
+          "status": "blocked",
+          "blocked_by": [
+            23
+          ],
+          "ready_action": "Builder: iOS auth 2/5: add testable session manager and secure persistence",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #24"
+        },
+        {
+          "issue": 25,
+          "status": "blocked",
+          "blocked_by": [
+            24
+          ],
+          "ready_action": "Builder: iOS auth 3/5: attach bearer tokens and verify /me",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #25"
+        },
+        {
+          "issue": 26,
+          "status": "blocked",
+          "blocked_by": [
+            24,
+            25
+          ],
+          "ready_action": "Builder: iOS auth 4/5: connect Profile sign-in and account UI",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #26"
+        },
+        {
+          "issue": 27,
+          "status": "blocked",
+          "blocked_by": [
+            26
+          ],
+          "ready_action": "Builder: iOS auth 5/5: run deterministic auth tests in CI and document acceptance",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #27"
+        },
+        {
+          "issue": 9,
+          "status": "blocked",
+          "blocked_by": [
+            5,
+            7,
+            8
+          ],
+          "ready_action": "Start iOS dream create and archive flow",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #9"
+        },
+        {
+          "issue": 10,
+          "status": "blocked",
+          "blocked_by": [
+            5,
+            6,
+            9
+          ],
+          "ready_action": "Unify shared AI result flow across Web and iOS",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #10"
+        },
+        {
+          "issue": 11,
+          "status": "blocked",
+          "blocked_by": [
+            6,
+            8,
+            9,
+            10
+          ],
+          "ready_action": "Run cross-client end-to-end coverage",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #11"
+        },
+        {
+          "issue": 12,
+          "status": "blocked",
+          "blocked_by": [
+            11
+          ],
+          "ready_action": "Prepare staging and TestFlight beta",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #12"
+        },
+        {
+          "issue": 38,
+          "status": "ready",
+          "next_action": "Review PR #37 (auth failures return 401 instead of 500)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #38"
+        },
+        {
+          "issue": 39,
+          "status": "ready",
+          "next_action": "Review PR #36 (tests ignore local .env)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #39"
+        },
+        {
+          "issue": 45,
+          "status": "ready",
+          "next_action": "Review PR #46 (AGENTS.md)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #45"
+        },
+        {
+          "issue": 47,
+          "status": "blocked",
+          "blocked_by": [
+            45
+          ],
+          "ready_action": "Builder: translate repo docs and code comments to English (follow AGENTS.md)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #47"
+        },
+        {
+          "issue": 41,
+          "status": "blocked",
+          "blocked_by": [
+            9
+          ],
+          "ready_action": "Review PR #42 (Dream Atlas 1/5: tokens, Home, tab tint)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #41"
+        },
+        {
+          "issue": 43,
+          "status": "blocked",
+          "blocked_by": [
+            41
+          ],
+          "ready_action": "Review PR #44 (English / Simplified Chinese language switch)",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #43"
+        },
+        {
+          "issue": 57,
+          "status": "ready",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #57"
+        },
+        {
+          "issue": 59,
+          "status": "ready",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #59"
+        },
+        {
+          "issue": 60,
+          "status": "blocked",
+          "blocked_by": [
+            59
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #60"
+        },
+        {
+          "issue": 51,
+          "status": "blocked",
+          "blocked_by": [
+            57
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #51"
+        },
+        {
+          "issue": 52,
+          "status": "blocked",
+          "blocked_by": [
+            51,
+            59
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #52"
+        },
+        {
+          "issue": 53,
+          "status": "blocked",
+          "blocked_by": [
+            52,
+            60
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #53"
+        },
+        {
+          "issue": 54,
+          "status": "blocked",
+          "blocked_by": [
+            53
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #54"
+        },
+        {
+          "issue": 55,
+          "status": "blocked",
+          "blocked_by": [
+            54
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #55"
+        },
+        {
+          "issue": 56,
+          "status": "blocked",
+          "blocked_by": [
+            55
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #56"
+        },
+        {
+          "issue": 62,
+          "status": "blocked",
+          "blocked_by": [
+            56
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #62"
+        },
+        {
+          "issue": 61,
+          "status": "blocked",
+          "blocked_by": [
+            62
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #61"
+        },
+        {
+          "issue": 63,
+          "status": "blocked",
+          "blocked_by": [
+            61
+          ],
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #63"
+        },
+        {
+          "issue": 40,
+          "status": "blocked",
+          "blocked_by": [
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            61,
+            62,
+            63
+          ],
+          "ready_action": "Confirm the Morning Capture epic is complete and close #40",
+          "repo": "Jinqiudong/AniDream",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #40"
+        }
+      ],
+      "lifecycle": "build",
+      "current_focus_zh": "清晨捕梦：设计稿进仓库、后端分阶段生成，然后依次做 iOS 各步（#40）",
       "open_issues": null,
       "open_prs": null,
       "ci": "unknown",
       "latest_activity": null,
       "live": false,
-      "error": "Live data will refresh from GitHub Actions. Private repositories require PORTFOLIO_GITHUB_TOKEN."
+      "error": "Private repository data unavailable. Configure PORTFOLIO_GITHUB_TOKEN.",
+      "slug": "anidream",
+      "kind": "repo",
+      "progress": {
+        "done": 0,
+        "total": 34,
+        "active": 0
+      },
+      "recent_merged": [],
+      "delivery": {
+        "weekly": [],
+        "median_hours_to_merge": null,
+        "per_week": 0
+      },
+      "milestones": [],
+      "milestones_error": false,
+      "handoffs": [],
+      "status": "needs_you",
+      "idea": null
     },
     {
       "name": "Digital You",
@@ -21,13 +2293,556 @@
       "stage": "MVP Definition",
       "health": "green",
       "current_focus": "Define the first measurable dance-improvement loop",
-      "attention": "Finalize first skill metrics and MVP data model.",
+      "work_items": [
+        {
+          "title": "Finalize first skill metrics and MVP data model",
+          "status": "decision",
+          "next_action": "Define the first measurable skill loop",
+          "needs_human": true,
+          "repo": "Jinqiudong/digital-you",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "decision",
+          "human_handoff": null
+        }
+      ],
+      "lifecycle": "explore",
+      "current_focus_zh": "定义第一个可衡量的舞蹈提升闭环",
       "open_issues": null,
       "open_prs": null,
       "ci": "unknown",
       "latest_activity": null,
       "live": false,
-      "error": "Live data will refresh from GitHub Actions. Private repositories require PORTFOLIO_GITHUB_TOKEN."
+      "error": "Private repository data unavailable. Configure PORTFOLIO_GITHUB_TOKEN.",
+      "slug": "digital-you",
+      "kind": "repo",
+      "progress": {
+        "done": 0,
+        "total": 0,
+        "active": 0
+      },
+      "recent_merged": [],
+      "delivery": {
+        "weekly": [],
+        "median_hours_to_merge": null,
+        "per_week": 0
+      },
+      "milestones": [],
+      "milestones_error": false,
+      "handoffs": [],
+      "status": "needs_you",
+      "idea": null
+    },
+    {
+      "name": "Cat Companion",
+      "name_zh": "猫猫美容中心",
+      "repo": "Jinqiudong/cat-companion",
+      "idea_issue": 9,
+      "stage": "Validation prototype",
+      "health": "green",
+      "lifecycle": "validate",
+      "current_focus": "Milestone 1 (#1): meet your cat. Cat profile by photo, text or voice, then a semi-realistic digital cat and a line-art home",
+      "current_focus_zh": "里程碑 1（#1）：认识你的猫。拍照、文字或语音建档 → 半写实数字猫 → 线稿的家",
+      "work_items": [
+        {
+          "issue": 5,
+          "status": "ready",
+          "needs_human": true,
+          "next_action": "Owner + Product Brain: compare image providers on the owner's two cats; owner judges recognizability",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #5"
+        },
+        {
+          "issue": 2,
+          "status": "ready",
+          "next_action": "Builder: bootstrap SwiftUI app, iOS CI and backend proxy skeleton",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "ready",
+          "human_handoff": null,
+          "title": "Issue #2"
+        },
+        {
+          "issue": 3,
+          "status": "blocked",
+          "blocked_by": [
+            2
+          ],
+          "ready_action": "Builder: cat profile onboarding",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #3"
+        },
+        {
+          "issue": 4,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "ready_action": "Builder: voice-to-personality card",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #4"
+        },
+        {
+          "issue": 6,
+          "status": "blocked",
+          "blocked_by": [
+            3,
+            5
+          ],
+          "ready_action": "Builder: generate the digital cat pose set",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #6"
+        },
+        {
+          "issue": 7,
+          "status": "blocked",
+          "blocked_by": [
+            3
+          ],
+          "ready_action": "Builder: default line-art room and optional room from photos",
+          "repo": "Jinqiudong/cat-companion",
+          "issue_url": null,
+          "issue_state": null,
+          "pr": null,
+          "pr_url": null,
+          "ci": null,
+          "workflow_stage": "blocked",
+          "human_handoff": null,
+          "title": "Issue #7"
+        }
+      ],
+      "open_issues": null,
+      "open_prs": null,
+      "ci": "unknown",
+      "latest_activity": null,
+      "live": false,
+      "error": "Private repository data unavailable. Configure PORTFOLIO_GITHUB_TOKEN.",
+      "slug": "cat-companion",
+      "kind": "repo",
+      "progress": {
+        "done": 0,
+        "total": 6,
+        "active": 0
+      },
+      "recent_merged": [],
+      "delivery": {
+        "weekly": [],
+        "median_hours_to_merge": null,
+        "per_week": 0
+      },
+      "milestones": [],
+      "milestones_error": false,
+      "handoffs": [],
+      "status": "needs_you",
+      "idea": {
+        "issue": 9,
+        "issue_url": "https://github.com/Jinqiudong/venture-lab/issues/9",
+        "title": "猫猫美容中心",
+        "done_steps": [
+          "Idea understood",
+          "Initial product hypothesis",
+          "Product direction C confirmed",
+          "Competitor desk research completed",
+          "First validation cohort selected: experienced busy cat owners",
+          "Pocket Kitty low-pressure companion and widget direction confirmed",
+          "Two-path onboarding, optional photo avatar, multi-cat and virtual adoption direction confirmed",
+          "Personality onboarding, multi-cat interactions, diary and portraits captured as product direction",
+          "Owner selected semi-realistic visual style for clickable prototype",
+          "Reframed as a companion-relationship product (2026-10-30)",
+          "First cohort: Chinese-speaking cat owners in the US",
+          "Widget chosen as the core emotional hook; prototype scope agreed",
+          "Product repo created: Jinqiudong/cat-companion (2026-10-30)",
+          "Check-ins reframed as the cat's needs, voiced by the cat one at a time (2026-10-30)"
+        ],
+        "next_steps": [
+          "Home: the cat voices one need at a time",
+          "Widget and photo-together",
+          "2-week prototype test",
+          "Survey + 5 interviews",
+          "Decide BUILD / iterate / park"
+        ]
+      }
+    },
+    {
+      "name": "Ski Pre-Run",
+      "name_zh": "雪场预滑",
+      "repo": "Jinqiudong/ski-prerun",
+      "idea_issue": 48,
+      "stage": "Validation prototype",
+      "health": "green",
+      "lifecycle": "validate",
+      "current_focus": "Prototype v2 is live: plan a route, ride the lifts and ski it at Copper Mountain. Owner tests it before a real ski day",
+      "current_focus_zh": "原型第二版已上线：在 Copper Mountain 规划路线、坐缆车、按路线滑一遍。等你玩过、真实滑雪前试用",
+      "work_items": [],
+      "open_issues": 0,
+      "open_prs": 0,
+      "ci": "success",
+      "latest_activity": "2026-11-01T18:43:29Z",
+      "live": true,
+      "error": null,
+      "slug": "ski-prerun",
+      "kind": "repo",
+      "progress": {
+        "done": 0,
+        "total": 0,
+        "active": 0
+      },
+      "recent_merged": [],
+      "delivery": {
+        "weekly": [
+          {
+            "week": "2026-09-07",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-14",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-21",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-28",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-05",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-12",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-19",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-26",
+            "merged": 0
+          }
+        ],
+        "median_hours_to_merge": null,
+        "per_week": 0.0
+      },
+      "milestones": [],
+      "milestones_error": false,
+      "handoffs": [],
+      "status": "quiet",
+      "idea": null
+    },
+    {
+      "name": "Venture Lab",
+      "repo": "Jinqiudong/venture-lab",
+      "stage": "Control plane",
+      "lifecycle": "build",
+      "dashboard": false,
+      "current_focus": "Self-developing workflow",
+      "work_items": [],
+      "open_issues": null,
+      "open_prs": null,
+      "ci": "unknown",
+      "latest_activity": null,
+      "live": false,
+      "error": "Private repository data unavailable. Configure PORTFOLIO_GITHUB_TOKEN.",
+      "slug": "venture-lab",
+      "kind": "repo",
+      "progress": {
+        "done": 0,
+        "total": 0,
+        "active": 0
+      },
+      "recent_merged": [
+        {
+          "number": 51,
+          "title": "feat(control-plane): platform CI once per milestone",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/51",
+          "merged_at": "2026-11-01T03:41:22Z"
+        },
+        {
+          "number": 50,
+          "title": "fix(review-cycle): stop re-reviewing stuck PRs; skip billing-blocked CI; Product Brain schema",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/50",
+          "merged_at": "2026-11-01T00:38:32Z"
+        },
+        {
+          "number": 47,
+          "title": "fix(guardrails): any provider or GitHub usage limit is not a Builder failure",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/47",
+          "merged_at": "2026-10-31T21:11:37Z"
+        },
+        {
+          "number": 46,
+          "title": "feat(control-plane): owner /retry clears an Issue's auto-stop",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/46",
+          "merged_at": "2026-10-31T21:10:01Z"
+        },
+        {
+          "number": 45,
+          "title": "fix(control-plane): heartbeat dispatch token and authenticated milestone fetch",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/45",
+          "merged_at": "2026-10-31T21:04:13Z"
+        },
+        {
+          "number": 44,
+          "title": "feat(dashboard): Operations tab for pipeline efficiency, API budget and Claude limits",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/44",
+          "merged_at": "2026-10-31T18:38:17Z"
+        },
+        {
+          "number": 42,
+          "title": "feat(control-plane): heartbeat loop, milestone branches, owner accepts milestones",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/42",
+          "merged_at": "2026-10-31T18:32:41Z"
+        },
+        {
+          "number": 39,
+          "title": "feat(dashboard): needs-you inbox, project detail page, milestones and delivery trend",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/39",
+          "merged_at": "2026-10-31T17:38:14Z"
+        },
+        {
+          "number": 37,
+          "title": "Idea intake and an autonomous Product Brain",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/37",
+          "merged_at": "2026-10-31T04:41:39Z"
+        },
+        {
+          "number": 36,
+          "title": "Fix/one card per product",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/36",
+          "merged_at": "2026-10-31T04:30:51Z"
+        },
+        {
+          "number": 35,
+          "title": "Stop exhausting the GitHub API budget: bulk dashboard reads, no checkpoint feed",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/35",
+          "merged_at": "2026-10-31T04:24:36Z"
+        },
+        {
+          "number": 34,
+          "title": "Register cat-companion (idea #9) on the dashboard",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/34",
+          "merged_at": "2026-10-31T04:01:00Z"
+        },
+        {
+          "number": 33,
+          "title": "Venture Lab reviews its own PRs; queue AniDream Morning Dream Capture",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/33",
+          "merged_at": "2026-10-31T03:41:38Z"
+        },
+        {
+          "number": 32,
+          "title": "Retarget stacked PRs instead of letting GitHub close them",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/32",
+          "merged_at": "2026-10-31T00:53:13Z"
+        },
+        {
+          "number": 31,
+          "title": "Dashboard v2: bilingual portfolio with lifecycle timelines and shipped feed",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/31",
+          "merged_at": "2026-10-31T00:52:54Z"
+        },
+        {
+          "number": 30,
+          "title": "More autonomy: hourly heartbeat, 2 parallel builders, hold label replaces draft gating",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/30",
+          "merged_at": "2026-10-31T00:45:43Z"
+        },
+        {
+          "number": 29,
+          "title": "Strip whitespace from agent auth tokens",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/29",
+          "merged_at": "2026-10-30T05:08:00Z"
+        },
+        {
+          "number": 28,
+          "title": "Run agents on Claude Code (Codex as fallback)",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/28",
+          "merged_at": "2026-10-30T05:04:59Z"
+        },
+        {
+          "number": 27,
+          "title": "fix(orchestrator): draft PRs no longer block the Builder queue",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/27",
+          "merged_at": "2026-10-30T02:26:03Z"
+        },
+        {
+          "number": 26,
+          "title": "chore(portfolio): register AniDream #38–#47",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/26",
+          "merged_at": "2026-10-30T02:20:14Z"
+        },
+        {
+          "number": 25,
+          "title": "docs: English-only autonomous-flow doc; docs guard covers orchestrator/",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/25",
+          "merged_at": "2026-10-30T02:15:01Z"
+        },
+        {
+          "number": 24,
+          "title": "fix(runtime): Runtime Guard never counts Fixer attempts",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/24",
+          "merged_at": "2026-10-30T01:55:16Z"
+        },
+        {
+          "number": 23,
+          "title": "docs: document autonomous delivery flow",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/23",
+          "merged_at": "2026-10-06T03:23:30Z"
+        },
+        {
+          "number": 22,
+          "title": "feat: Product Incubator V2 canonical product docs",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/22",
+          "merged_at": "2026-10-06T03:08:34Z"
+        },
+        {
+          "number": 20,
+          "title": "feat: Product Incubator V2 guided first slice",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/20",
+          "merged_at": "2026-10-06T02:46:07Z"
+        },
+        {
+          "number": 17,
+          "title": "fix: resume autonomous cycle after Product Owner decision",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/17",
+          "merged_at": "2026-10-06T02:35:27Z"
+        },
+        {
+          "number": 16,
+          "title": "feat: auto-merge low-risk reviewed PRs",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/16",
+          "merged_at": "2026-10-06T02:31:13Z"
+        },
+        {
+          "number": 13,
+          "title": "feat: add Product Incubator framework",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/13",
+          "merged_at": "2026-10-06T02:05:01Z"
+        },
+        {
+          "number": 15,
+          "title": "fix: fall back when CI evidence token lacks Actions access",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/15",
+          "merged_at": "2026-10-06T01:46:31Z"
+        },
+        {
+          "number": 14,
+          "title": "fix: let review cycle consume PR CI evidence",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/14",
+          "merged_at": "2026-10-06T01:43:13Z"
+        },
+        {
+          "number": 12,
+          "title": "feat: add shadow Scope Gate preflight",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/12",
+          "merged_at": "2026-10-03T01:15:00Z"
+        },
+        {
+          "number": 11,
+          "title": "chore: schedule scoped AniDream iOS auth tasks",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/11",
+          "merged_at": "2026-10-03T00:29:37Z"
+        },
+        {
+          "number": 10,
+          "title": "test: run isolated Codex Builder smoke task",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/10",
+          "merged_at": "2026-10-03T00:09:09Z"
+        },
+        {
+          "number": 8,
+          "title": "fix: stop repeated Builder auto-retries",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/8",
+          "merged_at": "2026-10-02T23:51:00Z"
+        },
+        {
+          "number": 7,
+          "title": "feat: add lightweight agent checkpoint transparency",
+          "url": "https://github.com/Jinqiudong/venture-lab/pull/7",
+          "merged_at": "2026-10-02T19:16:41Z"
+        }
+      ],
+      "delivery": {
+        "weekly": [
+          {
+            "week": "2026-09-07",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-14",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-21",
+            "merged": 0
+          },
+          {
+            "week": "2026-09-28",
+            "merged": 8
+          },
+          {
+            "week": "2026-10-05",
+            "merged": 8
+          },
+          {
+            "week": "2026-10-12",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-19",
+            "merged": 0
+          },
+          {
+            "week": "2026-10-26",
+            "merged": 22
+          }
+        ],
+        "median_hours_to_merge": 0.1,
+        "per_week": 7.5
+      },
+      "milestones": [],
+      "milestones_error": true,
+      "handoffs": [],
+      "status": "quiet",
+      "idea": null
     }
   ]
 }

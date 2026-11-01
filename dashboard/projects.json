@@ -355,6 +355,18 @@
       ]
     },
     {
+      "name": "Ski Pre-Run",
+      "name_zh": "雪场预滑",
+      "repo": "Jinqiudong/ski-prerun",
+      "idea_issue": 48,
+      "stage": "Validation prototype",
+      "health": "green",
+      "lifecycle": "validate",
+      "current_focus": "Prototype v2 is live: plan a route, ride the lifts and ski it at Copper Mountain. Owner tests it before a real ski day",
+      "current_focus_zh": "原型第二版已上线：在 Copper Mountain 规划路线、坐缆车、按路线滑一遍。等你玩过、真实滑雪前试用",
+      "work_items": []
+    },
+    {
       "name": "Venture Lab",
       "repo": "Jinqiudong/venture-lab",
       "stage": "Control plane",
