@@ -5,7 +5,7 @@
       "repo": "Jinqiudong/AniDream",
       "stage": "Mobile MVP",
       "health": "yellow",
-      "current_focus": "Morning Dream Capture: design reference, staged backend generation, then the iOS slices (#40)",
+      "current_focus": "Morning Capture: acceptance fixes, Feelings 2.0 and rituals v2 (#40, milestone PR #77)",
       "work_items": [
         {
           "issue": 3,
@@ -272,13 +272,37 @@
             56,
             61,
             62,
-            63
+            63,
+            80,
+            81,
+            86
           ],
           "ready_action": "Confirm the Morning Capture epic is complete and close #40"
+        },
+        {
+          "issue": 81,
+          "status": "ready"
+        },
+        {
+          "issue": 80,
+          "status": "ready"
+        },
+        {
+          "issue": 84,
+          "status": "ready"
+        },
+        {
+          "issue": 86,
+          "status": "blocked",
+          "blocked_by": [
+            84,
+            80,
+            81
+          ]
         }
       ],
       "lifecycle": "build",
-      "current_focus_zh": "清晨捕梦：设计稿进仓库、后端分阶段生成，然后依次做 iOS 各步（#40）"
+      "current_focus_zh": "清晨捕梦：验收修复、感觉 2.0、收好仪式 v2（#40，里程碑 PR #77）"
     },
     {
       "name": "Digital You",
