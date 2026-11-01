@@ -62,7 +62,7 @@ Opening/updating the PR triggers the product repository's own workflows. Results
 
 **Reviewer** reads Issue, PR, diff, architecture, and current-HEAD CI evidence. It returns `approve` or `request_changes`, escalating only genuine product ambiguity.
 
-**Fixer loop** runs for actionable blockers that do not need a product decision. It fixes only those findings and pushes a new commit. New HEAD means CI/review must run again. Platform-only execution requirements belong in platform CI, not an impossible Linux retry loop.
+**Fixer loop** runs for actionable blockers that do not need a product decision. It fixes only those findings and pushes a new commit. New HEAD means CI/review must run again. Platform-only execution requirements belong in platform CI, not an impossible Linux retry loop. If the Reviewer still requests changes on the same HEAD after the Fixer's one attempt, the PR is handed to the owner once (`venture-human-ready`) instead of being reviewed again every heartbeat. A PR whose CI jobs GitHub never started (Actions minutes or billing) is skipped without spending an agent run until CI can run.
 
 **QA** runs after Reviewer approval, validates acceptance criteria and relevant tests, and may treat successful platform CI on the exact HEAD as authoritative evidence. QA's `needs_human` / `human_validation` does not block the merge. It is a "try this" note, such as visual feel or behavior on a real device, that is added to the milestone PR and lands in the milestone's acceptance checklist. Anything actually broken or unverified is a `fail`.
 

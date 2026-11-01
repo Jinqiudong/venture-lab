@@ -85,6 +85,32 @@ jobs:
               ci_pending=$(gh run list --repo "$repo" --commit "$head" --limit 50 --json status,event 2>/dev/null | jq -r 'any(.[]; .event=="pull_request" and (.status=="queued" or .status=="in_progress" or .status=="waiting" or .status=="pending"))' || printf 'false')
               review_approved=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-review:$head -->" 'any(.[]; ((.body // "") | contains($marker)) and ((.body // "") | contains("**Verdict:** `approve`")))')
               qa_passed=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-qa:$head -->" 'any(.[]; ((.body // "") | contains($marker)) and ((.body // "") | contains("**Verdict:** `pass`")))')
+              # Jobs GitHub refused to start (Actions minutes or billing) are not code failures: wait, spend no agent run.
+              ci_blocked=false
+              for run_id in $(gh api "repos/$repo/actions/runs?head_sha=$head&per_page=20" --jq '.workflow_runs[] | select(.conclusion=="failure") | .id' 2>/dev/null); do
+                if gh api "repos/$repo/actions/runs/$run_id/jobs" --jq 'all(.jobs[]; (.steps | length) == 0)' 2>/dev/null | grep -q true; then
+                  ci_blocked=true
+                  break
+                fi
+              done
+              if [ "$ci_blocked" = "true" ]; then
+                echo "Skipping $repo PR #$pr: CI jobs on $head were never started by GitHub (Actions minutes or billing)."
+                continue
+              fi
+              # The Fixer already had its attempt on this HEAD and pushed nothing: reviewing it again changes nothing.
+              # Hand it to the owner once; the dashboard lists it, and a new push or a decision resumes the loop.
+              fixer_at=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-fixer-attempt:$head -->" '[.[] | select((.body // "") | contains($marker)) | .created_at] | max // ""')
+              # Stuck when a review of this HEAD is newer than the Fixer attempt, the last handoff and the owner's last decision.
+              since=$(printf '%s\n%s\n%s\n' "$fixer_at" "$handoff_at" "$decision_at" | sort | tail -1)
+              reviewed_since=$(printf '%s' "$comments" | jq -r --arg marker "<!-- venture-review:$head -->" --arg since "$since" 'any(.[]; ((.body // "") | contains($marker)) and .created_at > $since)')
+              if [ -n "$fixer_at" ] && [ "$reviewed_since" = "true" ]; then
+                gh pr comment "$pr" --repo "$repo" --body "<!-- venture-human-ready:$head -->
+          ### 👤 Stuck: the AI team cannot move this PR forward
+
+          The Reviewer still requests changes on \`${head:0:7}\` after the Fixer's one attempt, and the Fixer pushed nothing new. The AI team stops here instead of reviewing the same code again. See the latest review above. Push a fix, or comment with a decision, to resume."
+                echo "Handed off stuck $repo PR #$pr ($head)."
+                continue
+              fi
               reuse_evidence=false
               if [ -n "$handoff_at" ] && { [ -z "$decision_at" ] || [[ "$decision_at" < "$handoff_at" ]]; }; then
                 if [ "$review_approved" = "true" ] && [ "$qa_passed" = "true" ]; then
