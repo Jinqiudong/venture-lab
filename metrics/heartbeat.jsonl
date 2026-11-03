@@ -376,3 +376,4 @@
 {"t":"2026-11-03T08:13:30+00:00","waiting":4,"api":{"remaining":4598,"limit":5000,"used":402,"reset":"2026-11-03T08:42:59+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-03T08:23:41+00:00","waiting":4,"api":{"remaining":4464,"limit":5000,"used":536,"reset":"2026-11-03T08:42:59+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-03T08:33:52+00:00","waiting":4,"api":{"remaining":4337,"limit":5000,"used":663,"reset":"2026-11-03T08:42:59+00:00"},"state":"idle_with_work"}
+{"t":"2026-11-03T08:44:04+00:00","waiting":4,"api":{"remaining":5000,"limit":5000,"used":0,"reset":"2026-11-03T09:44:04+00:00"},"state":"idle_with_work"}
