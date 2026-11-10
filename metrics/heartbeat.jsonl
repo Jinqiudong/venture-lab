@@ -1,4 +1,3 @@
-{"t":"2026-11-03T18:44:51+00:00","waiting":4,"api":{"remaining":4323,"limit":5000,"used":677,"reset":"2026-11-03T18:53:58+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-03T18:55:02+00:00","waiting":4,"api":{"remaining":5000,"limit":5000,"used":0,"reset":"2026-11-03T19:55:02+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-03T19:05:13+00:00","waiting":4,"api":{"remaining":4864,"limit":5000,"used":136,"reset":"2026-11-03T19:55:04+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-03T19:15:24+00:00","waiting":4,"api":{"remaining":4728,"limit":5000,"used":272,"reset":"2026-11-03T19:55:04+00:00"},"state":"idle_with_work"}
@@ -619,3 +618,4 @@
 {"t":"2026-11-10T18:18:56+00:00","waiting":4,"api":{"remaining":4507,"limit":5000,"used":493,"reset":"2026-11-10T18:48:21+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-10T18:29:09+00:00","waiting":4,"api":{"remaining":4344,"limit":5000,"used":656,"reset":"2026-11-10T18:48:21+00:00"},"state":"idle_with_work"}
 {"t":"2026-11-10T18:39:22+00:00","waiting":4,"api":{"remaining":4181,"limit":5000,"used":819,"reset":"2026-11-10T18:48:21+00:00"},"state":"idle_with_work"}
+{"t":"2026-11-10T18:49:35+00:00","waiting":4,"api":{"remaining":5000,"limit":5000,"used":0,"reset":"2026-11-10T19:49:36+00:00"},"state":"idle_with_work"}
